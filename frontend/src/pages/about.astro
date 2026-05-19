@@ -1,0 +1,61 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout page="about">
+  <section class="card">
+    <h2 class="card-title">About Recursive Auth</h2>
+    <p class="card-sub">
+      Recursive Auth is a clean email-OTP authentication flow with login,
+      register, dashboard, and users management screens.
+    </p>
+
+    <div class="about-grid">
+      <div class="about-item">
+        <h3>Home</h3>
+        <p>Entry point with Login, Register, and About links.</p>
+      </div>
+      <div class="about-item">
+        <h3>Authentication</h3>
+        <p>Register, verify OTP, then sign in securely.</p>
+      </div>
+      <div class="about-item">
+        <h3>Dashboard</h3>
+        <p>Overview, Profile, Logout, and Users navigation.</p>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .about-item {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .about-item h3 {
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .about-item p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 900px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,177 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout page="register">
+  <div class="card">
+    <h2 class="card-title">Verify OTP</h2>
+    <p class="card-sub">
+      Enter the 6-digit code sent to<br />
+      <span
+        id="emailDisplay"
+        class="otp-target"
+        style="color: #7c5cfc; font-weight: 600;">your email</span
+      >
+    </p>
+
+    <div id="alert" class="alert"></div>
+
+    <div class="otp-grid">
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+      <input class="otp-box" maxlength="1" inputmode="numeric" />
+    </div>
+
+    <button class="btn-primary" id="verifyBtn" type="button"
+      >Verify Account</button
+    >
+
+    <div class="resend-row" style="margin-top:1rem;">
+      <button id="resendBtn" disabled
+        >Resend OTP (<span id="timer">01:00</span>)</button
+      >
+    </div>
+
+    <div class="card-footer">
+      <a href="/register" class="back-link">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"></path></svg
+        >
+        Back to register
+      </a>
+    </div>
+  </div>
+</MainLayout>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const email = params.get("email") || "";
+  const emailDisplay = document.getElementById("emailDisplay");
+  if (emailDisplay) emailDisplay.textContent = email || "your email";
+
+  const alertEl = document.getElementById("alert") as HTMLDivElement;
+  function showAlert(msg: string, type: string = "error") {
+    if (alertEl) {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type} show`;
+      setTimeout(() => alertEl.classList.remove("show"), 4000);
+    }
+  }
+
+  let timerInterval: ReturnType<typeof setInterval> | null = null;
+  function startTimer() {
+    let secs = 60;
+    const timerEl = document.getElementById("timer");
+    const resendBtn = document.getElementById("resendBtn") as HTMLButtonElement;
+    if (!resendBtn) return;
+    resendBtn.disabled = true;
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      secs--;
+      const m = String(Math.floor(secs / 60)).padStart(2, "0");
+      const s = String(secs % 60).padStart(2, "0");
+      if (timerEl) timerEl.textContent = `${m}:${s}`;
+      if (secs <= 0) {
+        if (timerInterval) clearInterval(timerInterval);
+        resendBtn.disabled = false;
+        resendBtn.textContent = "Resend OTP";
+      }
+    }, 1000);
+  }
+  startTimer();
+
+  const boxes = Array.from(
+    document.querySelectorAll(".otp-box"),
+  ) as HTMLInputElement[];
+  boxes.forEach((box, i) => {
+    box.addEventListener("input", () => {
+      box.classList.toggle("filled", box.value !== "");
+      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+    box.addEventListener("keydown", (e: Event) => {
+      const event = e as KeyboardEvent;
+      if (event.key === "Backspace" && !box.value && i > 0)
+        boxes[i - 1].focus();
+    });
+    box.addEventListener("paste", (e: Event) => {
+      const event = e as ClipboardEvent;
+      const paste =
+        event.clipboardData?.getData("text").replace(/\D/g, "").slice(0, 6) ||
+        "";
+      paste.split("").forEach((ch: string, j: number) => {
+        if (boxes[j]) {
+          boxes[j].value = ch;
+          boxes[j].classList.add("filled");
+        }
+      });
+      const next = boxes[Math.min(paste.length, boxes.length - 1)];
+      if (next) next.focus();
+      event.preventDefault();
+    });
+  });
+  if (boxes.length > 0) boxes[0].focus();
+
+  const verifyBtn = document.getElementById("verifyBtn") as HTMLButtonElement;
+  if (verifyBtn) {
+    verifyBtn.addEventListener("click", async () => {
+      const otp = boxes.map((b: HTMLInputElement) => b.value).join("");
+      if (otp.length < 6) {
+        showAlert("Please enter the complete 6-digit code.");
+        return;
+      }
+
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = "Verifying…";
+
+      try {
+        const res = await fetch("http://localhost:5001/api/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showAlert(data.message || "Invalid OTP");
+          verifyBtn.disabled = false;
+          verifyBtn.textContent = "Verify Account";
+          return;
+        }
+
+        showAlert("Email verified! Redirecting to login…", "success");
+        setTimeout(() => (window.location.href = "/login"), 1500);
+      } catch {
+        showAlert("Could not connect to server.");
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify Account";
+      }
+    });
+  }
+
+  const resendBtn = document.getElementById("resendBtn") as HTMLButtonElement;
+  if (resendBtn) {
+    resendBtn.addEventListener("click", async () => {
+      await fetch("http://localhost:5001/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      startTimer();
+      showAlert("OTP resent to your email.", "success");
+      boxes.forEach((b: HTMLInputElement) => {
+        b.value = "";
+        b.classList.remove("filled");
+      });
+      if (boxes.length > 0) boxes[0].focus();
+    });
+  }
+</script>

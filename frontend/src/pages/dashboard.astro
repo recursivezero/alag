@@ -1,0 +1,323 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout page="dashboard" title="Dashboard">
+  <section class="dashboard-hero">
+    <div class="dashboard-panel">
+      <div class="dashboard-topbar">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>Account Overview</h1>
+            <p class="section-copy">
+              See your signed-in account details and the latest user totals at a
+              glance.
+            </p>
+          </div>
+        </div>
+
+        <div class="profile-badge" aria-label="Profile icon">
+          <img src="/icon.png" alt="Profile icon" />
+          <span>My Profile</span>
+        </div>
+      </div>
+
+      <div class="dashboard-metrics">
+        <article class="metric-card">
+          <span>Total Users</span>
+          <strong id="totalUsers">--</strong>
+          <small>Synced from the database</small>
+        </article>
+        <article class="metric-card">
+          <span>Verification</span>
+          <strong id="verificationState">Loading</strong>
+          <small>Session status</small>
+        </article>
+      </div>
+
+      <article class="profile-card">
+        <div class="profile-info">
+          <img src="/icon.png" alt="Signed in profile icon" />
+          <div>
+            <p class="eyebrow">Signed In</p>
+            <h2 id="dashName">Loading...</h2>
+            <p id="dashEmail">Loading...</p>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <div class="status">Status: <strong>Verified</strong></div>
+        </div>
+      </article>
+
+      <div class="logout-row">
+        <button id="logoutBtn" class="logout-btn" type="button">
+          Logout
+        </button>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/login";
+  }
+
+  async function fetchUserData() {
+    try {
+      const res = await fetch("http://localhost:5001/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok && data.user) {
+        const dashNameEl = document.getElementById("dashName");
+        const dashEmailEl = document.getElementById("dashEmail");
+        const verificationStateEl =
+          document.getElementById("verificationState");
+
+        if (dashNameEl) dashNameEl.textContent = data.user.name;
+        if (dashEmailEl) dashEmailEl.textContent = data.user.email;
+        if (verificationStateEl) verificationStateEl.textContent = "Verified";
+      }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+    }
+  }
+
+  async function fetchUserCount() {
+    try {
+      const res = await fetch("http://localhost:5001/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const totalUsersEl = document.getElementById("totalUsers");
+      if (totalUsersEl)
+        totalUsersEl.textContent = String(data.users?.length ?? 0);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  }
+
+  fetchUserData();
+  fetchUserCount();
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    });
+  }
+</script>
+
+<style>
+  .dashboard-hero {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .dashboard-panel {
+    width: min(100%, 1100px);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 17, 28, 0.96),
+      rgba(11, 11, 20, 0.92)
+    );
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+    padding: clamp(1.2rem, 2vw, 2rem);
+  }
+
+  .compact {
+    margin-bottom: 1.3rem;
+  }
+
+  .dashboard-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.3rem;
+  }
+
+  .profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.01);
+    flex-shrink: 0;
+  }
+
+  .profile-badge img,
+  .profile-info img {
+    display: block;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .profile-badge span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    color: var(--purple-light);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(1.7rem, 3vw, 2.5rem);
+    letter-spacing: -0.04em;
+  }
+
+  .section-copy {
+    margin-top: 0.45rem;
+    color: var(--muted);
+    max-width: 62ch;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  .dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .metric-card,
+  .profile-card {
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .metric-card {
+    padding: 1.15rem 1.2rem;
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .metric-card span,
+  .metric-card small,
+  .profile-card p,
+  .status {
+    color: var(--muted);
+  }
+
+  .metric-card strong {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .profile-card {
+    padding: 1.25rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+
+  .logout-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
+
+  .profile-card h2 {
+    margin-bottom: 0.25rem;
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    letter-spacing: -0.03em;
+  }
+
+  .status strong {
+    color: #34d399;
+  }
+
+  .logout-btn {
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.12);
+    color: #ff6b6b;
+    padding: 0.8rem 1rem;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform 0.16s ease,
+      background 0.16s ease,
+      border-color 0.16s ease,
+      color 0.16s ease;
+  }
+
+  .logout-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ff8b8b;
+  }
+
+  @media (max-width: 900px) {
+    .dashboard-topbar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dashboard-metrics {
+      grid-template-columns: 1fr;
+    }
+
+    .profile-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .profile-actions {
+      margin-left: 0;
+      width: 100%;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .logout-row {
+      margin-top: 1rem;
+    }
+  }
+</style>
