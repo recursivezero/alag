@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "astro dev",
@@ -8,7 +9,10 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.0.0",
-    "axios": "^1.7.0"
+    "astro": "^5.18.1",
+    "axios": "^1.16.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

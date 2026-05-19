@@ -183,6 +183,10 @@ export const login = async (c: Context) => {
   const { email, password } = body
   const remember = body.remember === true || body.remember === 'true'
 
+  if (!email || !password) {
+    return c.json({ message: 'Email and password are required' }, 400)
+  }
+
   const [rows]: any = await db.execute(
     'SELECT * FROM users WHERE email = ?', [email]
   )
