@@ -1,0 +1,35 @@
+name: "Branch to Issue Connector"
+description: "Automates linking branches to issues via comments and labels"
+
+# ------------------------------------------------------------------------------
+# INPUTS: These are passed from the calling repository
+# ------------------------------------------------------------------------------
+inputs:
+  issue_prefix:
+    description: "The prefix to match (e.g., RZX)"
+    required: true
+  branch_name:
+    description: "The branch name (provided by github.event.ref)"
+    required: true
+  dry_run:
+    description: "Set to true to test without making changes"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Script
+      shell: bash
+      env:
+        # Pass the automatic GitHub Token so the 'gh' CLI can authenticate
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # 1. Make the script executable
+        chmod +x ${{ github.action_path }}/sync_branch.sh
+
+        # 2. Execute the script with the provided inputs
+        ${{ github.action_path }}/sync_branch.sh \
+          "${{ inputs.branch_name }}" \
+          "${{ inputs.issue_prefix }}" \
+          "${{ inputs.dry_run }}"

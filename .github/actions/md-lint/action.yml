@@ -1,0 +1,13 @@
+name: md-lint
+description: Run npx markdownlint-cli
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        npx markdownlint-cli '**/*.md' \
+        --config './.markdownlint.json' \
+        --ignore '.github/CONTRIBUTING.md' \
+        --ignore '.github/CODE_OF_CONDUCT.md'\
+        --ignore '.github/privacy.md'\
+        --ignore 'CHANGELOG.md'

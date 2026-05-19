@@ -1,0 +1,12 @@
+name: Check PAT Secret
+on: workflow_dispatch
+
+jobs:
+  test-pat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test if PAT works
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.ISSUE_TOKEN }}" \
+            https://api.github.com/user
