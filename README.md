@@ -1,4 +1,4 @@
-# Template Repository
+# ALAG - Authentication Layer and Groups
 
 ![Template][template]
 ![License][license]
@@ -26,10 +26,10 @@ This is template repository of RecursiveZero.
 > <!-- References -->
 
 [template]: https://badgen.net/static/github/template?icon=github
-[repo]: https://github.com/recursivezero/template
-[license]: https://badgen.net/github/license/recursivezero/template
-[issues]: https://badgen.net/github/open-issues/recursivezero/template
-[PR]: https://badgen.net/github/prs/recursivezero/template
-[commits]: https://badgen.net/github/commits/recursivezero/template/main?color=green
+[repo]: https://github.com/recursivezero/alag
+[license]: https://badgen.net/github/license/recursivezero/alag
+[issues]: https://badgen.net/github/open-issues/recursivezero/alag
+[PR]: https://badgen.net/github/prs/recursivezero/alag
+[commits]: https://badgen.net/github/commits/recursivezero/alag/main?color=green
 
 
