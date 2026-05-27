@@ -1,0 +1,65 @@
+---
+import Avatar from "../ui/Avatar.astro";
+import type { PostItem } from "../../types/post";
+import { formatCounter, formatRelativeTime } from "../../services/interactionService";
+
+const { post } = Astro.props as { post: PostItem };
+---
+
+<article class="overflow-hidden rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
+  <div class="flex items-center justify-between gap-4 px-5 pt-5">
+    <div class="flex min-w-0 items-center gap-3">
+      <Avatar src={post.author.picture || "/icon.png"} alt={post.author.name} size="md" />
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <a href={`/posts/${post.slug}`} class="truncate text-sm font-semibold text-[color:var(--dashboard-text)] transition hover:text-[color:var(--dashboard-accent)]">{post.author.name}</a>
+          <span class="inline-flex rounded-full bg-[color:var(--dashboard-accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">New</span>
+        </div>
+        <p class="truncate text-xs text-[color:var(--dashboard-muted)]">{formatRelativeTime(post.createdAt)} · {post.location || "Worldwide"}</p>
+      </div>
+    </div>
+
+    <button type="button" class="rounded-full p-2 text-[color:var(--dashboard-muted)] transition hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.75" /><circle cx="12" cy="12" r="1.75" /><circle cx="12" cy="19" r="1.75" /></svg>
+    </button>
+  </div>
+
+  <a href={`/posts/${post.slug}`} class="mt-4 block px-5">
+    <img
+      src={post.imageUrl}
+      alt={post.title}
+      class="aspect-[16/9] w-full rounded-[22px] object-cover shadow-[0_12px_40px_rgba(15,23,42,0.18)]"
+    />
+  </a>
+
+  <div class="space-y-4 px-5 py-5">
+    <div>
+      <a href={`/posts/${post.slug}`} class="text-base font-semibold text-[color:var(--dashboard-text)] transition hover:text-[color:var(--dashboard-accent)]">{post.title}</a>
+      <p class="mt-2 line-clamp-2 text-sm leading-6 text-[color:var(--dashboard-muted)]">{post.caption}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--dashboard-border)] pt-4 text-sm text-[color:var(--dashboard-muted)]">
+      <div class="flex items-center gap-4">
+        <button type="button" class="inline-flex items-center gap-2 transition hover:text-rose-500" aria-pressed={post.userState?.liked ? "true" : "false"}>
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill={post.userState?.liked ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg>
+          {formatCounter(post.counts.likes)}
+        </button>
+        <button type="button" class="inline-flex items-center gap-2 transition hover:text-[color:var(--dashboard-accent)]">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.9 20.5a.8.8 0 0 1-1.3-.6V17a8 8 0 1 1 5.9 1.8 8 8 0 0 1-4.6 1.7Z" /></svg>
+          {formatCounter(post.counts.comments)}
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="button" class="inline-flex items-center gap-2 transition hover:text-[color:var(--dashboard-accent)]" aria-pressed={post.userState?.saved ? "true" : "false"}>
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill={post.userState?.saved ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.8"><path d="M7 4h10a1 1 0 0 1 1 1v16l-6-3-6 3V5a1 1 0 0 1 1-1Z" /></svg>
+          Save
+        </button>
+        <button type="button" class="inline-flex items-center gap-2 transition hover:text-[color:var(--dashboard-accent)]">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a3 3 0 1 0-2.8-4h-.2a3 3 0 0 0 0 6h.2A3 3 0 1 0 18 8ZM6 14a3 3 0 1 0 2.8 4H9a3 3 0 0 0 0-6h-.2A3 3 0 1 0 6 14Zm6-2.8 3.7-1.9m0 4.6L12 17.2" /></svg>
+          Share
+        </button>
+      </div>
+    </div>
+  </div>
+</article>

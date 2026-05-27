@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 const page = Astro && Astro.props && Astro.props.page ? Astro.props.page : "";
-const authPages = new Set(["dashboard", "users"]);
+const authPages = new Set(["dashboard"]);
 ---
 
 <html lang="en">
@@ -47,11 +47,6 @@ const authPages = new Set(["dashboard", "users"]);
             <li>
               <a href="/dashboard" class={page === "dashboard" ? "active" : ""}>
                 Dashboard
-              </a>
-            </li>
-            <li>
-              <a href="/users" class={page === "users" ? "active" : ""}>
-                User
               </a>
             </li>
           </ul>

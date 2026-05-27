@@ -1,0 +1,428 @@
+---
+import Input from "../ui/Input.astro";
+---
+
+<div id="rememberedAccountCard" class="remembered-account-card" hidden>
+  <div class="remembered-account-summary">
+    <img
+      id="rememberedAccountAvatar"
+      src="/icon.png"
+      alt="Remembered account avatar"
+    />
+    <div>
+      <p class="remembered-account-label">Remembered account</p>
+      <h3 id="rememberedAccountName">Continue as</h3>
+      <p id="rememberedAccountEmail"></p>
+    </div>
+  </div>
+  <div class="remembered-account-actions">
+    <button id="continueAsBtn" type="button" class="remembered-action primary"
+      >Continue as</button
+    >
+    <button id="switchAccountBtn" type="button" class="remembered-action"
+      >Switch account</button
+    >
+    <button id="forgetAccountBtn" type="button" class="remembered-action"
+      >Forget account</button
+    >
+  </div>
+</div>
+
+<div id="alert" class="alert"></div>
+
+<Input
+  id="email"
+  label="Email Address"
+  type="email"
+  placeholder="you@example.com"
+>
+  <svg
+    slot="icon"
+    class="ico"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+  </svg>
+</Input>
+
+<Input
+  id="password"
+  label="Password"
+  type="password"
+  placeholder="Enter your password"
+>
+  <svg
+    slot="icon"
+    class="ico"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+  </svg>
+  <button
+    slot="action"
+    class="toggle-pw"
+    id="togglePw"
+    type="button"
+    aria-label="Toggle password visibility"
+  >
+    <svg
+      id="eyeIcon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  </button>
+</Input>
+
+<div class="remember-row">
+  <label class="remember-me">
+    <input type="checkbox" id="rememberMe" />
+    <span>Remember me</span>
+  </label>
+  <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+</div>
+
+<button id="loginBtn" type="button" class="btn-primary">
+  Login
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M5 12h14M12 5l7 7-7 7"></path>
+  </svg>
+</button>
+
+<div class="divider">OR</div>
+
+<div class="btn-google" id="googleLoginBtn"></div>
+
+<script>
+  import { getApiBaseUrl } from "../../services/api";
+  import { mountGoogleIdentityButton } from "../../services/google-auth";
+  import {
+    forgetAccount,
+    getPrimaryRememberedAccount,
+    rememberAccount,
+  } from "../../services/remembered-accounts";
+  import {
+    clearUserSessionToken,
+    validateUserSession,
+    watchUserSession,
+  } from "../../services/session";
+
+  const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
+  const apiBase = getApiBaseUrl();
+  const alertEl = document.getElementById("alert");
+  const rememberedAccountCard = document.getElementById(
+    "rememberedAccountCard",
+  );
+  const rememberedAccountAvatar = document.getElementById(
+    "rememberedAccountAvatar",
+  ) as HTMLImageElement | null;
+  const rememberedAccountName = document.getElementById(
+    "rememberedAccountName",
+  );
+  const rememberedAccountEmail = document.getElementById(
+    "rememberedAccountEmail",
+  );
+  const emailInput = document.getElementById(
+    "email",
+  ) as HTMLInputElement | null;
+  const passwordInput = document.getElementById(
+    "password",
+  ) as HTMLInputElement | null;
+  const dashboardPath = "/dashboard";
+
+  const renderRememberedAccount = () => {
+    const rememberedAccount = getPrimaryRememberedAccount();
+    if (!rememberedAccount) {
+      rememberedAccountCard?.setAttribute("hidden", "true");
+      return null;
+    }
+
+    rememberedAccountCard?.removeAttribute("hidden");
+    if (rememberedAccountAvatar) {
+      rememberedAccountAvatar.src = rememberedAccount.picture || "/icon.png";
+    }
+    if (rememberedAccountName) {
+      rememberedAccountName.textContent = `Continue as ${rememberedAccount.name}`;
+    }
+    if (rememberedAccountEmail) {
+      rememberedAccountEmail.textContent = rememberedAccount.email;
+    }
+    if (emailInput) {
+      emailInput.value = rememberedAccount.email;
+    }
+
+    return rememberedAccount;
+  };
+
+  const rememberedAccount = renderRememberedAccount();
+
+  document.getElementById("continueAsBtn")?.addEventListener("click", () => {
+    const account = rememberedAccount || getPrimaryRememberedAccount();
+    if (!account) return;
+    if (emailInput) {
+      emailInput.value = account.email;
+    }
+    rememberedAccountCard?.setAttribute("hidden", "true");
+    passwordInput?.focus();
+  });
+
+  document.getElementById("switchAccountBtn")?.addEventListener("click", () => {
+    rememberedAccountCard?.setAttribute("hidden", "true");
+    if (emailInput) {
+      emailInput.focus();
+      emailInput.select();
+    }
+  });
+
+  document.getElementById("forgetAccountBtn")?.addEventListener("click", () => {
+    const account = rememberedAccount || getPrimaryRememberedAccount();
+    if (!account) return;
+    forgetAccount(account.email);
+    rememberedAccountCard?.setAttribute("hidden", "true");
+    if (emailInput) {
+      emailInput.value = "";
+      emailInput.focus();
+    }
+  });
+
+  const redirectIfAuthenticated = async () => {
+    const isValid = await validateUserSession();
+    if (isValid) {
+      window.location.replace(dashboardPath);
+    }
+  };
+
+  void redirectIfAuthenticated();
+
+  const stopWatchingSession = watchUserSession(
+    () => window.location.replace(dashboardPath),
+    () => clearUserSessionToken(),
+  );
+
+  window.addEventListener("beforeunload", () => {
+    stopWatchingSession();
+  });
+
+  const redirectAfterLogin = (data: {
+    user?: { role?: string };
+    redirectTo?: string;
+  }) => {
+    window.location.href =
+      data.redirectTo ||
+      (data?.user?.role === "admin" ? "/admin/dashboard" : dashboardPath);
+  };
+
+  function showAlert(msg: string, type: string = "error") {
+    if (!alertEl) return;
+    alertEl.textContent = msg;
+    alertEl.className = `alert ${type} show`;
+    setTimeout(() => alertEl?.classList.remove("show"), 4000);
+  }
+
+  const toggleBtn = document.getElementById("togglePw");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const pw = document.getElementById("password") as HTMLInputElement;
+      if (!pw) return;
+      const isText = pw.type === "text";
+      pw.type = isText ? "password" : "text";
+      const eyeIcon = document.getElementById("eyeIcon");
+      if (eyeIcon) {
+        eyeIcon.innerHTML = isText
+          ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+          : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      }
+    });
+  }
+
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+      const emailEl = document.getElementById("email") as HTMLInputElement;
+      const passwordEl = document.getElementById(
+        "password",
+      ) as HTMLInputElement;
+      if (!emailEl || !passwordEl) return;
+
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      const rememberEl = document.getElementById(
+        "rememberMe",
+      ) as HTMLInputElement | null;
+      const remember = !!(rememberEl && rememberEl.checked);
+
+      if (!email || !email.includes("@")) {
+        showAlert("Please enter a valid email address.");
+        return;
+      }
+      if (!password) {
+        showAlert("Please enter your password.");
+        return;
+      }
+
+      const btn = document.getElementById("loginBtn") as HTMLButtonElement;
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+
+      try {
+        const res = await fetch(`${apiBase}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password, remember }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showAlert(data.message || "Login failed.");
+          btn.disabled = false;
+          btn.innerHTML =
+            'Sign In <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+          return;
+        }
+
+        if (res.ok) {
+          if (remember) {
+            rememberAccount({
+              email,
+              name: data.user?.name || email,
+              picture: data.user?.picture || null,
+              role: data.user?.role || "user",
+            });
+          } else {
+            forgetAccount(email);
+          }
+          showAlert("Login successful! Redirecting…", "success");
+          setTimeout(() => redirectAfterLogin(data), 750);
+        }
+      } catch {
+        showAlert("Could not connect to server.");
+        btn.disabled = false;
+        btn.innerHTML =
+          'Sign In <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      }
+    });
+  }
+
+  const googleButton = document.getElementById("googleLoginBtn");
+  if (googleButton) {
+    mountGoogleIdentityButton({
+      clientId: googleClientId,
+      buttonId: "googleLoginBtn",
+      text: "signin_with",
+      fallbackLabel: "Continue with Google",
+      onCredential: async (credential: string) => {
+        try {
+          const res = await fetch(`${apiBase}/google-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ credential, remember }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showAlert(data.message || "Google login failed.");
+            return;
+          }
+
+          if (res.ok) {
+            if (remember && data.user?.email) {
+              rememberAccount({
+                email: data.user.email,
+                name: data.user?.name || data.user?.email || "Google User",
+                picture: data.user?.picture || null,
+                role: data.user?.role || "user",
+              });
+            } else if (data.user?.email) {
+              forgetAccount(data.user.email);
+            }
+            showAlert("Google login successful! Redirecting…", "success");
+            setTimeout(() => redirectAfterLogin(data), 650);
+          }
+        } catch {
+          showAlert("Could not complete Google login.");
+        }
+      },
+      onUnavailable: () =>
+        showAlert(
+          "Google sign-in is not configured. Set PUBLIC_GOOGLE_CLIENT_ID in frontend/.env.",
+        ),
+    }).catch(() => {
+      showAlert("Google sign-in could not be started.");
+    });
+  }
+</script>
+
+<style>
+  .remember-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.25rem;
+    color: var(--text);
+    font-size: 0.84rem;
+  }
+
+  .remember-me {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .remember-me input {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+    accent-color: var(--purple);
+  }
+
+  .forgot-link {
+    margin-left: auto;
+    color: var(--purple-light);
+    transition: color var(--ease);
+    white-space: nowrap;
+  }
+
+  .forgot-link:hover {
+    color: var(--text);
+  }
+
+  @media (max-width: 480px) {
+    .remember-row {
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .forgot-link {
+      margin-left: 0;
+    }
+  }
+</style>

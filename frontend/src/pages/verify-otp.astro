@@ -137,6 +137,7 @@ import MainLayout from "../layouts/MainLayout.astro";
         const res = await fetch("http://localhost:5001/api/verify-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email, otp }),
         });
         const data = await res.json();
@@ -147,8 +148,11 @@ import MainLayout from "../layouts/MainLayout.astro";
           return;
         }
 
-        showAlert("Email verified! Redirecting to login…", "success");
-        setTimeout(() => (window.location.href = "/login"), 1500);
+        showAlert("Email verified! Redirecting to dashboard…", "success");
+        setTimeout(
+          () => (window.location.href = data.redirectTo || "/dashboard"),
+          1500,
+        );
       } catch {
         showAlert("Could not connect to server.");
         verifyBtn.disabled = false;
@@ -163,6 +167,7 @@ import MainLayout from "../layouts/MainLayout.astro";
       await fetch("http://localhost:5001/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email }),
       });
       startTimer();

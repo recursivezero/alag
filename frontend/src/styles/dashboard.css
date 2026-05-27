@@ -1,0 +1,96 @@
+:root {
+  --dashboard-bg: #f5f7ff;
+  --dashboard-bg-soft: #eef2ff;
+  --dashboard-surface: rgba(255, 255, 255, 0.82);
+  --dashboard-surface-strong: rgba(255, 255, 255, 0.96);
+  --dashboard-border: rgba(15, 23, 42, 0.08);
+  --dashboard-text: #0f172a;
+  --dashboard-muted: #64748b;
+  --dashboard-accent: #7c3aed;
+  --dashboard-accent-strong: #6d28d9;
+  --dashboard-accent-soft: rgba(124, 58, 237, 0.12);
+  --dashboard-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+}
+
+.dark {
+  --dashboard-bg: #070816;
+  --dashboard-bg-soft: #0d1020;
+  --dashboard-surface: rgba(9, 11, 27, 0.82);
+  --dashboard-surface-strong: rgba(14, 16, 34, 0.96);
+  --dashboard-border: rgba(255, 255, 255, 0.08);
+  --dashboard-text: #f5f7ff;
+  --dashboard-muted: #9aa4bf;
+  --dashboard-accent: #9d82fd;
+  --dashboard-accent-strong: #b59cff;
+  --dashboard-accent-soft: rgba(157, 130, 253, 0.15);
+  --dashboard-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.18), transparent 30%),
+    radial-gradient(circle at 85% 12%, rgba(59, 130, 246, 0.12), transparent 24%),
+    linear-gradient(180deg, var(--dashboard-bg) 0%, var(--dashboard-bg-soft) 100%);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    background 220ms ease;
+}
+
+.dashboard-shell {
+  min-height: 100vh;
+  color: var(--dashboard-text);
+}
+
+.dashboard-surface {
+  background: var(--dashboard-surface);
+  border: 1px solid var(--dashboard-border);
+  box-shadow: var(--dashboard-shadow);
+  backdrop-filter: blur(22px);
+}
+
+.dashboard-surface-strong {
+  background: var(--dashboard-surface-strong);
+  border: 1px solid var(--dashboard-border);
+  box-shadow: var(--dashboard-shadow);
+  backdrop-filter: blur(22px);
+}
+
+.dashboard-border {
+  border-color: var(--dashboard-border);
+}
+
+.dashboard-muted {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-accent {
+  color: var(--dashboard-accent);
+}
+
+.dashboard-accent-bg {
+  background: var(--dashboard-accent-soft);
+}
+
+.dashboard-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--dashboard-accent) 22%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

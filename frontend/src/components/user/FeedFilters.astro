@@ -1,0 +1,26 @@
+---
+const { current = "all" } = Astro.props;
+
+const filters = ["all", "nature", "travel", "city", "food", "lifestyle", "latest"];
+---
+
+<div class="flex flex-wrap items-center gap-2">
+  {filters.map((filter) => {
+    const active = current === filter
+    const label = filter === "all" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1)
+
+    return (
+      <a
+        href={filter === "all" ? "/dashboard" : `/dashboard?filter=${filter}`}
+        class:list={[
+          "rounded-full border px-4 py-2 text-sm font-medium transition",
+          active
+            ? "border-transparent bg-[color:var(--dashboard-accent)] text-white shadow-[0_14px_30px_rgba(124,58,237,0.28)]"
+              : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-accent)] hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]",
+        ]}
+      >
+        {label}
+      </a>
+    )
+  })}
+</div>

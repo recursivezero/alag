@@ -1,0 +1,39 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminShell from "../../components/admin/AdminShell.astro";
+import AdminCard from "../../components/admin/AdminCard.astro";
+---
+
+<AdminLayout title="Waitlist | RecursiveAuth">
+  <AdminShell
+    active="waitlist"
+    title="Waitlist"
+    eyebrow="Pending Access"
+    description="Review accounts that are waiting for approval or verification before they are allowed into the system."
+    showSearch={false}
+    showNotifications={false}
+    showThemeToggle={true}
+    showAddUserAction={false}
+  >
+    <section class="grid gap-3 md:grid-cols-3">
+      <AdminCard title="Pending" value="12" description="Users waiting on review" tone="violet">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg>
+      </AdminCard>
+
+      <AdminCard title="Verified" value="34" description="Approved accounts" tone="emerald">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"></path><path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"></path></svg>
+      </AdminCard>
+
+      <AdminCard title="Expiring" value="3" description="Invites nearing timeout" tone="amber">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v4l2.5 1.5"></path><circle cx="12" cy="12" r="9"></circle></svg>
+      </AdminCard>
+    </section>
+
+    <div class="mt-4 rounded-[10px] border border-white/10 bg-[linear-gradient(180deg,#07101d,#040915)] p-5">
+      <h2 class="text-[1.05rem] font-bold tracking-[-0.03em] text-white">Recent Requests</h2>
+      <p class="mt-2 text-[14px] leading-7 text-slate-400/80">
+        This route is reserved for future approval workflows. It remains protected and will redirect unauthorized visitors back to <a class="text-violet-300 hover:text-violet-200" href="/admin">/admin</a>.
+      </p>
+    </div>
+  </AdminShell>
+</AdminLayout>

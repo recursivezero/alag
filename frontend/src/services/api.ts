@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const getApiBaseUrl = () => {
+export const getApiBaseUrl = () => {
   const configured = (import.meta as ImportMeta & {
     env?: { PUBLIC_API_BASE_URL?: string }
   }).env?.PUBLIC_API_BASE_URL?.trim()
@@ -17,5 +17,6 @@ const getApiBaseUrl = () => {
 }
 
 export default axios.create({
-  baseURL: getApiBaseUrl()
+  baseURL: getApiBaseUrl(),
+  withCredentials: true,
 })

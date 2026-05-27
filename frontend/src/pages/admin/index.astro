@@ -1,0 +1,461 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Admin Portal | RecursiveAuth">
+  <main
+    class="relative min-h-screen overflow-x-hidden overflow-y-auto text-white"
+    style="background:#04050d"
+  >
+    <div
+      class="pointer-events-none absolute inset-0"
+      style="background:
+				radial-gradient(ellipse 70% 45% at 50% 0%, rgba(90,50,200,0.28) 0%, transparent 55%),
+				radial-gradient(ellipse 50% 40% at 50% 100%, rgba(60,30,160,0.15) 0%, transparent 55%),
+				linear-gradient(180deg,#050610 0%,#060814 40%,#04050d 100%)"
+    >
+    </div>
+
+    <div
+      class="pointer-events-none absolute inset-0"
+      style="background-image:linear-gradient(rgba(255,255,255,0.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.028) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(circle at center,black 20%,transparent 75%);opacity:0.5"
+    >
+    </div>
+
+    <div
+      class="pointer-events-none absolute left-1/2 -translate-x-1/2"
+      style="top:-8rem;width:38rem;height:38rem;border-radius:50%;background:rgba(100,55,220,0.18);filter:blur(140px)"
+    >
+    </div>
+
+    <div
+      class="pointer-events-none absolute"
+      style="left:-6rem;top:40%;width:22rem;height:22rem;border-radius:50%;background:rgba(70,40,180,0.1);filter:blur(110px)"
+    >
+    </div>
+
+    <div
+      class="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-16 sm:px-6"
+    >
+      <div
+        class="w-full max-w-[520px] rounded-[28px] px-8 py-10 sm:px-10 sm:py-11"
+        style="background: rgba(14,14,26,0.82);border: 1px solid rgba(255,255,255,0.085);backdrop-filter: blur(20px) saturate(1.2);-webkit-backdrop-filter: blur(20px) saturate(1.2);box-shadow:0 40px 120px rgba(0,0,0,0.72),0 0 60px rgba(90,50,200,0.12),inset 0 1px 0 rgba(255,255,255,0.055);"
+      >
+        <div
+          class="mx-auto flex max-w-[420px] flex-col items-center text-center"
+        >
+          <div
+            class="grid place-items-center text-violet-300"
+            style="width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(160,130,255,0.3);background:rgba(100,60,220,0.14);box-shadow:0 0 28px rgba(120,80,255,0.32),inset 0 1px 0 rgba(200,180,255,0.1);"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              style="width:32px;height:32px"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+              ></path>
+              <rect x="9" y="11" width="6" height="5" rx="1"></rect>
+              <path d="M9.5 11V9.5a2.5 2.5 0 0 1 5 0V11"></path>
+            </svg>
+          </div>
+
+          <h1
+            class="mt-6 font-extrabold text-white"
+            style="font-size:2.3rem;letter-spacing:-0.025em;line-height:1.15;font-family:'Inter var',Inter,system-ui,sans-serif;"
+          >
+            Admin <span style="color:#a78bfa">Portal</span>
+          </h1>
+          <p
+            style="margin-top:0.5rem;font-size:14.5px;color:rgba(148,163,184,0.82);line-height:1.6"
+          >
+            Secure administrator access
+          </p>
+
+          <form
+            id="adminLoginForm"
+            class="mt-9 w-full text-left"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            novalidate
+          >
+            <input
+              type="text"
+              name="username_fake_x9z"
+              style="display:none"
+              tabindex="-1"
+              aria-hidden="true"
+            />
+            <input
+              type="password"
+              name="password_fake_x9z"
+              style="display:none"
+              tabindex="-1"
+              aria-hidden="true"
+            />
+
+            <div style="display:flex;flex-direction:column;gap:1.25rem">
+              <div>
+                <label
+                  for="adminEmail"
+                  style="display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#fff"
+                  >Email Address</label
+                >
+                <div
+                  id="emailWrap"
+                  style="display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;border-radius:16px;border:1px solid rgba(255,255,255,0.075);background:rgba(4,4,14,0.72);box-shadow:inset 0 1px 0 rgba(255,255,255,0.025);transition:border-color 0.18s,box-shadow 0.18s,background 0.18s;"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    style="width:16px;height:16px;flex-shrink:0;color:rgba(148,163,184,0.55)"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                  </svg>
+                  <input
+                    id="adminEmail"
+                    name="adm_em_r7k"
+                    type="email"
+                    inputmode="email"
+                    placeholder="you@example.com"
+                    autocomplete="new-password"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    required
+                    style="flex:1;height:100%;border:none;background:transparent;padding:0;font-size:15px;color:#fff;outline:none;box-shadow:none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  for="adminPassword"
+                  style="display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#fff"
+                  >Password</label
+                >
+                <div
+                  id="passwordWrap"
+                  style="display:flex;align-items:center;gap:12px;height:52px;padding:0 16px;border-radius:16px;border:1px solid rgba(255,255,255,0.075);background:rgba(4,4,14,0.72);box-shadow:inset 0 1px 0 rgba(255,255,255,0.025);transition:border-color 0.18s,box-shadow 0.18s,background 0.18s;"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    style="width:16px;height:16px;flex-shrink:0;color:rgba(148,163,184,0.55)"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  <input
+                    id="adminPassword"
+                    name="adm_pw_r7k"
+                    type="password"
+                    placeholder="Enter your password"
+                    autocomplete="new-password"
+                    autocapitalize="off"
+                    autocorrect="off"
+                    spellcheck="false"
+                    required
+                    style="flex:1;height:100%;border:none;background:transparent;padding:0;font-size:15px;color:#fff;outline:none;box-shadow:none"
+                  />
+                  <button
+                    id="togglePassword"
+                    type="button"
+                    aria-label="Toggle password visibility"
+                    style="flex-shrink:0;background:none;border:none;padding:6px;cursor:pointer;color:rgba(148,163,184,0.6);border-radius:50%;transition:color 0.15s"
+                    onmouseover="this.style.color='rgba(203,213,225,0.9)'"
+                    onmouseout="this.style.color='rgba(148,163,184,0.6)'"
+                  >
+                    <svg
+                      id="eyeIcon"
+                      viewBox="0 0 24 24"
+                      style="width:18px;height:18px;display:block"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M2.1 2.1l19.8 19.8"></path>
+                      <path d="M10.7 10.7a3 3 0 0 0 4.2 4.2"></path>
+                      <path
+                        d="M6.6 6.6A12.3 12.3 0 0 0 1 12s4 8 11 8c1.7 0 3.3-.3 4.7-.9"
+                      ></path>
+                      <path
+                        d="M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 11 8 11 8a18.7 18.7 0 0 1-3.2 4.3"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                id="loginBtn"
+                type="submit"
+                style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:54px;margin-top:4px;border:none;border-radius:16px;background:linear-gradient(90deg,#7c3aed 0%,#8b5cf6 50%,#6d5ce6 100%);box-shadow:0 14px 40px rgba(120,80,255,0.3),0 0 0 1px rgba(196,181,253,0.15);font-size:15px;font-weight:600;color:#fff;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s,opacity 0.18s"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 20px 54px rgba(120,80,255,0.42),0 0 28px rgba(120,80,255,0.3)'"
+                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 14px 40px rgba(120,80,255,0.3),0 0 0 1px rgba(196,181,253,0.15)'"
+              >
+                <span id="btnText">Unlock</span>
+                <svg
+                  id="btnArrow"
+                  viewBox="0 0 24 24"
+                  style="width:16px;height:16px;transition:transform 0.18s"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
+          </form>
+
+          <p
+            id="loginMessage"
+            style="margin-top:14px;min-height:20px;font-size:14px;color:#fca5a5"
+            aria-live="polite"
+          >
+          </p>
+
+          <div style="margin-top:28px;width:100%">
+            <div style="position:relative;display:flex;align-items:center">
+              <div
+                style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.09),transparent)"
+              >
+              </div>
+              <div
+                style="margin:0 14px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.035);display:grid;place-items:center;flex-shrink:0;"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  style="width:13px;height:13px;color:rgba(148,163,184,0.55)"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+                  ></path>
+                </svg>
+              </div>
+              <div
+                style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.09),transparent)"
+              >
+              </div>
+            </div>
+            <p
+              style="margin-top:12px;font-size:13px;color:rgba(100,116,139,0.85)"
+            >
+              Authorized personnel only
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <footer
+        style="position:absolute;left:50%;bottom:1.5rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;font-size:13px;color:rgba(100,116,139,0.7)"
+      >
+        <p>© 2026 RecursiveAuth. All rights reserved.</p>
+        <a
+          href="/"
+          style="display:flex;align-items:center;gap:6px;color:rgba(148,163,184,0.7);text-decoration:none;transition:color 0.15s,text-decoration-color 0.15s"
+          onmouseover="this.style.color='#fff';this.style.textDecoration='underline';this.style.textDecorationColor='#fff'"
+          onmouseout="this.style.color='rgba(148,163,184,0.7)';this.style.textDecoration='none'"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            style="width:13px;height:13px"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"
+            ></path>
+            <path d="M9 21V12h6v9"></path>
+          </svg>
+          Back to Home
+        </a>
+      </footer>
+    </div>
+  </main>
+</AdminLayout>
+
+<script>
+  const EYE_OPEN =
+    '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  const EYE_CLOSED =
+    '<path d="M2.1 2.1l19.8 19.8"></path><path d="M10.7 10.7a3 3 0 0 0 4.2 4.2"></path><path d="M6.6 6.6A12.3 12.3 0 0 0 1 12s4 8 11 8c1.7 0 3.3-.3 4.7-.9"></path><path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 11 8 11 8a18.7 18.7 0 0 1-3.2 4.3"></path>';
+
+  const passwordInput = document.getElementById(
+    "adminPassword",
+  ) as HTMLInputElement | null;
+  const eyeIcon = document.getElementById("eyeIcon");
+  const syncEye = () => {
+    if (!eyeIcon || !passwordInput) return;
+    eyeIcon.innerHTML =
+      passwordInput.type === "password" ? EYE_CLOSED : EYE_OPEN;
+  };
+  syncEye();
+
+  document.getElementById("togglePassword")?.addEventListener("click", () => {
+    if (!passwordInput) return;
+    passwordInput.type =
+      passwordInput.type === "password" ? "text" : "password";
+    syncEye();
+  });
+
+  const FOCUS_STYLE = {
+    borderColor: "rgba(139,92,246,0.5)",
+    background: "rgba(4,4,14,0.86)",
+    boxShadow:
+      "0 0 0 1px rgba(139,92,246,0.22),0 0 28px rgba(120,80,255,0.16),inset 0 1px 0 rgba(255,255,255,0.03)",
+  };
+  const BLUR_STYLE = {
+    borderColor: "rgba(255,255,255,0.075)",
+    background: "rgba(4,4,14,0.72)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.025)",
+  };
+
+  const apiBase = (() => {
+    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
+    if (configured) return configured.replace(/\/$/, "");
+    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
+  })();
+
+  function applyWrapStyle(wrapId: string, styles: Record<string, string>) {
+    const el = document.getElementById(wrapId) as HTMLElement | null;
+    if (!el) return;
+    Object.assign(el.style, styles);
+  }
+
+  document
+    .getElementById("adminEmail")
+    ?.addEventListener("focus", () => applyWrapStyle("emailWrap", FOCUS_STYLE));
+  document
+    .getElementById("adminEmail")
+    ?.addEventListener("blur", () => applyWrapStyle("emailWrap", BLUR_STYLE));
+  document
+    .getElementById("adminPassword")
+    ?.addEventListener("focus", () =>
+      applyWrapStyle("passwordWrap", FOCUS_STYLE),
+    );
+  document
+    .getElementById("adminPassword")
+    ?.addEventListener("blur", () =>
+      applyWrapStyle("passwordWrap", BLUR_STYLE),
+    );
+
+  const showMessage = (msg: string, isError = true) => {
+    const el = document.getElementById("loginMessage");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.color = isError ? "#fca5a5" : "#6ee7b7";
+  };
+
+  const emailInput = document.getElementById(
+    "adminEmail",
+  ) as HTMLInputElement | null;
+  const loginBtn = document.getElementById(
+    "loginBtn",
+  ) as HTMLButtonElement | null;
+  const btnText = document.getElementById("btnText");
+  const btnArrow = document.getElementById("btnArrow");
+
+  document
+    .getElementById("adminLoginForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!emailInput || !passwordInput || !loginBtn || !btnText) return;
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      loginBtn.disabled = true;
+      loginBtn.style.opacity = "0.7";
+      loginBtn.style.cursor = "not-allowed";
+      btnText.textContent = "Unlocking…";
+      if (btnArrow) btnArrow.style.display = "none";
+
+      try {
+        const res = await fetch(`${apiBase}/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMessage(data.message || "Login failed.");
+          loginBtn.disabled = false;
+          loginBtn.style.opacity = "1";
+          loginBtn.style.cursor = "pointer";
+          btnText.textContent = "Unlock";
+          if (btnArrow) btnArrow.style.display = "block";
+          return;
+        }
+
+        showMessage("Login successful. Redirecting…", false);
+        window.location.href = data.redirectTo || "/admin/dashboard";
+      } catch {
+        showMessage("Unable to connect to the backend server.");
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = "1";
+        loginBtn.style.cursor = "pointer";
+        btnText.textContent = "Unlock";
+        if (btnArrow) btnArrow.style.display = "block";
+      }
+    });
+
+  window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (emailInput) emailInput.value = "";
+        if (passwordInput) passwordInput.value = "";
+      }, 50);
+    });
+  });
+</script>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #04050d;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+</style>

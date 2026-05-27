@@ -61,3 +61,45 @@ export async function sendOTPEmail(email: string, otp: string) {
     return false
   }
 }
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  try {
+    if (!emailUser || !emailPassword) {
+      throw new Error('Email credentials are not configured')
+    }
+
+    const transporter = createTransporter()
+
+    const mailOptions = {
+      from: `RecursiveAuth <${emailUser}>`,
+      to: email,
+      subject: 'Reset your password on RecursiveAuth',
+      html: `
+        <div style="margin:0;padding:24px 12px;background:#06101f;">
+          <div style="max-width:560px;margin:0 auto;padding:0 12px;font-family:Arial,Helvetica,sans-serif;color:#e6ebff;">
+            <div style="padding:18px 0;text-align:center;font-size:20px;font-weight:700;letter-spacing:.02em;color:#ffffff;">
+              Recursive<span style="color:#8b6bff;">Auth</span>
+            </div>
+            <div style="background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(9,16,30,.98));border:1px solid rgba(255,255,255,.08);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.4);padding:40px 28px;text-align:center;">
+              <div style="width:68px;height:68px;margin:0 auto 20px;border-radius:20px;background:rgba(124,92,252,.16);display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:30px;line-height:1;">🔒</div>
+              <div style="font-size:28px;line-height:1.15;font-weight:800;color:#ffffff;margin-bottom:10px;">We got your request</div>
+              <div style="font-size:16px;line-height:1.7;color:#a8b3d1;margin:0 auto 28px;max-width:360px;">You can now reset your password.</div>
+              <a href="${resetUrl}" style="display:inline-block;padding:15px 28px;border-radius:14px;background:linear-gradient(90deg,#7c5cfc,#8f5cff);color:#ffffff;text-decoration:none;font-weight:700;box-shadow:0 14px 30px rgba(124,92,252,.28);">Reset Password</a>
+              <div style="margin-top:18px;font-size:13px;color:#a8b3d1;">This link will expire in 15 minutes.</div>
+              <div style="margin-top:28px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.6;color:#8090b8;">
+                If you didn’t request a password reset, you can ignore this email.
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+    }
+
+    await transporter.sendMail(mailOptions)
+    console.log(`[EMAIL] Password reset link sent to ${email}`)
+    return true
+  } catch (error) {
+    console.error('[EMAIL] Error sending password reset email:', error)
+    return false
+  }
+}

@@ -4,11 +4,14 @@ Recursive Login is a full-stack authentication system with email OTP verificatio
 
 ## Features
 
-- JWT authentication
-- OTP-based email verification
-- Google authentication
-- Password reset flow
-- Separate frontend and backend projects
+- JWT authentication (access tokens issued from backend)
+- OTP-based email verification and verification flow
+- Google authentication (OAuth client integration)
+- Password reset flow with email tokens
+- User dashboard (feed, liked, saved, profile, explore)
+- Post pages with per-post routes and comment section
+- Admin panel with user management and waitlist
+- Separate frontend and backend projects with clear service layers
 
 ## Tech Stack
 
@@ -23,8 +26,15 @@ Recursive Login is a full-stack authentication system with email OTP verificatio
 ## Project Structure
 
 - `frontend/` — Astro frontend application
-- `backend/` — Authentication API and database logic
-- `database/recursive.sql` — Database schema
+  - `src/pages/` — public, auth, admin, and dashboard pages (login, register, verify-otp, reset-password, welcome, index, posts/[slug], dashboard/\*)
+  - `src/components/` — UI components (admin, auth, posts, ui, user)
+  - `src/services/` — client-side API and auth services (`api.ts`, `auth.ts`, `userService.ts`, `postService.ts`, `session.ts`, `google-auth.ts`)
+  - `src/stores/` — client state (user/session, theme)
+    `backend/` — Authentication API and database logic
+  - `src/controllers/` — `auth`, `posts`, `admin`
+  - `src/routes/` — API route definitions for auth, posts, admin
+  - `src/utils/` — helpers: OTP generator, mailer, JWT, hashing, session helper
+    `database/recursive.sql` — Database schema
 
 ## Requirements
 
@@ -77,6 +87,8 @@ If needed, set the frontend API URL in `frontend/.env`:
 ```bash
 PUBLIC_API_BASE_URL=http://localhost:5001/api
 ```
+
+Note: the frontend relies on `src/services/*` to communicate with the backend; keep `PUBLIC_API_BASE_URL` aligned with the running backend.
 
 ## How to Start the Project
 
@@ -154,8 +166,10 @@ npm run preview
 ## Important Notes
 
 - Keep backend and frontend dependencies separate.
-- Use Astro packages only inside `frontend/`.
-- Keep the repo clean by removing temporary log, pid, and lock files when they are not needed.
+- The frontend implements a small service layer (`src/services`) that centralizes API requests, auth handling, session storage, and remembered-account logic — prefer adding client API calls there instead of ad-hoc fetches in pages.
+- Authentication flow summary: users register/login via the backend auth endpoints; email OTP verification and password-reset flows are supported; JWTs are issued by the backend and consumed by the frontend services for Authorization headers. The frontend also maintains a lightweight session store (`src/stores/userStore.ts`) for client state.
+- Admin UI is available under `frontend/src/pages/admin/*` and uses the backend `admin` routes for user management and waitlist operations.
+- Database migrations are manual via `database/recursive.sql`. Back up data before applying schema changes.
 
 ## Clean Repository Rules
 

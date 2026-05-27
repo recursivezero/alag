@@ -94,11 +94,13 @@ export const mountGoogleIdentityButton = async ({
     },
   })
 
+  // Render button sized to the container width so it matches other full-width buttons
+  const containerWidth = Math.max(0, Math.floor((button.clientWidth || button.getBoundingClientRect().width || 320)));
   google.accounts.id.renderButton(button, {
     theme: 'outline',
     size: 'large',
-    width: 320,
-    shape: 'pill',
+    width: containerWidth,
+    shape: 'rectangular',
     text: 'continue_with',
   })
 

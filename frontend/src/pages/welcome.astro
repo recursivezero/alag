@@ -93,17 +93,42 @@ import MainLayout from "../layouts/MainLayout.astro";
 </MainLayout>
 
 <script>
-  const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.href = "/login";
-  }
+  import {
+    clearUserSessionToken,
+    validateUserSession,
+    watchUserSession,
+  } from "../services/session";
+
+  const loginPath = "/login";
+
+  const redirectToLogin = () => {
+    clearUserSessionToken();
+    window.location.replace(loginPath);
+  };
+
+  const ensureSession = async () => {
+    const isValid = await validateUserSession();
+    if (!isValid) {
+      redirectToLogin();
+    }
+  };
+
+  void ensureSession();
+
+  const stopWatchingSession = watchUserSession(
+    () => window.location.replace("/dashboard"),
+    redirectToLogin,
+  );
+
+  window.addEventListener("beforeunload", () => {
+    stopWatchingSession();
+  });
+
   async function fetchUserData() {
     try {
       const res = await fetch("http://localhost:5001/api/user", {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       const data = await res.json();
       if (res.ok && data.user) {
@@ -124,8 +149,8 @@ import MainLayout from "../layouts/MainLayout.astro";
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("token");
-      window.location.href = "/";
+      clearUserSessionToken();
+      window.location.replace("/");
     });
   }
 

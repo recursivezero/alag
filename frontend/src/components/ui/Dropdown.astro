@@ -1,0 +1,16 @@
+---
+const { open = true, align = "right", class: className = "" } = Astro.props;
+---
+
+<div
+  class:list={[
+    "absolute top-full z-50 mt-3 w-72 rounded-3xl border border-white/10 bg-[color:var(--dashboard-surface-strong)] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl transition-all duration-200 dark:border-white/10",
+    align === "right" ? "right-0" : "left-0",
+    open
+      ? "opacity-100 visible translate-y-0"
+      : "pointer-events-none invisible -translate-y-2 opacity-0",
+    className,
+  ]}
+>
+  <slot />
+</div>

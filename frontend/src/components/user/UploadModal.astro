@@ -1,0 +1,52 @@
+---
+import Modal from "../ui/Modal.astro";
+---
+
+<Modal id="upload-modal">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Upload</p>
+      <h2 class="mt-2 text-2xl font-semibold text-[color:var(--dashboard-text)]">Share a new image</h2>
+      <p class="mt-2 max-w-xl text-sm leading-6 text-[color:var(--dashboard-muted)]">
+        Upload modal shell ready for your existing media flow. Hook this into your media endpoint when needed.
+      </p>
+    </div>
+    <button type="button" data-upload-close class="rounded-full border border-[color:var(--dashboard-border)] px-3 py-2 text-sm text-[color:var(--dashboard-muted)] transition hover:bg-[color:var(--dashboard-accent-soft)]">Close</button>
+  </div>
+
+  <div class="mt-6 grid gap-4 rounded-[24px] border border-dashed border-[color:var(--dashboard-border)] p-6">
+    <div class="rounded-[22px] bg-[color:var(--dashboard-accent-soft)] px-4 py-6 text-center text-sm text-[color:var(--dashboard-muted)]">
+      Drag and drop area or file picker placeholder.
+    </div>
+    <div class="grid gap-3 md:grid-cols-2">
+      <input type="text" placeholder="Caption" class="rounded-2xl border border-[color:var(--dashboard-border)] bg-transparent px-4 py-3 text-sm text-[color:var(--dashboard-text)] outline-none transition focus:border-[color:var(--dashboard-accent)]" />
+      <input type="text" placeholder="Location" class="rounded-2xl border border-[color:var(--dashboard-border)] bg-transparent px-4 py-3 text-sm text-[color:var(--dashboard-text)] outline-none transition focus:border-[color:var(--dashboard-accent)]" />
+    </div>
+    <button type="button" class="inline-flex w-fit items-center rounded-full bg-[color:var(--dashboard-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--dashboard-accent-strong)]">Upload image</button>
+  </div>
+</Modal>
+
+<script type="module">
+  const modal = document.getElementById("upload-modal");
+  const openButtons = document.querySelectorAll("[data-upload-trigger]");
+  const closeButton = document.querySelector("[data-upload-close]");
+
+  const show = () => {
+    modal?.classList.remove("pointer-events-none", "invisible", "opacity-0");
+    modal?.classList.add("opacity-100", "visible");
+  };
+
+  const hide = () => {
+    modal?.classList.add("pointer-events-none", "invisible", "opacity-0");
+    modal?.classList.remove("opacity-100", "visible");
+  };
+
+  openButtons.forEach((button) => button.addEventListener("click", show));
+  closeButton?.addEventListener("click", hide);
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) hide();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hide();
+  });
+</script>

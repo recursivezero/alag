@@ -14,3 +14,9 @@ export const loginUser = (data: { email: string; password: string }) =>
 
 export const googleLogin = (data: { credential: string }) =>
   api.post('/google-login', data)
+
+export const forgotPassword = (data: { email: string }) =>
+  api.post('/forgot-password', data)
+
+export const resetPassword = (data: { token: string; newPassword: string }) =>
+  api.post('/reset-password', data)

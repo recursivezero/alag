@@ -1,0 +1,42 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  autocomplete?: string;
+  required?: boolean;
+  name?: string;
+  value?: string;
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  type = "text",
+  placeholder = "",
+  autocomplete = "off",
+  required = false,
+  name,
+  value,
+  class: className = "",
+} = Astro.props as Props;
+---
+
+<div class:list={["field", className]}>
+  <label for={id}>{label}</label>
+  <div class="input-wrap">
+    <slot name="icon" />
+    <input
+      id={id}
+      name={name || id}
+      type={type}
+      placeholder={placeholder}
+      autocomplete={autocomplete}
+      required={required}
+      value={value}
+    />
+    <slot name="action" />
+  </div>
+</div>

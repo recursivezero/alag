@@ -1,0 +1,17 @@
+---
+import PostCard from "./PostCard.astro";
+import type { PostItem } from "../../types/post";
+
+const { posts } = Astro.props as { posts: PostItem[] };
+---
+
+<div class="grid gap-6">
+  {posts.length ? (
+    posts.map((post) => <PostCard post={post} />)
+  ) : (
+    <div class="rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-10 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+      <p class="text-lg font-semibold text-[color:var(--dashboard-text)]">No posts yet</p>
+      <p class="mt-2 text-sm text-[color:var(--dashboard-muted)]">Your feed will appear here once the database contains posts.</p>
+    </div>
+  )}
+</div>

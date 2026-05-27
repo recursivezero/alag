@@ -1,0 +1,42 @@
+---
+import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import Sidebar from "../../components/user/Sidebar.astro";
+import Topbar from "../../components/user/Topbar.astro";
+import Feed from "../../components/user/Feed.astro";
+import FeedFilters from "../../components/user/FeedFilters.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchFeedPosts } from "../../services/postService";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+const posts = currentUser.id
+  ? await fetchFeedPosts({ cookieHeader, userId: currentUser.id })
+  : [];
+---
+
+<UserDashboardLayout title="Explore | RecursiveAuth">
+  <div class="dashboard-shell">
+    <Sidebar currentPath={Astro.url.pathname} user={currentUser} />
+    <div class="min-h-screen lg:pl-72">
+      <Topbar user={currentUser} />
+      <main class="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8">
+        <h1
+          class="text-4xl font-semibold tracking-tight text-[color:var(--dashboard-text)]"
+        >
+          Explore
+        </h1>
+        <p
+          class="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          Browse the newest public posts from the database.
+        </p>
+        <section class="mt-6 grid gap-5">
+          <FeedFilters current="latest" />
+          <Feed posts={posts} />
+        </section>
+      </main>
+    </div>
+  </div>
+  <UploadModal />
+</UserDashboardLayout>
