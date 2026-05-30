@@ -1,13 +1,21 @@
 import { getApiBaseUrl } from './api'
 
-export const getUserSessionToken = () => {
-  return ''
-}
+const clientAuthStorageKeys = ['token', 'alag-user-profile']
 
-export const setUserSessionToken = () => undefined
+const clearClientAuthState = () => {
+  if (typeof window === 'undefined') return
+
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    for (const key of clientAuthStorageKeys) {
+      storage.removeItem(key)
+    }
+  }
+}
 
 const clearSessionToken = async (path: string) => {
   if (typeof window === 'undefined') return
+
+  clearClientAuthState()
 
   try {
     await fetch(`${getApiBaseUrl()}${path}`, {

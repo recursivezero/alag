@@ -4,23 +4,41 @@ const { current = "all" } = Astro.props;
 const filters = ["all", "nature", "travel", "city", "food", "lifestyle", "latest"];
 ---
 
-<div class="flex flex-wrap items-center gap-2">
+<div class=" feed-filter-btn flex flex-wrap items-center gap-2">
   {filters.map((filter) => {
-    const active = current === filter
-    const label = filter === "all" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1)
+    const active = current === filter;
+    const label = filter === "all" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1);
 
     return (
       <a
         href={filter === "all" ? "/dashboard" : `/dashboard?filter=${filter}`}
         class:list={[
-          "rounded-full border px-4 py-2 text-sm font-medium transition",
+          "filter-btn rounded-full border text-sm font-medium transition-all duration-200",
           active
-            ? "border-transparent bg-[color:var(--dashboard-accent)] text-white shadow-[0_14px_30px_rgba(124,58,237,0.28)]"
-              : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-accent)] hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]",
+            ? "filter-btn--active border-transparent bg-[color:var(--dashboard-accent)] text-white shadow-[0_6px_20px_rgba(124,58,237,0.30)]"
+            : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-accent)] hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]",
         ]}
       >
         {label}
       </a>
-    )
+    );
   })}
 </div>
+
+<style>
+  /*
+    !important required — Tailwind preflight resets padding:0 on <a> tags.
+    Same issue as search input, topbar, and page-grid.
+    14px top/bottom, 18px left/right gives pill-shaped buttons.
+  */
+  .filter-btn {
+    padding-top:    8px  !important;
+    padding-bottom: 8px  !important;
+    padding-left:   18px !important;
+    padding-right:  18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+    margin-top: 20px !important;
+  }
+</style>

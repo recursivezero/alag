@@ -54,7 +54,6 @@ export async function sendOTPEmail(email: string, otp: string) {
     }
 
     await transporter.sendMail(mailOptions)
-    console.log(`[EMAIL] OTP sent to ${email}`)
     return true
   } catch (error) {
     console.error('[EMAIL] Error sending OTP:', error)
@@ -96,7 +95,6 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     }
 
     await transporter.sendMail(mailOptions)
-    console.log(`[EMAIL] Password reset link sent to ${email}`)
     return true
   } catch (error) {
     console.error('[EMAIL] Error sending password reset email:', error)

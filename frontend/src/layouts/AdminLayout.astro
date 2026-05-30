@@ -10,6 +10,16 @@ const { title = "Admin Panel" } = Astro.props;
 
 <html lang="en" class="h-full">
   <head>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('admin_theme');
+          var theme = t === 'light' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-admin-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
@@ -194,6 +204,17 @@ const { title = "Admin Panel" } = Astro.props;
     color: #0f172a !important;
   }
 
+  html[data-admin-theme="dark"] [data-admin-surface="table"] th,
+  html[data-admin-theme="dark"] [data-admin-surface="table"] td,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] h2,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] p,
+  html[data-admin-theme="dark"] [data-admin-surface="stat-card"] p,
+  html[data-admin-theme="dark"] [data-admin-surface="stat-card"] h2,
+  html[data-admin-theme="dark"] [data-admin-surface="filters"] label,
+  html[data-admin-theme="dark"] [data-admin-surface="filters"] p {
+    color: #f1f5f9 !important;
+  }
+
   html[data-admin-theme="light"] [data-admin-surface="topbar"] input,
   html[data-admin-theme="light"] [data-admin-surface="topbar"] button,
   html[data-admin-theme="light"] [data-admin-surface="sidebar"] button,
@@ -218,7 +239,7 @@ const { title = "Admin Panel" } = Astro.props;
 
   html[data-admin-theme="light"] [data-theme-toggle] {
     background: #ffffff !important;
-    color: #f59e0b !important; /* sun color */
+    color: #f59e0b !important;
     border: 1px solid #000000 !important;
     box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06) !important;
   }
@@ -348,7 +369,6 @@ const { title = "Admin Panel" } = Astro.props;
     color: #0f172a !important;
   }
 
- 
   html[data-admin-theme="dark"]
     [data-admin-surface="stat-card"]
     [class*="border-violet-"] {
@@ -537,7 +557,7 @@ const { title = "Admin Panel" } = Astro.props;
     padding: 0.5rem !important;
   }
 
-  /* ICON neon for light theme as well (so icons stay neon-colored regardless of theme) */
+  /* ICON neon for light theme as well */
   html[data-admin-theme="light"]
     [data-admin-surface="stat-card"]
     [data-admin-icon][data-tone="violet"] {
@@ -621,5 +641,44 @@ const { title = "Admin Panel" } = Astro.props;
   [data-admin-surface="stat-card"] h2 {
     font-size: 2rem !important;
     line-height: 1 !important;
+  }
+
+  /* === DARK MODE SURFACE FIXES (no revert - explicit dark backgrounds) === */
+  html[data-admin-theme="dark"] [data-admin-surface="sidebar"] {
+    background: linear-gradient(180deg, rgba(5,10,24,0.98), rgba(3,7,18,0.98)) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="shell"] {
+    background: #040b17 !important;
+    color: #f1f5f9 !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="topbar"] {
+    background: rgba(9, 14, 32, 0.92) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="main"] {
+    background: rgba(4, 11, 23, 0.98) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"],
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] {
+    background: rgba(9, 14, 32, 0.95) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] thead tr,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] thead tr {
+    background: rgba(14, 20, 40, 0.98) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] th,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] th {
+    color: #cbd5e1 !important;
+    background: rgba(14, 20, 40, 0.95) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] td,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] td {
+    color: #e2e8f0 !important;
   }
 </style>

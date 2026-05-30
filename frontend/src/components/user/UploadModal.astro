@@ -3,7 +3,7 @@ import Modal from "../ui/Modal.astro";
 ---
 
 <Modal id="upload-modal">
-  <div class="flex items-start justify-between gap-4">
+  <div class="conatiner1 flex items-start justify-between gap-4">
     <div>
       <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Upload</p>
       <h2 class="mt-2 text-2xl font-semibold text-[color:var(--dashboard-text)]">Share a new image</h2>
@@ -50,3 +50,8 @@ import Modal from "../ui/Modal.astro";
     if (event.key === "Escape") hide();
   });
 </script>
+<style>
+  .conatiner1{
+    padding: 20px;
+  }
+</style>

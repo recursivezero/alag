@@ -1,41 +1,106 @@
 ---
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
-import Sidebar from "../../components/user/Sidebar.astro";
-import Topbar from "../../components/user/Topbar.astro";
 import UploadModal from "../../components/user/UploadModal.astro";
 import { fetchCurrentUserOrGuest } from "../../services/userService";
 
 const cookieHeader = Astro.request.headers.get("cookie") || "";
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
+const buildAvatarFallback = (name: string) => {
+  const initials =
+    (name || "User")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0] || "")
+      .join("")
+      .toUpperCase() || "U";
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Profile avatar fallback">
+      <defs>
+        <linearGradient id="avatar-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8b5cf6" />
+          <stop offset="100%" stop-color="#d946ef" />
+        </linearGradient>
+      </defs>
+      <circle cx="60" cy="60" r="60" fill="url(#avatar-bg)" />
+      <circle cx="60" cy="48" r="22" fill="rgba(255,255,255,0.92)" />
+      <path d="M26 103c6.8-19 23.2-30 34-30s27.2 11 34 30" fill="rgba(255,255,255,0.92)" />
+      <text x="60" y="68" text-anchor="middle" font-size="30" font-family="Arial, sans-serif" font-weight="700" fill="#5b21b6">${initials}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const profileAvatarFallback = buildAvatarFallback(
+  currentUser.fullName || currentUser.name || "User",
+);
+
+const profileUsername =
+  currentUser.username ||
+  (currentUser.fullName || currentUser.name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "") ||
+  "Not set";
 ---
 
-<UserDashboardLayout title="Profile | RecursiveAuth">
-  <div class="dashboard-shell">
-    <Sidebar currentPath={Astro.url.pathname} user={currentUser} />
-    <div class="min-h-screen lg:pl-72">
-      <Topbar user={currentUser} />
-      <main class="mx-auto w-full max-w-4xl px-4 py-6 lg:px-8">
-        <div class="rounded-[36px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] p-6 shadow-[var(--dashboard-shadow)] lg:p-8">
-          <h1 class="text-4xl font-semibold tracking-tight text-[color:var(--dashboard-text)]">Profile</h1>
-          <div class="mt-6 grid gap-4 rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Account</p>
-              <h2 class="mt-2 text-2xl font-semibold text-[color:var(--dashboard-text)]">{currentUser.name}</h2>
-            </div>
-            <dl class="grid gap-4 md:grid-cols-2">
-              <div>
-                <dt class="text-sm text-[color:var(--dashboard-muted)]">Email</dt>
-                <dd class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{currentUser.email}</dd>
-              </div>
-              <div>
-                <dt class="text-sm text-[color:var(--dashboard-muted)]">Phone</dt>
-                <dd class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{currentUser.phoneNumber || "Not set"}</dd>
-              </div>
-            </dl>
-          </div>
+<UserDashboardLayout title="Profile | RecursiveAuth" user={currentUser}>
+  <main class="mx-auto w-full max-w-4xl px-4 py-6 lg:px-8">
+    <div class="profile-card-container rounded-[36px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] p-6 shadow-[var(--dashboard-shadow)] lg:p-8">
+      <div class="profile-hero flex flex-col gap-5 rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Account</p>
+          <h1 data-dashboard-profile-full-name class="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--dashboard-text)]">{currentUser.fullName || currentUser.name}</h1>
+          <p data-dashboard-profile-username class="mt-2 text-base font-medium text-[color:var(--dashboard-muted)]">@{profileUsername}</p>
         </div>
-      </main>
+        <div data-dashboard-profile-avatar class="shrink-0">
+          <img
+            src={currentUser.picture || profileAvatarFallback}
+            alt="Profile avatar"
+            class="h-24 w-24 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
+          />
+        </div>
+      </div>
+
+      <div class="profile-account-card mt-6 grid gap-4 rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6">
+        <dl class="grid gap-4 md:grid-cols-2">
+          <div>
+            <dt class="text-sm text-[color:var(--dashboard-muted)]">Full Name</dt>
+            <dd data-dashboard-profile-name class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{currentUser.fullName || currentUser.name}</dd>
+          </div>
+          <div>
+            <dt class="text-sm text-[color:var(--dashboard-muted)]">Username</dt>
+            <dd data-dashboard-profile-username class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{profileUsername}</dd>
+          </div>
+          <div>
+            <dt class="text-sm text-[color:var(--dashboard-muted)]">Email Address</dt>
+            <dd data-dashboard-profile-email class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{currentUser.email}</dd>
+          </div>
+          <div>
+            <dt class="text-sm text-[color:var(--dashboard-muted)]">Phone Number</dt>
+            <dd data-dashboard-profile-phone class="mt-1 text-base font-medium text-[color:var(--dashboard-text)]">{currentUser.phoneNumber || "Not set"}</dd>
+          </div>
+          <div class="md:col-span-2">
+            <dt class="text-sm text-[color:var(--dashboard-muted)]">Bio</dt>
+            <dd data-dashboard-profile-bio class="mt-1 text-base font-medium leading-7 text-[color:var(--dashboard-text)]">{currentUser.bio || "Not set"}</dd>
+          </div>
+        </dl>
+      </div>
     </div>
-  </div>
+  </main>
   <UploadModal />
 </UserDashboardLayout>
+
+<style>
+  .profile-card-container{
+    padding: 20px;
+  }
+
+  .profile-account-card{
+    margin-top: 30px;
+    padding: 20px;
+  }
+</style>

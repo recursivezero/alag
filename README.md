@@ -8,7 +8,7 @@ Recursive Login is a full-stack authentication system with email OTP verificatio
 - OTP-based email verification and verification flow
 - Google authentication (OAuth client integration)
 - Password reset flow with email tokens
-- User dashboard (feed, liked, saved, profile, explore)
+- User dashboard (feed, liked, saved, profile, settings, explore)
 - Post pages with per-post routes and comment section
 - Admin panel with user management and waitlist
 - Separate frontend and backend projects with clear service layers
@@ -26,7 +26,7 @@ Recursive Login is a full-stack authentication system with email OTP verificatio
 ## Project Structure
 
 - `frontend/` — Astro frontend application
-  - `src/pages/` — public, auth, admin, and dashboard pages (login, register, verify-otp, reset-password, welcome, index, posts/[slug], dashboard/\*)
+  - `src/pages/` — public, auth, admin, and dashboard pages (login, register, verify-otp, reset-password, welcome, index, posts/[slug], dashboard/feed, dashboard/profile, dashboard/settings, dashboard/explore, dashboard/liked, dashboard/saved)
   - `src/components/` — UI components (admin, auth, posts, ui, user)
   - `src/services/` — client-side API and auth services (`api.ts`, `auth.ts`, `userService.ts`, `postService.ts`, `session.ts`, `google-auth.ts`)
   - `src/stores/` — client state (user/session, theme)

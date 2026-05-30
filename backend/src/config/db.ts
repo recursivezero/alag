@@ -39,6 +39,11 @@ await db.execute(`
     last_used_at DATETIME NULL,
     user_agent VARCHAR(255) NULL,
     ip_address VARCHAR(64) NULL,
+    device_name VARCHAR(100) NULL,
+    browser_name VARCHAR(100) NULL,
+    location VARCHAR(255) NULL,
+    login_at_ist VARCHAR(64) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Active Now',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_session_hash (session_hash),
@@ -46,6 +51,38 @@ await db.execute(`
     INDEX idx_revoked_at (revoked_at)
   )
 `)
+
+const [userSessionColumns]: any = await db.execute(`
+  SELECT COLUMN_NAME
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_sessions'
+`)
+
+const existingUserSessionColumns = new Set(
+  userSessionColumns.map((row: { COLUMN_NAME: string }) => row.COLUMN_NAME)
+)
+
+if (!existingUserSessionColumns.has('device_name')) {
+  await db.execute('ALTER TABLE user_sessions ADD COLUMN device_name VARCHAR(100) NULL AFTER ip_address')
+}
+
+if (!existingUserSessionColumns.has('browser_name')) {
+  await db.execute('ALTER TABLE user_sessions ADD COLUMN browser_name VARCHAR(100) NULL AFTER device_name')
+}
+
+if (!existingUserSessionColumns.has('location')) {
+  await db.execute('ALTER TABLE user_sessions ADD COLUMN location VARCHAR(255) NULL AFTER browser_name')
+}
+
+if (!existingUserSessionColumns.has('login_at_ist')) {
+  await db.execute('ALTER TABLE user_sessions ADD COLUMN login_at_ist VARCHAR(64) NULL AFTER location')
+}
+
+if (!existingUserSessionColumns.has('status')) {
+  await db.execute("ALTER TABLE user_sessions ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Active Now' AFTER login_at_ist")
+}
+
+await db.execute("UPDATE user_sessions SET status = CASE WHEN revoked_at IS NULL THEN 'Active Now' ELSE 'Logged Out' END")
 
 const [userColumns]: any = await db.execute(`
   SELECT COLUMN_NAME
@@ -79,8 +116,20 @@ if (!existingColumns.has('name')) {
   await db.execute('ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL')
 }
 
+if (!existingColumns.has('username')) {
+  await db.execute('ALTER TABLE users ADD COLUMN username VARCHAR(100) NULL AFTER name')
+}
+
 if (!existingColumns.has('phone_number')) {
   await db.execute('ALTER TABLE users ADD COLUMN phone_number VARCHAR(30) NULL AFTER name')
+}
+
+if (!existingColumns.has('bio')) {
+  await db.execute('ALTER TABLE users ADD COLUMN bio TEXT NULL AFTER phone_number')
+}
+
+if (!existingColumns.has('picture')) {
+  await db.execute('ALTER TABLE users ADD COLUMN picture TEXT NULL AFTER bio')
 }
 
 await db.execute('UPDATE users SET full_name = COALESCE(full_name, name) WHERE full_name IS NULL')

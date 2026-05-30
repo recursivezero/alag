@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "../styles/tailwind.css";
 import "../styles/dashboard.css";
+import postThemeScriptUrl from "../scripts/post-theme.ts?url";
 const { title = "Post" } = Astro.props;
 ---
 
@@ -14,11 +15,7 @@ const { title = "Post" } = Astro.props;
     <link rel="icon" type="image/png" href="/icon2.png" sizes="1024x1024" />
   </head>
   <body class="dashboard-shell antialiased transition-colors duration-300">
-    <script type="module">
-      import { initializeThemeStore } from "../stores/themeStore";
-
-      initializeThemeStore();
-    </script>
+    <script type="module" src={postThemeScriptUrl}></script>
     <slot />
   </body>
 </html>

@@ -84,7 +84,7 @@ const tooltipClass = (key) =>
     id="sidebar"
     data-admin-surface="sidebar"
     data-sidebar-default-active={resolvedActive}
-    class="relative z-40 flex w-[250px] flex-col overflow-visible h-full rounded-[10px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,10,24,0.98),rgba(3,7,18,0.98))] p-3 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 -translate-x-[120%] lg:translate-x-0"
+    class="relative z-40 flex w-[250px] flex-col overflow-visible h-full rounded-[10px] border border-white/10 bg-[linear-gradient(180deg,rgba(5,10,24,0.98),rgba(3,7,18,0.98))] p-3 shadow-[0_25px_80px_rgba(0,0,0,0.45)] transition-all duration-300 translate-x-0"
   >
     <div class="sidebar-header flex items-center justify-between">
       <div class="sidebar-header-brand flex items-center gap-3 min-w-0">
@@ -397,7 +397,7 @@ const tooltipClass = (key) =>
     const applyMainContentOffset = () => {
       const mainContent = document.getElementById("mainContent");
       if (!mainContent) return;
-      // Layout is driven by flex width now, so keep content padding untouched.
+
       mainContent.style.paddingLeft = "";
     };
 

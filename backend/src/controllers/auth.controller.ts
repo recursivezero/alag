@@ -37,40 +37,112 @@ const getClientIp = (c: Context) =>
 const getSessionExpiry = (remember: boolean) =>
   new Date(Date.now() + (remember ? USER_SESSION_REMEMBER_MAX_AGE : USER_SESSION_MAX_AGE) * 1000)
 
-const logGooglePayload = (payload: any) => {
-  console.log({
-    email_verified: payload?.email_verified,
-    nbf: payload?.nbf,
-    name: payload?.name,
-    picture: payload?.picture,
-    given_name: payload?.given_name,
-    family_name: payload?.family_name,
-    iat: payload?.iat,
-    exp: payload?.exp,
-    jti: payload?.jti,
-  })
+const privateIpPatterns = [
+  /^10\./,
+  /^127\./,
+  /^192\.168\./,
+  /^172\.(1[6-9]|2\d|3[0-1])\./,
+  /^::1$/,
+  /^fc00:/i,
+  /^fe80:/i,
+]
+
+const isPrivateIp = (ip: string) => privateIpPatterns.some((pattern) => pattern.test(ip))
+
+const formatSessionDateIst = (input = new Date()) =>
+  `${new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(input)} IST`
+
+const getDeviceName = (userAgent: string | null) => {
+  const ua = (userAgent || '').toLowerCase()
+  if (!ua) return 'Unknown device'
+  if (ua.includes('iphone')) return 'iPhone'
+  if (ua.includes('ipad')) return 'iPad'
+  if (ua.includes('android')) return 'Android'
+  if (ua.includes('macintosh') || ua.includes('mac os x')) return 'MacBook'
+  if (ua.includes('windows')) return 'Windows PC'
+  if (ua.includes('linux')) return 'Linux PC'
+  return 'Unknown device'
 }
 
-const logAuthProfile = (profile: {
-  email: string
-  name: string
-  picture?: string | null
-  provider: string
-  emailVerified: boolean
-  extra?: Record<string, unknown>
-}) => {
-  console.log({
-    email: profile.email,
-    name: profile.name,
-    picture: profile.picture,
-    auth_provider: profile.provider,
-    emailVerified: profile.emailVerified,
-    ...(profile.extra || {}),
-  })
+const getBrowserName = (userAgent: string | null) => {
+  const ua = userAgent || ''
+  if (/Brave\//i.test(ua)) return 'Brave'
+  if (/Edg\//i.test(ua)) return 'Edge'
+  if (/OPR\//i.test(ua) || /Opera/i.test(ua)) return 'Opera'
+  if (/Firefox\//i.test(ua)) return 'Firefox'
+  if (/Chrome\//i.test(ua) && !/Edg\//i.test(ua) && !/OPR\//i.test(ua) && !/Brave\//i.test(ua)) return 'Chrome'
+  if (/Safari\//i.test(ua) && !/Chrome\//i.test(ua) && !/Chromium\//i.test(ua) && !/Edg\//i.test(ua)) return 'Safari'
+  return 'Unknown browser'
+}
+
+const getRequestLocation = (c: Context) => {
+  const city = c.req.header('cf-ipcity') || c.req.header('x-vercel-ip-city') || ''
+  const state =
+    c.req.header('cf-region') ||
+    c.req.header('cf-ipregion') ||
+    c.req.header('x-vercel-ip-country-region') ||
+    c.req.header('x-vercel-ip-region') ||
+    ''
+  const country =
+    c.req.header('cf-ipcountry') ||
+    c.req.header('x-vercel-ip-country') ||
+    c.req.header('x-country') ||
+    ''
+
+  const parts = [city, state, country].map((part) => part.trim()).filter(Boolean)
+  return parts.length ? parts.join(', ') : ''
+}
+
+const lookupLocationFromIp = async (ip: string | null) => {
+  if (!ip || isPrivateIp(ip)) return ''
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 1500)
+
+  try {
+    const response = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
+      signal: controller.signal,
+    })
+
+    if (!response.ok) return ''
+
+    const payload: any = await response.json()
+    if (!payload?.success) return ''
+
+    const parts = [payload.city, payload.region, payload.country]
+      .map((part) => (typeof part === 'string' ? part.trim() : ''))
+      .filter(Boolean)
+
+    return parts.length ? parts.join(', ') : ''
+  } catch {
+    return ''
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+const resolveSessionLocation = async (c: Context) => {
+  const headerLocation = getRequestLocation(c)
+  if (headerLocation) return headerLocation
+
+  const ipLocation = await lookupLocationFromIp(getClientIp(c))
+  return ipLocation || 'Unknown location'
 }
 
 const normalizeEmail = (email: unknown) =>
   typeof email === 'string' ? email.trim() : ''
+
+const passwordMeetsPolicy = (password: string) =>
+  password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password)
 
 const getRegistrationConflict = async (email: string) => {
   const [existingUsers]: any = await db.execute(
@@ -84,6 +156,38 @@ const getRegistrationConflict = async (email: string) => {
 
   return Boolean(existingUsers.length || pendingUsers.length)
 }
+
+const isValidEmail = (email: string) => /.+@.+\..+/.test(email)
+
+const normalizeOptionalField = (value: unknown) => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? trimmed : null
+}
+
+const buildUserProfilePayload = (user: {
+  id: number
+  name: string
+  fullName?: string | null
+  username?: string | null
+  email: string
+  phoneNumber?: string | null
+  bio?: string | null
+  picture?: string | null
+  role?: string
+  isDisabled?: boolean
+}) => ({
+  id: user.id,
+  name: user.fullName || user.name,
+  fullName: user.fullName || user.name,
+  username: user.username || null,
+  email: user.email,
+  phoneNumber: user.phoneNumber || null,
+  bio: user.bio || null,
+  picture: user.picture || null,
+  role: user.role,
+  isDisabled: user.isDisabled,
+})
 
 const getActiveUserFromAuthHeader = async (c: Context) => {
   const authHeader = c.req.header('Authorization')
@@ -108,8 +212,12 @@ const getActiveUserFromAuthHeader = async (c: Context) => {
     SELECT
       u.id,
       COALESCE(u.full_name, u.name) AS name,
+      COALESCE(u.full_name, u.name) AS fullName,
+      u.username,
       u.email,
       u.phone_number AS phoneNumber,
+      u.bio,
+      u.picture,
       u.role,
       u.is_disabled AS isDisabled,
       s.id AS sessionId,
@@ -133,7 +241,7 @@ const getActiveUserFromAuthHeader = async (c: Context) => {
   if (user.isDisabled) {
     if (user.sessionId) {
       await db.execute(
-        'UPDATE user_sessions SET revoked_at = NOW() WHERE id = ? AND revoked_at IS NULL',
+        "UPDATE user_sessions SET revoked_at = NOW(), status = 'Logged Out' WHERE id = ? AND revoked_at IS NULL",
         [user.sessionId]
       )
     }
@@ -150,7 +258,7 @@ const getActiveUserFromAuthHeader = async (c: Context) => {
   }
 
   return {
-    user,
+    user: buildUserProfilePayload(user),
     session: {
       id: user.sessionId,
       rememberMe: Boolean(user.rememberMe),
@@ -162,6 +270,13 @@ const getActiveUserFromAuthHeader = async (c: Context) => {
 const issueUserSession = async (c: Context, userId: number, remember = false) => {
   const sessionToken = createSessionToken()
   const signedToken = createToken(userId, remember, sessionToken)
+  const userAgent = c.req.header('user-agent') || null
+  const sessionMetadata = {
+    deviceName: getDeviceName(userAgent),
+    browserName: getBrowserName(userAgent),
+    location: await resolveSessionLocation(c),
+    loginAtIst: formatSessionDateIst(),
+  }
 
   await db.execute(
     `
@@ -171,16 +286,26 @@ const issueUserSession = async (c: Context, userId: number, remember = false) =>
       remember_me,
       expires_at,
       user_agent,
-      ip_address
-    ) VALUES (?, ?, ?, ?, ?, ?)
+      ip_address,
+      device_name,
+      browser_name,
+      location,
+      login_at_ist,
+      status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       userId,
       hashSessionToken(sessionToken),
       remember,
       getSessionExpiry(remember),
-      c.req.header('user-agent') || null,
+      userAgent,
       getClientIp(c),
+      sessionMetadata.deviceName,
+      sessionMetadata.browserName,
+      sessionMetadata.location,
+      sessionMetadata.loginAtIst,
+      'Active Now',
     ]
   )
 
@@ -232,18 +357,6 @@ export const register = async (c: Context) => {
     await db.execute('DELETE FROM pending_registrations WHERE email = ?', [normalizedEmail])
     return c.json({ message: 'Failed to send OTP email' }, 500)
   }
-
-  console.log('Registration OTP sent')
-  logAuthProfile({
-    email: normalizedEmail,
-    name,
-    provider: 'email',
-    emailVerified: false,
-    extra: {
-      pendingVerification: true,
-      otpStatus: 'sent',
-    },
-  })
 
   return c.json({ message: 'OTP sent to your email' })
 }
@@ -369,19 +482,6 @@ export const login = async (c: Context) => {
 
   const token = await issueUserSession(c, user.id, remember)
 
-  console.log('Email login success')
-  logAuthProfile({
-    email: user.email,
-    name: user.name,
-    picture: user.picture || null,
-    provider: user.auth_provider || 'email',
-    emailVerified: Boolean(user.is_verified),
-    extra: {
-      remember,
-      userId: user.id,
-    },
-  })
-
   return c.json({
     token,
     user: {
@@ -480,20 +580,6 @@ export const googleLogin = async (c: Context) => {
         ]
       )
 
-      logGooglePayload(payload)
-      logAuthProfile({
-        email,
-        name,
-        picture,
-        provider: 'google',
-        emailVerified: true,
-        extra: {
-          googleSub,
-          userId: user.id,
-        },
-      })
-      console.log("Existing user logged in")
-
       const token = await issueUserSession(c, user.id, remember)
 
       return c.json({
@@ -534,20 +620,6 @@ export const googleLogin = async (c: Context) => {
       ]
     )
 
-    logGooglePayload(payload)
-    logAuthProfile({
-      email,
-      name,
-      picture,
-      provider: 'google',
-      emailVerified: true,
-      extra: {
-        googleSub,
-        userId: result.insertId,
-      },
-    })
-    console.log("New Google user created")
-
     const token = await issueUserSession(c, result.insertId, remember)
 
     return c.json({
@@ -583,6 +655,139 @@ export const getUser = async (c: Context) => {
   return c.json({ user: authResult.user })
 }
 
+export const updateUserProfile = async (c: Context) => {
+  const authResult = await getActiveUserFromAuthHeader(c)
+  if (authResult.error) {
+    return authResult.error
+  }
+
+  const body = await c.req.json()
+  const fullName = typeof body.fullName === 'string' ? body.fullName.trim() : ''
+  const username = typeof body.username === 'string' ? body.username.trim() : ''
+  const email = typeof body.email === 'string' ? body.email.trim() : ''
+  const phoneNumber = normalizeOptionalField(body.phoneNumber)
+  const bio = normalizeOptionalField(body.bio)
+  const picture =
+    body.picture === null
+      ? null
+      : typeof body.picture === 'string'
+        ? body.picture.trim() || null
+        : undefined
+
+  if (!fullName || !username || !email) {
+    return c.json({ message: 'Full name, username, and email are required.' }, 400)
+  }
+
+  if (!isValidEmail(email)) {
+    return c.json({ message: 'Enter a valid email address.' }, 400)
+  }
+
+  const [conflictRows]: any = await db.execute(
+    `
+    SELECT id
+    FROM users
+    WHERE id <> ?
+      AND (email = ? OR username = ?)
+    LIMIT 1
+    `,
+    [authResult.user.id, email, username]
+  )
+
+  if (conflictRows.length) {
+    return c.json({ message: 'Email or username is already in use.' }, 409)
+  }
+
+  await db.execute(
+    `
+    UPDATE users
+    SET
+      full_name = ?,
+      name = ?,
+      username = ?,
+      email = ?,
+      phone_number = ?,
+      bio = ?,
+      picture = ?
+    WHERE id = ?
+    `,
+    [
+      fullName,
+      fullName,
+      username,
+      email,
+      phoneNumber,
+      bio,
+      picture === undefined ? authResult.user.picture || null : picture,
+      authResult.user.id,
+    ]
+  )
+
+  if (authResult.session?.id) {
+    await db.execute('UPDATE user_sessions SET last_used_at = NOW() WHERE id = ?', [authResult.session.id])
+  }
+
+  const updatedUser = buildUserProfilePayload({
+    ...authResult.user,
+    name: fullName,
+    fullName,
+    username,
+    email,
+    phoneNumber,
+    bio,
+    picture: picture === undefined ? authResult.user.picture || null : picture,
+  })
+
+  return c.json({
+    message: 'Profile updated successfully.',
+    user: updatedUser,
+  })
+}
+
+export const listUserSessions = async (c: Context) => {
+  const authResult = await getActiveUserFromAuthHeader(c)
+  if (authResult.error) {
+    return authResult.error
+  }
+
+  const [rows]: any = await db.execute(
+    `
+    SELECT
+      id,
+      device_name AS deviceName,
+      browser_name AS browserName,
+      location,
+      login_at_ist AS loginAtIst,
+      status,
+      revoked_at AS revokedAt,
+      expires_at AS expiresAt,
+      created_at AS createdAt
+    FROM user_sessions
+    WHERE user_id = ?
+    ORDER BY created_at DESC, id DESC
+    `,
+    [authResult.user.id]
+  )
+
+  const sessions = rows.map((session: any) => {
+    const isRevoked = Boolean(session.revokedAt)
+    const expiresAt = session.expiresAt ? new Date(session.expiresAt) : null
+    const isExpired = expiresAt ? expiresAt.getTime() <= Date.now() : false
+
+    return {
+      id: session.id,
+      deviceName: session.deviceName || 'Unknown device',
+      browserName: session.browserName || 'Unknown browser',
+      location: session.location || 'Unknown location',
+      loginAtIst:
+        session.loginAtIst ||
+        (session.createdAt ? formatSessionDateIst(new Date(session.createdAt)) : 'Unknown time'),
+      status: isRevoked || isExpired ? 'Logged Out' : session.status || 'Active Now',
+    }
+  })
+
+  return c.json({ sessions })
+}
+
 export const logout = async (c: Context) => {
   const authHeader = c.req.header('Authorization')
   const cookieToken = getCookie(c, USER_SESSION_COOKIE)
@@ -594,7 +799,7 @@ export const logout = async (c: Context) => {
     const payload = verifyToken(token)
     if (payload?.sid) {
       await db.execute(
-        'UPDATE user_sessions SET revoked_at = NOW() WHERE session_hash = ? AND revoked_at IS NULL',
+        "UPDATE user_sessions SET revoked_at = NOW(), status = 'Logged Out' WHERE session_hash = ? AND revoked_at IS NULL",
         [hashSessionToken(payload.sid)]
       )
     }
@@ -642,7 +847,6 @@ export const forgotPassword = async (c: Context) => {
     return c.json({ message: 'Failed to send reset link' }, 500)
   }
 
-  console.log('Password reset link sent')
   return c.json({ message: 'If an account exists, a reset link has been sent.' })
 }
 
@@ -675,8 +879,70 @@ export const resetPassword = async (c: Context) => {
   await db.execute('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = ?', [resetRecord.id])
   await db.execute('DELETE FROM password_reset_tokens WHERE email = ?', [resetRecord.email])
   await db.execute(
-    'UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = (SELECT id FROM users WHERE email = ?) AND revoked_at IS NULL',
+    "UPDATE user_sessions SET revoked_at = NOW(), status = 'Logged Out' WHERE user_id = (SELECT id FROM users WHERE email = ?) AND revoked_at IS NULL",
     [resetRecord.email]
+  )
+
+  return c.json({ message: 'Password updated successfully' })
+}
+
+export const updatePassword = async (c: Context) => {
+  const authResult = await getActiveUserFromAuthHeader(c)
+  if (authResult.error) {
+    return authResult.error
+  }
+
+  const body = await c.req.json()
+  const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : ''
+  const newPassword = typeof body.newPassword === 'string' ? body.newPassword : ''
+
+  if (!currentPassword || !newPassword) {
+    return c.json({ message: 'All password fields are required.' }, 400)
+  }
+
+  if (!passwordMeetsPolicy(newPassword)) {
+    return c.json(
+      {
+        message:
+          'You must create a password with at least 8 characters and include uppercase, lowercase, and a number.',
+      },
+      400,
+    )
+  }
+
+  const [rows]: any = await db.execute(
+    'SELECT id, password FROM users WHERE id = ? LIMIT 1',
+    [authResult.user.id],
+  )
+
+  if (!rows.length) {
+    return c.json({ message: 'User not found' }, 404)
+  }
+
+  const user = rows[0]
+  const hasPassword = typeof user.password === 'string' && user.password.length > 0
+  if (!hasPassword) {
+    return c.json({ message: 'Current password is incorrect' }, 401)
+  }
+
+  const isValid = await comparePassword(currentPassword, user.password)
+  if (!isValid) {
+    return c.json({ message: 'Current password is incorrect' }, 401)
+  }
+
+  const hashedPassword = await hashPassword(newPassword)
+  await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id])
+
+  if (authResult.session?.id) {
+    await db.execute(
+      "UPDATE user_sessions SET revoked_at = NOW(), status = 'Logged Out' WHERE user_id = ? AND id <> ? AND revoked_at IS NULL",
+      [user.id, authResult.session.id],
+    )
+  }
+
+  await db.execute(
+    'UPDATE user_sessions SET last_used_at = NOW() WHERE id = ?',
+    [authResult.session?.id],
   )
 
   return c.json({ message: 'Password updated successfully' })
@@ -787,7 +1053,7 @@ export const disableUser = async (c: Context) => {
   )
 
   await db.execute(
-    'UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+    "UPDATE user_sessions SET revoked_at = NOW(), status = 'Logged Out' WHERE user_id = ? AND revoked_at IS NULL",
     [id]
   )
 

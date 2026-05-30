@@ -1,46 +1,187 @@
 ---
+
 ---
 
+<!--
+  ThemeToggle — matches reference exactly
+  [icon-box] Dark Mode  [violet pill toggle]
+  Toggle pill: moves right = dark mode ON (violet)
+-->
 <button
   type="button"
   data-theme-toggle
-  class="flex min-h-[58px] w-full items-center gap-3 rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] px-3 py-3 text-left text-sm font-medium text-[color:var(--dashboard-text)] transition-all hover:border-violet-400/25 hover:bg-[color:var(--dashboard-accent-soft)]"
+  class="theme-btn group flex items-center overflow-hidden
+         rounded-[14px] border w-full text-left
+         transition-all duration-200"
 >
-  <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-violet-400/20 bg-violet-500/10 text-[color:var(--dashboard-accent)] shadow-[0_0_18px_rgba(124,58,237,0.12)]">
-    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-      <path d="M12 3a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1Z" />
-      <path d="M12 19a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1Z" />
-      <path d="M4.22 4.22a1 1 0 0 1 1.41 0l.7.7a1 1 0 1 1-1.41 1.41l-.7-.7a1 1 0 0 1 0-1.41Zm12.74 12.74a1 1 0 0 1 1.41 0l.7.7a1 1 0 0 1-1.41 1.41l-.7-.7a1 1 0 0 1 0-1.41Z" />
-      <path d="M3 12a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm15 0a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1Z" />
-      <path d="M6.34 17.66a1 1 0 0 1 0 1.41l-.7.7a1 1 0 0 1-1.41-1.41l.7-.7a1 1 0 0 1 1.41 0Zm12.74-12.74a1 1 0 0 1 0 1.41l-.7.7a1 1 0 1 1-1.41-1.41l.7-.7a1 1 0 0 1 1.41 0Z" />
-      <circle cx="12" cy="12" r="4" />
+  <!-- Icon box — sun/moon swap -->
+  <span
+    class="ti-icon grid shrink-0 place-items-center rounded-[12px] border
+               transition-all duration-200"
+  >
+    <!-- Moon — shown in light mode -->
+    <svg
+      data-theme-icon-moon
+      class="ti-svg ti-moon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.9"
+      stroke-linecap="round"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+    <!-- Sun — shown in dark mode -->
+    <svg
+      data-theme-icon-sun
+      class="ti-svg ti-sun"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.9"
+      stroke-linecap="round"
+    >
+      <circle cx="12" cy="12" r="4"></circle>
+      <path
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+      ></path>
     </svg>
   </span>
-  <span class="min-w-0 flex-1">
-    <span class="block text-sm font-semibold text-[color:var(--dashboard-text)]">Theme</span>
-    <span class="block text-xs text-[color:var(--dashboard-muted)]">Light / Dark</span>
+
+  <!-- Label -->
+  <span
+    data-theme-toggle-label
+    class="ti-label min-w-0 flex-1 overflow-hidden whitespace-nowrap"
+  >
+    <span
+      class="ti-title block text-[13.5px] font-medium leading-none"
+      style="color:var(--sb-text)">Dark Mode</span
+    >
   </span>
-  <span class="pointer-events-none ml-auto inline-flex h-6 w-11 items-center rounded-full border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-accent-soft)] p-0.5 transition-colors">
-    <span class="theme-toggle-knob h-5 w-5 rounded-full bg-[color:var(--dashboard-accent)] shadow-[0_0_12px_rgba(124,58,237,0.34)] transition-transform duration-300"></span>
+
+  <!-- Toggle pill — the key visual from the reference images -->
+  <span
+    data-theme-toggle-switch
+    class="ti-pill pointer-events-none inline-flex shrink-0 items-center
+           rounded-full p-[3px] transition-colors duration-300"
+  >
+    <span
+      data-theme-toggle-knob
+      class="ti-knob rounded-full transition-transform duration-300"></span>
   </span>
 </button>
 
 <style>
-  [data-theme-toggle] .theme-toggle-knob {
-    transform: translateX(0);
+  /* ── Button layout ── */
+  .theme-btn {
+    gap: 12px;
+    padding: 8px 10px;
+    min-height: 50px;
+    align-items: center;
+    background: var(--sb-item-bg);
+    border-color: var(--sb-border);
+    color: var(--sb-text);
   }
 
-  html.dark [data-theme-toggle] .theme-toggle-knob {
-    transform: translateX(1.25rem);
+  .theme-btn:hover {
+    background: var(--sb-item-hover-bg);
+    border-color: rgba(109, 65, 217, 0.18);
+  }
+
+  /* ── Icon box ── */
+  .ti-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: var(--sb-item-bg);
+    border-color: var(--sb-border);
+    color: var(--sb-muted);
+  }
+
+  .theme-btn:hover .ti-icon {
+    background: rgba(109, 65, 217, 0.1);
+    border-color: rgba(109, 65, 217, 0.22);
+    color: var(--sb-text);
+  }
+
+  /* Sun/moon in dark mode: show sun; in light: show moon */
+  html.dark .ti-sun {
+    display: block;
+  }
+  html.dark .ti-moon {
+    display: none;
+  }
+  html:not(.dark) .ti-sun {
+    display: none;
+  }
+  html:not(.dark) .ti-moon {
+    display: block;
+  }
+
+  /* ── SVG size ── */
+  .ti-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── Toggle pill — matches reference exactly ── */
+  .ti-pill {
+    width: 52px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  html.dark .ti-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Pill becomes violet when dark mode is ON */
+  html.dark .ti-pill {
+    background: rgb(109, 65, 217);
+    border-color: rgb(124, 80, 232);
+  }
+
+  /* ── Knob ── */
+  .ti-knob {
+    width: 22px;
+    height: 22px;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transform: translateX(0);
+    transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* In dark mode: knob moves right — matches reference */
+  html.dark [data-theme-toggle] .ti-knob {
+    transform: translateX(24px);
+  }
+
+  /* ══ Collapsed ══ */
+  :global([data-user-sidebar][data-collapsed="true"]) .theme-btn {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .ti-label {
+    display: none !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .ti-pill {
+    display: none !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .ti-icon {
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--sb-item-bg) !important;
+    border-color: var(--sb-border) !important;
   }
 </style>
-
-<script type="module">
-  import { toggleTheme } from "../../stores/themeStore";
-
-  const button = document.querySelector("[data-theme-toggle]");
-
-  button?.addEventListener("click", () => {
-    toggleTheme();
-  });
-</script>

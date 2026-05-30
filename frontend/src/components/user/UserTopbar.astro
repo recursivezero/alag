@@ -1,0 +1,274 @@
+---
+import ProfileDropdown from "./ProfileDropdown.astro";
+import type { UserProfile } from "../../types/user";
+
+const { user } = Astro.props as { user: UserProfile };
+---
+
+<header class="topbar sticky top-0 z-40 flex-shrink-0">
+  <div
+    class="topbar-inner mx-auto flex h-[64px] w-full items-center gap-3 px-6 lg:px-8"
+  >
+    <!-- LEFT SPACER — pushes search bar toward center -->
+    <!-- ── SEARCH BAR — fixed max width, centered ── -->
+    <label class="relative w-full h-[40px] max-w-[650px] flex-shrink-0">
+      <span class="sr-only">Search images, users or descriptions</span>
+
+      <div
+        class="search-box relative flex h-[42px] items-center rounded-[13px]"
+      >
+        <!-- Search icon -->
+        <svg
+          class="pointer-events-none absolute left-[13px] top-1/2 h-[14px] w-[14px]
+                 -translate-y-1/2 flex-shrink-0 text-[color:var(--search-placeholder)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+
+        <!-- Input -->
+        <input
+          type="search"
+          placeholder="Search images, users or descriptions..."
+          class="search-input h-full w-full bg-transparent text-[13px] font-medium
+                 text-[color:var(--dashboard-text)] outline-none
+                 placeholder:text-[color:var(--search-placeholder)]"
+        />
+
+        <!-- ⌘K badge -->
+        <div
+          class="absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-[3px]
+                    rounded-[7px] border border-[color:var(--dashboard-border)]
+                    bg-[color:var(--dashboard-surface)] px-[7px] py-[3px]
+                    text-[11px] font-medium text-[color:var(--dashboard-muted)] md:flex"
+        >
+        </div>
+      </div>
+    </label>
+
+    <!-- RIGHT SPACER — balances left spacer so search stays centered -->
+    <div class="flex-1 flex justify-end">
+      <!-- ── RIGHT ACTIONS ── -->
+      <div class="flex items-center gap-3">
+        <!-- THEME TOGGLE -->
+        <button
+          type="button"
+          data-topbar-theme-btn
+          aria-label="Toggle theme"
+          class="topbar-icon-btn grid h-10 w-10 place-items-center rounded-[12px]"
+        >
+          <svg
+            data-theme-icon-sun
+            class="h-[17px] w-[17px]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+            ></path>
+          </svg>
+          <svg
+            data-theme-icon-moon
+            class="h-[17px] w-[17px]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- UPLOAD -->
+        <button
+          type="button"
+          data-upload-trigger
+          class="upload-btn inline-flex h-10 min-w-[100px] items-center justify-center
+                 gap-[6px] rounded-[12px] px-5
+                 text-[13px] font-semibold text-white
+                 transition-all duration-200 active:scale-[0.97]"
+        >
+          <svg
+            class="h-[14px] w-[14px] flex-shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+          >
+            <path d="M12 16V4"></path>
+            <path d="m7 9 5-5 5 5"></path>
+            <path d="M4 20h16"></path>
+          </svg>
+          <span>Upload</span>
+        </button>
+
+        <!-- NOTIFICATIONS -->
+        <button
+          type="button"
+          aria-label="Notifications"
+          class="topbar-icon-btn relative grid h-10 w-10 place-items-center rounded-[12px]"
+        >
+          <svg
+            class="h-[17px] w-[17px]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"
+            ></path>
+            <path d="M9 17a3 3 0 0 0 6 0"></path>
+          </svg>
+          <span
+            class="absolute right-[7px] top-[7px] flex h-[15px] min-w-[15px] items-center
+                       justify-center rounded-full bg-violet-500 px-[3px]
+                       text-[9px] font-bold text-white leading-none"
+          >
+            1
+          </span>
+        </button>
+
+        <!-- PROFILE -->
+        <div
+          class="profile-chip rounded-[14px] border border-[color:var(--dashboard-border)]
+                    bg-[color:var(--dashboard-surface)] p-1 shadow-[var(--dashboard-shadow)]"
+        >
+          <ProfileDropdown user={user} />
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script is:inline>
+  (function () {
+    const btn = document.querySelector("[data-topbar-theme-btn]");
+    if (!btn) return;
+
+    function updateIcons() {
+      const isDark = document.documentElement.classList.contains("dark");
+      const sun = btn.querySelector("[data-theme-icon-sun]");
+      const moon = btn.querySelector("[data-theme-icon-moon]");
+      if (sun) sun.style.display = isDark ? "block" : "none";
+      if (moon) moon.style.display = isDark ? "none" : "block";
+    }
+    updateIcons();
+
+    document.addEventListener("alag-theme-change", updateIcons);
+
+    btn.addEventListener("click", function () {
+      document.dispatchEvent(new CustomEvent("theme-toggle-request"));
+    });
+  })();
+</script>
+
+<style>
+  .topbar {
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--topbar-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  @media (min-width: 1024px) {
+    .topbar-inner {
+      padding-left: 32px !important; /* lg:px-8 = 32px */
+      padding-right: 32px !important;
+    }
+  }
+
+  .search-box {
+    background: var(--search-bg);
+    border: 1px solid var(--search-border);
+    box-shadow: var(--dashboard-shadow);
+    overflow: hidden;
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .search-box:focus-within {
+    border-color: color-mix(in srgb, var(--dashboard-accent) 40%, transparent);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--dashboard-accent) 12%, transparent),
+      var(--dashboard-shadow);
+  }
+
+  /* Padding beats Tailwind preflight reset */
+  .search-input {
+    padding-left: 40px !important;
+    padding-right: 70px !important;
+  }
+
+  .search-input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-input[type="search"]::-ms-clear {
+    display: none;
+  }
+
+  .topbar-icon-btn {
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface);
+    color: var(--dashboard-muted);
+    transition:
+      border-color 200ms,
+      background 200ms,
+      color 200ms;
+  }
+
+  .topbar-icon-btn:hover {
+    border-color: color-mix(in srgb, var(--dashboard-accent) 30%, transparent);
+    background: var(--dashboard-accent-soft);
+    color: var(--dashboard-accent);
+  }
+
+  html.dark [data-theme-icon-sun] {
+    display: block !important;
+  }
+  html.dark [data-theme-icon-moon] {
+    display: none !important;
+  }
+  html:not(.dark) [data-theme-icon-sun] {
+    display: none !important;
+  }
+  html:not(.dark) [data-theme-icon-moon] {
+    display: block !important;
+  }
+
+  .upload-btn {
+    background: linear-gradient(
+      135deg,
+      var(--dashboard-accent) 0%,
+      var(--dashboard-accent-strong) 100%
+    );
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--dashboard-accent) 38%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  }
+
+  .upload-btn:hover {
+    box-shadow:
+      0 6px 22px color-mix(in srgb, var(--dashboard-accent) 50%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    transform: translateY(-1px);
+  }
+
+  .profile-chip {
+    backdrop-filter: blur(12px);
+
+    padding-left:3px;
+    padding-top:4px;
+    padding-right:3px;
+
+
+  }
+</style>

@@ -1,10 +1,9 @@
 ---
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
-import Sidebar from "../../components/user/Sidebar.astro";
-import Topbar from "../../components/user/Topbar.astro";
 import Feed from "../../components/user/Feed.astro";
 import FeedFilters from "../../components/user/FeedFilters.astro";
 import UploadModal from "../../components/user/UploadModal.astro";
+
 import { fetchCurrentUserOrGuest } from "../../services/userService";
 import { fetchFeedPosts } from "../../services/postService";
 
@@ -15,40 +14,112 @@ const posts = currentUser.id
   : [];
 ---
 
-<UserDashboardLayout title="Dashboard | RecursiveAuth">
-  <div class="dashboard-shell">
-    <Sidebar currentPath={Astro.url.pathname} user={currentUser} />
+<UserDashboardLayout title="Dashboard | RecursiveAuth" user={currentUser}>
+  <div
+    class="page-grid mx-auto w-full max-w-[1400px] px-5 py-6 lg:px-6 lg:py-7"
+  >
+    <!-- ══════════════ LEFT / MAIN FEED ══════════════ -->
+    <section class="feed-col min-w-0">
+      <!-- Hero greeting -->
+      <div class="mb-6">
+        <p
+          class="text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-400"
+        >
+          Welcome back, {currentUser.name}
+        </p>
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
+          Your social feed
+        </h1>
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          Discover fresh image posts, save what inspires you, and stay connected
+          with the people and moments you follow.
+        </p>
+      </div>
 
-    <div class="min-h-screen lg:pl-72">
-      <Topbar user={currentUser} />
+      <!-- Category filters -->
+      <div class="mb-5">
+        <FeedFilters current="all" />
+      </div>
 
-      <main class="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8">
-        <div class="max-w-3xl">
-          <p
-            class="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-accent)]"
-          >
-            Welcome back, {currentUser.name}
-          </p>
-          <h1
-            class="mt-2 text-4xl font-semibold tracking-tight text-[color:var(--dashboard-text)]"
-          >
-            Your social feed
-          </h1>
-          <p
-            class="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--dashboard-muted)]"
-          >
-            Discover fresh image posts, save what inspires you, and keep your
-            dashboard focused on the people and moments you follow.
-          </p>
-        </div>
+      <!-- Posts feed -->
+      <Feed posts={posts} />
+    </section>
 
-        <section class="mt-6 grid gap-5">
-          <FeedFilters current="all" />
-          <Feed posts={posts} />
-        </section>
-      </main>
-    </div>
+    <!-- ══════════════ RIGHT SIDEBAR ══════════════ -->
   </div>
 
   <UploadModal />
 </UserDashboardLayout>
+
+<style>
+  /* ── 2-column layout ── */
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 24px !important;
+    padding-bottom: 32px !important;
+  }
+
+  @media (min-width: 1024px) {
+    .page-grid {
+      padding-left: 28px !important;
+      padding-right: 28px !important;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .page-grid {
+      grid-template-columns: minmax(0, 1fr) 308px;
+      gap: 2rem;
+    }
+  }
+
+  /* ── Profile card glass ── */
+  .profile-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--dashboard-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ── Divider ── */
+  .section-divider {
+    height: 1px;
+    background: var(--dashboard-border);
+    margin: 0 1.25rem;
+  }
+
+  /* ── Stat chips ── */
+  .stat-chip {
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+  }
+
+  /* ── Tag chips ── */
+  .tag-chip {
+    border-color: var(--dashboard-border);
+    background: var(--dashboard-surface);
+  }
+  .tag-chip:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    background: var(--dashboard-accent-soft);
+    color: var(--dashboard-accent);
+  }
+
+  /* ── Section heading ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dashboard-muted);
+  }
+</style>

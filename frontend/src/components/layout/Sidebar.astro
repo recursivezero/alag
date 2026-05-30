@@ -1,0 +1,497 @@
+---
+import SidebarItem from "./SidebarItem.astro";
+import SidebarFooter from "./SidebarFooter.astro";
+import type { UserProfile } from "../../types/user";
+
+const { currentPath = "/dashboard", user } = Astro.props as {
+  currentPath?: string;
+  user: UserProfile;
+};
+
+const normalizedPath = currentPath.replace(/\/+$/, "") || "/";
+
+const navItems = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: `<path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-5a2 2 0 0 0-4 0v5H4a1 1 0 0 1-1-1V9.5Z" fill="currentColor" stroke="none"/>`,
+  },
+  {
+    label: "Explore",
+    href: "/dashboard/explore",
+    icon: `<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2Zm3.5 5.1-5.2 2a1 1 0 0 0-.6.6l-2 5.2a.5.5 0 0 0 .65.65l5.2-2a1 1 0 0 0 .6-.6l2-5.2a.5.5 0 0 0-.65-.65ZM12 11a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z" fill="currentColor" stroke="none"/>`,
+  },
+  {
+    label: "My Profile",
+    href: "/dashboard/profile",
+    icon: `<path d="M7  14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6" fill="currentColor" stroke="none"/>`,
+  },
+  {
+    label: "Saved",
+    href: "/dashboard/saved",
+    icon: `<path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1Z" fill="currentColor" stroke="none"/>`,
+  },
+  {
+    label: "Liked",
+    href: "/dashboard/liked",
+    icon: `<path d="M12 20s-9-5.2-9-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.8-9 11-9 11Z" fill="currentColor" stroke="none"/>`,
+  },
+  {
+    label: "Settings",
+    href: "/dashboard/settings",
+    icon: `<path fill-rule="evenodd" clip-rule="evenodd" d="M10.3 2.3a2 2 0 0 1 3.4 0l.8 1.3 1.5-.2a2 2 0 0 1 2.2 2.2l-.2 1.5 1.3.8a2 2 0 0 1 0 3.4l-1.3.8.2 1.5a2 2 0 0 1-2.2 2.2l-1.5-.2-.8 1.3a2 2 0 0 1-3.4 0l-.8-1.3-1.5.2a2 2 0 0 1-2.2-2.2l.2-1.5-1.3-.8a2 2 0 0 1 0-3.4l1.3-.8-.2-1.5A2 2 0 0 1 8 3.4l1.5.2.8-1.3ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" fill="currentColor" stroke="none"/>`,
+  },
+];
+
+const isActive = (href: string) => normalizedPath === href;
+---
+
+<aside
+  id="userSidebar"
+  data-user-sidebar
+  data-collapsed="false"
+  class="sb-root hidden h-screen shrink-0 md:flex m flex-col"
+>
+  <div class="sb-outer flex h-full flex-col">
+    <div class="sb-glass flex h-full flex-col">
+      <!-- ══════════ HEADER ══════════ -->
+      <div class="sb-header">
+        <!-- Shield logo box — solid violet gradient -->
+        <div
+          class="sb-shield flex items-center justify-center grid shrink-0 place-items-center"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="sb-shield-svg"
+          >
+            <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+            ></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+        </div>
+
+        <!-- Brand title -->
+        <div class="sb-brand-text min-w-0 flex-1">
+          <h2 class="truncate sb-brand-title">RecursiveAuth</h2>
+        </div>
+
+        <!-- Hamburger toggle -->
+        <button
+          id="sbToggleBtn"
+          type="button"
+          aria-label="Toggle sidebar"
+          class="sb-hamburger grid shrink-0 place-items-center"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.1"
+            stroke-linecap="round"
+            class="sb-ham-svg"
+          >
+            <path d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      <!-- /HEADER -->
+
+      <!-- ══════════ NAV ══════════ -->
+      <nav
+        class="sb-nav flex flex-1 flex-col overflow-y-auto overflow-x-hidden"
+      >
+        {
+          navItems.map((item) => (
+            <SidebarItem
+              href={item.href}
+              label={item.label}
+              icon={item.icon}
+              active={isActive(item.href)}
+            />
+          ))
+        }
+      </nav>
+
+      <!-- ══════════ FOOTER ══════════ -->
+      <div class="sb-footer">
+        <SidebarFooter />
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script is:inline>
+  (function () {
+    var EW = 260;
+    var CW = 132;
+    var KEY = "sb-collapsed";
+
+    var sb = document.getElementById("userSidebar");
+    var btn = document.getElementById("sbToggleBtn");
+    if (!sb) return;
+
+    var saved = localStorage.getItem(KEY);
+    var collapsed =
+      saved !== null ? saved === "true" : window.innerWidth < 1280;
+
+    function applyWidth(w) {
+      sb.style.width = w + "px";
+      sb.style.minWidth = w + "px";
+      sb.style.maxWidth = w + "px";
+    }
+
+    function applyState() {
+      sb.dataset.collapsed = String(collapsed);
+      applyWidth(collapsed ? CW : EW);
+      if (btn)
+        btn.setAttribute(
+          "aria-label",
+          collapsed ? "Expand sidebar" : "Collapse sidebar",
+        );
+      localStorage.setItem(KEY, String(collapsed));
+    }
+
+    applyState();
+
+    if (btn)
+      btn.addEventListener("click", function () {
+        collapsed = !collapsed;
+        applyState();
+      });
+  })();
+</script>
+
+<style>
+  .sidebar-item:hover .sidebar-icon {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  /* ══════════════════════════════════════════════
+     CSS VARIABLES — light / dark
+  ══════════════════════════════════════════════ */
+  #userSidebar {
+    --sb-bg: rgba(255, 255, 255, 0.96);
+    --sb-border: rgba(15, 23, 42, 0.08);
+    --sb-divider: rgba(15, 23, 42, 0.06);
+
+    --sb-text: #0f172a;
+
+    --sb-muted: rgba(15, 23, 42, 0.45);
+
+    --sb-item-bg: rgba(15, 23, 42, 0.03);
+
+    --sb-item-hover-bg: color-mix(in srgb, var(--dashboard-text) 4%, transparent);
+    --sb-item-hover-border: color-mix(in srgb, var(--dashboard-text) 10%, var(--sb-border));
+
+    --sb-active-bg: color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
+    --sb-active-border: color-mix(in srgb, var(--dashboard-accent) 34%, transparent);
+
+    --sb-active-icon-bg: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--dashboard-accent) 26%, white),
+      color-mix(in srgb, var(--dashboard-accent-strong) 16%, transparent)
+    );
+
+    --sb-active-icon-border: color-mix(in srgb, var(--dashboard-accent) 46%, transparent);
+
+    --sb-active-icon-shadow: 0 0 18px color-mix(in srgb, var(--dashboard-accent) 24%, transparent);
+
+    --sb-active-text: var(--dashboard-accent-strong);
+
+    --sb-active-icon-color: #111827;
+
+    /* FIXED COLORS */
+    --sb-icon-color: rgba(15, 23, 42, 0.74);
+    --sb-label-color: rgba(15, 23, 42, 0.72);
+    --sb-label-active: var(--dashboard-accent-strong);
+
+    --sb-tooltip-bg: color-mix(in srgb, var(--dashboard-accent) 10%, var(--sb-bg));
+    --sb-tooltip-border: color-mix(in srgb, var(--dashboard-accent) 28%, var(--sb-border));
+    --sb-tooltip-shadow: 0 12px 30px color-mix(in srgb, var(--dashboard-accent) 14%, rgba(15, 23, 42, 0.14));
+    --sb-tooltip-text: var(--dashboard-accent-strong);
+
+    /* Shield */
+    --sb-shield-bg: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--dashboard-accent) 22%, transparent),
+      color-mix(in srgb, var(--dashboard-accent-strong) 10%, transparent)
+    );
+
+    --sb-shield-border: color-mix(in srgb, var(--dashboard-accent) 34%, transparent);
+
+    --sb-shield-shadow: 0 0 18px color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+  }
+
+  html.dark #userSidebar {
+    --sb-bg: linear-gradient(
+      180deg,
+      rgba(5, 10, 24, 0.98),
+      rgba(3, 7, 18, 0.98)
+    );
+
+    --sb-border: rgba(255, 255, 255, 0.08);
+    --sb-divider: rgba(255, 255, 255, 0.07);
+
+    --sb-text: #e8e8f8;
+
+    --sb-muted: rgba(255, 255, 255, 0.45);
+
+    --sb-item-bg: rgba(255, 255, 255, 0.04);
+
+    --sb-item-hover-bg: color-mix(in srgb, var(--dashboard-text) 4%, transparent);
+    --sb-item-hover-border: color-mix(in srgb, var(--dashboard-text) 10%, var(--sb-border));
+
+    --sb-active-bg: color-mix(in srgb, var(--dashboard-accent) 16%, transparent);
+    --sb-active-border: color-mix(in srgb, var(--dashboard-accent) 38%, transparent);
+
+    --sb-active-icon-bg: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--dashboard-accent) 30%, white),
+      color-mix(in srgb, var(--dashboard-accent-strong) 18%, transparent)
+    );
+
+    --sb-active-icon-border: color-mix(in srgb, var(--dashboard-accent) 50%, transparent);
+
+    --sb-active-icon-shadow:
+      0 0 10px color-mix(in srgb, var(--dashboard-accent) 42%, transparent),
+      0 0 24px color-mix(in srgb, var(--dashboard-accent) 42%, transparent),
+      0 0 44px color-mix(in srgb, var(--dashboard-accent) 26%, transparent);
+
+    --sb-active-text: var(--dashboard-accent);
+
+    --sb-active-icon-color: #ffffff;
+
+    --sb-icon-color: rgba(255, 255, 255, 0.76);
+    --sb-label-color: rgba(255, 255, 255, 0.62);
+    --sb-label-active: var(--dashboard-accent);
+
+    --sb-tooltip-bg: color-mix(in srgb, var(--dashboard-accent) 12%, var(--sb-bg));
+    --sb-tooltip-border: color-mix(in srgb, var(--dashboard-accent) 32%, var(--sb-border));
+    --sb-tooltip-shadow: 0 12px 30px color-mix(in srgb, var(--dashboard-accent) 18%, rgba(0, 0, 0, 0.34));
+    --sb-tooltip-text: var(--dashboard-accent);
+
+    --sb-shield-bg: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--dashboard-accent) 28%, transparent),
+      color-mix(in srgb, var(--dashboard-accent-strong) 12%, transparent)
+    );
+
+    --sb-shield-border: color-mix(in srgb, var(--dashboard-accent) 36%, transparent);
+
+    --sb-shield-shadow: 0 0 20px color-mix(in srgb, var(--dashboard-accent) 28%, transparent);
+  }
+
+  /* ══ Width transition ══ */
+  .sb-root {
+    overflow: visible;
+    transition:
+      width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+      min-width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+      max-width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: width;
+  }
+
+  /* ══ Outer wrapper — the visible padding around the glass card ══ */
+  .sb-outer {
+    padding: 0;
+    margin: 1px;
+    height: 100%;
+  }
+
+  .sb-shield-svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  /* ══ Glass card — the dark rounded container ══ */
+  .sb-glass {
+    background: var(--sb-bg);
+    border: 1px solid var(--sb-border);
+    border-radius: 12px;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ══════════════════════════════════════════════
+     HEADER
+  ══════════════════════════════════════════════ */
+  .sb-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 14px 14px;
+    flex-shrink: 0;
+  }
+
+  /* Shield — solid violet gradient box, exactly as Image 2 */
+  .sb-shield {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    border: 1px solid rgba(124, 92, 252, 0.28);
+
+    background: linear-gradient(
+      180deg,
+      rgba(45, 27, 105, 0.95),
+      rgba(24, 24, 60, 0.95)
+    );
+
+    box-shadow: 0 0 18px rgba(124, 92, 252, 0.35);
+
+    color: white;
+
+    flex-shrink: 0;
+  }
+  .sb-shield-svg {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Brand title */
+  .sb-brand-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--sb-text);
+    line-height: 1.2;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hamburger */
+  .sb-hamburger {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid var(--sb-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--sb-text);
+    cursor: pointer;
+    transition:
+      background 180ms,
+      border-color 180ms;
+  }
+  .sb-hamburger:hover {
+    border-color: color-mix(in srgb, var(--dashboard-accent) 40%, var(--sb-border));
+    background: color-mix(in srgb, var(--dashboard-accent) 10%, transparent);
+  }
+  .sb-ham-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ══════════════════════════════════════════════
+     NAV
+  ══════════════════════════════════════════════ */
+  .sb-nav {
+    padding: 10px 12px;
+
+    gap: 14px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    margin-top: 10px;
+  }
+
+  /* ══════════════════════════════════════════════
+     FOOTER
+  ══════════════════════════════════════════════ */
+  .sb-footer {
+    padding: 12px 8px 14px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+
+    margin-top: auto;
+  }
+
+  /* ══════════════════════════════════════════════
+     COLLAPSED STATE
+  ══════════════════════════════════════════════ */
+  [data-user-sidebar][data-collapsed="true"] {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] .sb-header {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] .sb-shield,
+  [data-user-sidebar][data-collapsed="true"] .sb-brand-text {
+    display: none !important;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] .sb-nav {
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: stretch;
+    overflow-x: visible !important;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] {
+    position: relative;
+    z-index: 50;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] .sb-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] [data-theme-toggle],
+  [data-user-sidebar][data-collapsed="true"] [data-user-logout-button] {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  [data-user-sidebar][data-collapsed="true"] [data-theme-toggle-label],
+  [data-user-sidebar][data-collapsed="true"] [data-theme-toggle-switch],
+  [data-user-sidebar][data-collapsed="true"] [data-sidebar-footer-copy] {
+    display: none !important;
+  }
+
+  /* ══════════════════════════════════════════════
+     EXPANDED STATE — restore hidden elements
+  ══════════════════════════════════════════════ */
+  [data-user-sidebar]:not([data-collapsed="true"]) .sb-shield,
+  [data-user-sidebar]:not([data-collapsed="true"]) .sb-brand-text {
+    display: flex;
+  }
+  [data-user-sidebar]:not([data-collapsed="true"]) .sb-brand-text {
+    display: block;
+  }
+  [data-user-sidebar]:not([data-collapsed="true"]) [data-theme-toggle-label],
+  [data-user-sidebar]:not([data-collapsed="true"]) [data-sidebar-footer-copy] {
+    display: block;
+  }
+  [data-user-sidebar]:not([data-collapsed="true"]) [data-theme-toggle-switch] {
+    display: inline-flex;
+  }
+</style>

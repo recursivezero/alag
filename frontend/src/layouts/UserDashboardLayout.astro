@@ -2,25 +2,105 @@
 import "../styles/global.css";
 import "../styles/tailwind.css";
 import "../styles/dashboard.css";
-const { title = "Dashboard" } = Astro.props;
+
+import Sidebar from "../components/user/UserSidebar.astro";
+import Topbar from "../components/user/UserTopbar.astro";
+import LogoutModal from "../components/user/LogoutModal.astro";
+
+import userDashboardScriptUrl from "../scripts/user-dashboard.ts?url";
+
+import type { UserProfile } from "../types/user";
+
+const { title = "Dashboard", user } = Astro.props as {
+  title?: string;
+  user: UserProfile;
+};
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
 ---
 
 <html lang="en" class="scroll-smooth">
   <head>
+    <!-- THEME: applied before paint to prevent flash -->
+    <script is:inline>
+      (() => {
+        try {
+          const themeMode = sessionStorage.getItem("alag-user-theme");
+          const accent = sessionStorage.getItem("alag-user-accent") || "purple";
+          const prefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)",
+          ).matches;
+          const effectiveTheme =
+            themeMode === "dark"
+              ? "dark"
+              : themeMode === "light"
+                ? "light"
+                : prefersDark
+                  ? "dark"
+                  : "light";
+
+          document.documentElement.classList.toggle(
+            "dark",
+            effectiveTheme === "dark",
+          );
+          document.documentElement.style.colorScheme = effectiveTheme;
+          document.documentElement.dataset.theme = effectiveTheme;
+          document.documentElement.dataset.themeMode =
+            themeMode === "dark" || themeMode === "light" || themeMode === "system"
+              ? themeMode
+              : prefersDark
+                ? "system"
+                : "light";
+          document.documentElement.dataset.accentColor = accent;
+        } catch (_) {}
+      })();
+    </script>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#7c3aed" />
     <title>{title}</title>
     <link rel="icon" type="image/png" href="/icon2.png" sizes="1024x1024" />
   </head>
-  <body
-    class="dashboard-shell min-h-screen overflow-x-hidden antialiased transition-colors duration-300"
-  >
-    <script type="module">
-      import { initializeThemeStore } from "../stores/themeStore";
 
-      initializeThemeStore();
-    </script>
-    <slot />
+  <body class="h-screen overflow-hidden antialiased">
+    <div class="flex h-screen overflow-hidden" data-user-dashboard-shell>
+      <!-- LEFT SIDEBAR -->
+      <Sidebar currentPath={currentPath} user={user} />
+
+      <!--
+        MAIN AREA
+        margin-left: 8px  → visible gap between sidebar glass card right edge and content
+        border-left       → subtle separator line
+      -->
+      <div class="main-col flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Topbar user={user} />
+
+        <main
+          class="dashboard-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 pb-8 md:px-7"
+        >
+          <slot />
+        </main>
+      </div>
+    </div>
+
+    <LogoutModal />
+    <script type="module" src={userDashboardScriptUrl}></script>
   </body>
 </html>
+
+<style>
+  /*
+    8px left margin on the main column creates a clear visual
+    gap between the sidebar glass card and the page content.
+    The sidebar already has p-2.5 internally so its glass card
+    doesn't touch the viewport edge — this margin separates the
+    two columns from each other.
+  */
+  .main-col {
+    margin-left: 25px;
+    /* padding: 22px; */
+    padding-left: 20px;
+    border-left: 1px solid var(--dashboard-border);
+  }
+</style>

@@ -39,8 +39,11 @@ export const fetchCurrentUserOrGuest = async (headers?: SessionHeaders) => {
     user || {
       id: 0,
       name: 'Guest',
+      fullName: 'Guest',
+      username: null,
       email: '',
       phoneNumber: null,
+      bio: null,
       picture: null,
       role: 'user',
     }
