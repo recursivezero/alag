@@ -64,3 +64,4 @@ out/
 .node_repl_history
 .eslintcache
 .stylelintcache
+Thumbs.db

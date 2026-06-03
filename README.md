@@ -187,10 +187,10 @@ package-lock.json
 
 ## Summary
 
+
 - Backend starts first in Terminal 1
 - Frontend starts second in Terminal 2
 - Backend URL: `http://localhost:5001`
 - Frontend URL: `http://localhost:4321`
 
-Created by Sonu
-Last Updated: May 19, 2026
+Created by Devender
