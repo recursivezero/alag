@@ -178,5 +178,5 @@ package-lock.json
 - Backend URL: `http://localhost:5001`
 - Frontend URL: `http://localhost:4321`
 
-Created by Sonu
-Last Updated: May 19, 2026
+Created by Devender
+
