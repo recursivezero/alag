@@ -1,57 +1,423 @@
 ---
 import Modal from "../ui/Modal.astro";
+import uploadModalScriptUrl from "../../scripts/upload-modal.ts?url";
 ---
 
-<Modal id="upload-modal">
-  <div class="conatiner1 flex items-start justify-between gap-4">
-    <div>
-      <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Upload</p>
-      <h2 class="mt-2 text-2xl font-semibold text-[color:var(--dashboard-text)]">Share a new image</h2>
-      <p class="mt-2 max-w-xl text-sm leading-6 text-[color:var(--dashboard-muted)]">
-        Upload modal shell ready for your existing media flow. Hook this into your media endpoint when needed.
-      </p>
-    </div>
-    <button type="button" data-upload-close class="rounded-full border border-[color:var(--dashboard-border)] px-3 py-2 text-sm text-[color:var(--dashboard-muted)] transition hover:bg-[color:var(--dashboard-accent-soft)]">Close</button>
-  </div>
+<Modal
+  id="upload-modal"
+  role="dialog"
+  ariaModal={true}
+  ariaLabelledby="upload-modal-title"
+  ariaDescribedby="upload-modal-desc"
+  class="bg-slate-950/60 backdrop-blur-md"
+  panelClass="upload-dialog w-[min(94vw,780px)] max-h-[calc(100vh-3rem)] overflow-hidden rounded-[22px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] shadow-[0_28px_90px_rgba(15,23,42,0.32)]"
+>
+  <div data-upload-toast-region class="upload-toast-region" aria-live="assertive" aria-atomic="true"></div>
 
-  <div class="mt-6 grid gap-4 rounded-[24px] border border-dashed border-[color:var(--dashboard-border)] p-6">
-    <div class="rounded-[22px] bg-[color:var(--dashboard-accent-soft)] px-4 py-6 text-center text-sm text-[color:var(--dashboard-muted)]">
-      Drag and drop area or file picker placeholder.
+  <div class="flex max-h-[calc(100vh-3rem)] flex-col">
+
+    <!-- Header -->
+    <div class="upload-card-header flex items-start justify-between gap-4 border-b border-[color:var(--dashboard-border)] px-7 pb-4 pt-6">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-[color:var(--dashboard-accent)]">Upload</p>
+        <h2 id="upload-modal-title" class="mt-1.5 text-[24px] font-bold leading-[1.2] tracking-[-0.02em] text-[color:var(--dashboard-text)]">Share a new image</h2>
+        <p id="upload-modal-desc" class="sr-only">Upload modal.</p>
+      </div>
+      <button
+        type="button"
+        data-upload-close
+        aria-label="Close upload modal"
+        class="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[color:var(--dashboard-muted)] transition hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" color="red" stroke="currentColor" stroke-width="3">
+          <path d="m18 6-12 12"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
     </div>
-    <div class="grid gap-3 md:grid-cols-2">
-      <input type="text" placeholder="Caption" class="rounded-2xl border border-[color:var(--dashboard-border)] bg-transparent px-4 py-3 text-sm text-[color:var(--dashboard-text)] outline-none transition focus:border-[color:var(--dashboard-accent)]" />
-      <input type="text" placeholder="Location" class="rounded-2xl border border-[color:var(--dashboard-border)] bg-transparent px-4 py-3 text-sm text-[color:var(--dashboard-text)] outline-none transition focus:border-[color:var(--dashboard-accent)]" />
+
+    <!-- Body: two-column form -->
+    <form data-upload-form class="upload-form grid flex-1 min-h-0 overflow-y-auto dashboard-scrollbar md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <input data-upload-input type="file" class="hidden" accept="image/jpeg,image/png,image/webp" />
+
+      <!-- LEFT COLUMN -->
+      <section class="upload-right-section border-b border-[color:var(--dashboard-border)] px-7 py-6 md:border-b-0 md:border-r">
+
+        <p class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Image Preview</p>
+
+        <!-- Dropzone -->
+        <button 
+          type="button"
+          data-upload-dropzone
+          class="upload-dropzone-btn mt-3 flex w-full flex-col overflow-hidden rounded-[14px] border border-dashed border-[color:rgba(124,58,237,0.3)] bg-[color:var(--upload-dropzone-bg)] text-left transition hover:border-[color:var(--dashboard-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--dashboard-accent)]/35"
+        >
+          <div class="relative w-full overflow-hidden rounded-[12px]">
+            <div data-upload-preview-placeholder class="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 px-6 py-8 text-center">
+              <div class="grid h-14 w-14 place-items-center rounded-full border border-[color:var(--dashboard-border)] bg-white text-[color:var(--dashboard-accent)] shadow-sm dark:bg-[color:var(--dashboard-surface-strong)]">
+                <svg class="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+              <path d="M12 12v9"></path>
+              <path d="m16 16-4-4-4 4"></path>
+            </svg>
+              </div>
+              <div>
+                <p class="text-[14px] font-semibold text-[color:var(--dashboard-text)]">Drag &amp; drop an image here</p>
+                <p class="mt-0.5 text-[12px] text-[color:var(--dashboard-muted)]">or click to choose a file</p>
+              </div>
+            </div>
+            <img data-upload-preview-image alt="Selected image preview" class="hidden aspect-[4/5] w-full object-cover" />
+          </div>
+        </button>
+
+        <!-- Replace / Remove -->
+        <div class="replace-remove-btn mt-3 grid grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            data-upload-replace
+            class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-btn-bg)] px-3 text-[13px] font-medium text-[color:var(--dashboard-text)] transition hover:bg-[color:var(--dashboard-accent-soft)]"
+          >
+            <svg class="h-[15px] w-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
+              <path d="m16 5 3 3-3 3"></path>
+              <path d="M19 8h-6"></path>
+            </svg>
+            Replace Image
+          </button>
+          <button
+            type="button"
+            data-upload-remove
+            class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-btn-bg)] px-3 text-[13px] font-medium text-[color:var(--dashboard-text)] transition hover:bg-[color:var(--dashboard-accent-soft)]"
+          >
+            <svg class="h-[15px] w-[15px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18"></path>
+              <path d="M8 6V4h8v2"></path>
+              <path d="M6 6l1 14h10l1-14"></path>
+              <path d="M10 11v5"></path>
+              <path d="M14 11v5"></path>
+            </svg>
+            Remove
+          </button>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN -->
+      <section class="px-7 py-6">
+        <div class="flex h-full min-h-0 flex-col gap-5">
+
+          <!-- Caption -->
+          <div class="grid gap-1.5">
+            <span class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Caption</span>
+            <textarea
+              data-upload-caption
+              maxlength="500"
+              rows="3"
+              placeholder="   Write a caption for this post"
+              class="textarea-caption-input resize-none rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] px-3.5 py-3 text-[16px] leading-6 text-[color:var(--dashboard-text)] outline-none transition placeholder:text-[color:var(--dashboard-muted)] focus:border-[color:var(--dashboard-accent)] focus:ring-2 focus:ring-[color:var(--dashboard-accent)]/20"
+            ></textarea>
+            <div class="flex justify-end">
+              <span data-upload-caption-count class="text-[11px] text-[color:var(--dashboard-muted)]">0 / 500</span>
+            </div>
+          </div>
+
+          <!-- ALT Text -->
+          <div class="grid gap-1.5">
+            <span class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Alt Text (Accessibility)</span>
+            <textarea
+              data-upload-alt
+              maxlength="200"
+              rows="3"
+              placeholder="  Explain what the image shows"
+              class="resize-none rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] px-3.5 py-3 text-[16px] leading-6 text-[color:var(--dashboard-text)] outline-none transition placeholder:text-[color:var(--dashboard-muted)] focus:border-[color:var(--dashboard-accent)] focus:ring-2 focus:ring-[color:var(--dashboard-accent)]/20"
+            ></textarea>
+            <div class="flex justify-end">
+              <span data-upload-alt-count class="text-[11px] text-[color:var(--dashboard-muted)]">0 / 200</span>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="grid gap-1.5">
+            <span class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Category</span>
+            <div class="relative">
+              <select
+                data-upload-category
+                class="category-selectlist w-full appearance-none rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] py-3 pl-4 pr-10 text-[13px] text-[color:var(--dashboard-text)] outline-none transition focus:border-[color:var(--dashboard-accent)] focus:ring-2 focus:ring-[color:var(--dashboard-accent)]/20"
+              >
+                <option value="nature">Nature</option>
+                <option value="travel">Travel</option>
+                <option value="city">City</option>
+                <option value="food">Food</option>
+                <option value="lifestyle">Lifestyle</option>
+              </select>
+              <svg class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--dashboard-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feed Type -->
+          <div class="grid gap-2">
+            <span class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Feed Type</span>
+            <label class="flex cursor-pointer items-center gap-3">
+              <input data-upload-feed-type type="radio" name="feedType" value="public" checked class="peer sr-only" />
+              <span class="upload-radio-indicator grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full border-2 border-[color:rgba(15,23,42,0.2)] bg-white transition dark:border-[color:var(--dashboard-border)] dark:bg-[color:var(--dashboard-surface)]">
+                <span class="upload-radio-dot h-[10px] w-[10px] rounded-full bg-[color:var(--dashboard-accent)] opacity-0 transition"></span>
+              </span>
+              <span>
+                <span class="block text-[13px] font-semibold text-[color:var(--dashboard-text)]">Public Feed</span>
+                <span class="block text-[12px] text-[color:var(--dashboard-muted)]">(Visible to everyone)</span>
+              </span>
+            </label>
+
+            <label class="flex cursor-pointer items-center gap-3">
+              <input data-upload-feed-type type="radio" name="feedType" value="personal" class="peer sr-only" />
+              <span class="upload-radio-indicator grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full border-2 border-[color:rgba(15,23,42,0.2)] bg-white transition dark:border-[color:var(--dashboard-border)] dark:bg-[color:var(--dashboard-surface)]">
+                <span class="upload-radio-dot h-[10px] w-[10px] rounded-full bg-[color:var(--dashboard-accent)] opacity-0 transition"></span>
+              </span>
+              <span>
+                <span class="block text-[13px] font-semibold text-[color:var(--dashboard-text)]">Personal Feed</span>
+                <span class="block text-[12px] text-[color:var(--dashboard-muted)]">(Visible only on your profile)</span>
+              </span>
+            </label>
+          </div>
+
+          <!-- Location -->
+          <div class="grid gap-1.5">
+            <span class="text-[13px] font-semibold text-[color:var(--dashboard-text)]">Location</span>
+            <div class="relative">
+              <input
+                data-upload-location
+                type="text"
+                maxlength="120"
+                placeholder="Add a location"
+                class="location-input w-full rounded-[10px] border border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] py-3 pl-4 pr-10 text-[13px] text-[color:var(--dashboard-text)] outline-none transition placeholder:text-[color:var(--dashboard-muted)] focus:border-[color:var(--dashboard-accent)] focus:ring-2 focus:ring-[color:var(--dashboard-accent)]/20"
+              />
+              <span class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[color:var(--dashboard-muted)]">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 10c0 5-6 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Footer buttons -->
+          <div class="mt-auto flex items-center justify-between gap-3 pt-2">
+            <button
+              type="button"
+              data-upload-cancel
+              class="inline-flex h-11 w-full items-center justify-center rounded-full border border-[color:var(--dashboard-border)] bg-white px-6 text-[14px] font-medium text-[color:var(--dashboard-text)] transition hover:bg-[color:var(--dashboard-accent-soft)] dark:border-[color:var(--dashboard-border)] dark:bg-[color:var(--dashboard-surface)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              data-upload-submit
+              disabled
+              class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--dashboard-accent)] px-6 text-[14px] font-semibold text-white transition hover:bg-[color:var(--dashboard-accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2 11 13"></path>
+                <path d="m22 2-7 20-4-9-9-4Z"></path>
+              </svg>
+              Publish Post
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </form>
+
+    <!-- Uploading state -->
+    <div data-upload-state="uploading" class="hidden flex-1 min-h-0 px-7 py-10">
+      <div class="mx-auto flex max-w-md flex-col items-center rounded-[30px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] px-6 py-8 text-center shadow-[0_18px_60px_rgba(15,23,42,0.12)]">
+        <div class="grid h-16 w-16 place-items-center rounded-full border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent)]">
+          <svg class="h-8 w-8 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-3.2-6.9"></path>
+          </svg>
+        </div>
+        <h3 class="mt-5 text-2xl font-semibold text-[color:var(--dashboard-text)]">Uploading your image</h3>
+        <p class="mt-2 text-sm leading-6 text-[color:var(--dashboard-muted)]">Please wait while we upload your image.</p>
+        <div class="mt-6 w-full rounded-full bg-[color:var(--dashboard-accent-soft)] p-1">
+          <div data-upload-progress class="h-2 w-0 rounded-full bg-[color:var(--dashboard-accent)] transition-[width] duration-200"></div>
+        </div>
+        <p data-upload-progress-label class="mt-3 text-sm font-medium text-[color:var(--dashboard-text)]">0%</p>
+        <button type="button" data-upload-abort class="mt-6 inline-flex items-center justify-center rounded-full border border-[color:var(--dashboard-border)] px-5 py-3 text-sm font-medium text-[color:var(--dashboard-text)] transition hover:bg-[color:var(--dashboard-accent-soft)]">
+          Cancel
+        </button>
+      </div>
     </div>
-    <button type="button" class="inline-flex w-fit items-center rounded-full bg-[color:var(--dashboard-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--dashboard-accent-strong)]">Upload image</button>
+
+    <!-- Success state -->
+    <div data-upload-state="success" class="upload-success-container hidden flex flex-col justify-center items-center min-h-0 px-7 py-10">
+  <div class="upload-success-container2 max-w-md flex flex-col items-center rounded-[30px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] px-6 py-8 text-center shadow-[0_18px_60px_rgba(15,23,42,0.12)]">
+    <div class="grid h-16 w-16 place-items-center rounded-full bg-emerald-500/12 text-emerald-500">
+      <svg class="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M20 6 9 17l-5-5"></path>
+      </svg>
+    </div>
+    <h3 class="mt-5 text-2xl font-semibold text-[color:var(--dashboard-text)]">Uploaded Successfully!</h3>
+    <p class="mt-2 text-sm leading-6 text-[color:var(--dashboard-muted)]">Your image has been published.</p>
+
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+      <a data-upload-success-link href="#" class="view-btn inline-flex items-center justify-center rounded-full bg-[color:var(--dashboard-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--dashboard-accent-strong)]">
+        View Post
+      </a>
+      <button type="button" data-upload-success-close class="close-btn inline-flex items-center justify-center rounded-full border border-[color:var(--dashboard-border)] px-5 py-3 text-sm font-medium text-[color:var(--dashboard-text)] transition hover:bg-[color:var(--dashboard-accent-soft)]">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
   </div>
 </Modal>
 
-<script type="module">
-  const modal = document.getElementById("upload-modal");
-  const openButtons = document.querySelectorAll("[data-upload-trigger]");
-  const closeButton = document.querySelector("[data-upload-close]");
+<script type="module" src={uploadModalScriptUrl}></script>
 
-  const show = () => {
-    modal?.classList.remove("pointer-events-none", "invisible", "opacity-0");
-    modal?.classList.add("opacity-100", "visible");
-  };
-
-  const hide = () => {
-    modal?.classList.add("pointer-events-none", "invisible", "opacity-0");
-    modal?.classList.remove("opacity-100", "visible");
-  };
-
-  openButtons.forEach((button) => button.addEventListener("click", show));
-  closeButton?.addEventListener("click", hide);
-  modal?.addEventListener("click", (event) => {
-    if (event.target === modal) hide();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") hide();
-  });
-</script>
 <style>
-  .conatiner1{
+  .upload-card-header {
     padding: 20px;
+  }
+  .upload-form{
+    padding: 20px;
+  }
+  .upload-right-section{
+    padding-right: 25px;
+    margin-right: 25px;
+  }
+  .upload-dropzone-btn{
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+  .replace-remove-btn{
+    margin-bottom: 20px;
+  }
+.category-selectlist{
+  height: 45px;
+  padding: 15px;
+  font-size: 14px;
+
+}
+.location-input{
+  background-color:white;
+  /* border-color: black; */
+  color:black;
+}
+
+  /* Light mode custom properties */
+  :root {
+    --upload-dropzone-bg: #eef0f8;
+    --upload-field-bg: #ffffff;
+    --upload-btn-bg: #f4f5f9;
+  }
+
+  /* Dark mode overrides */
+  html.dark {
+    --upload-dropzone-bg: var(--dashboard-background-soft);
+    --upload-field-bg: var(--dashboard-surface-strong);
+    --upload-btn-bg: var(--dashboard-surface);
+  }
+
+  .upload-dialog {
+    animation: upload-pop 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Radio checked state */
+  label:has(input[type="radio"]:checked) .upload-radio-indicator {
+    border-color: var(--dashboard-accent);
+    background: color-mix(in srgb, var(--dashboard-accent-soft) 40%, white);
+  }
+  html.dark label:has(input[type="radio"]:checked) .upload-radio-indicator {
+    background: color-mix(in srgb, var(--dashboard-accent-soft) 30%, var(--dashboard-surface));
+  }
+  label:has(input[type="radio"]:checked) .upload-radio-dot {
+    opacity: 1;
+  }
+
+  .upload-toast-region {
+    position: absolute;
+    inset: 0 auto auto 0;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+
+  .upload-success-container {
+    padding: 20px;
+  }
+  .upload-success-container2{
+    margin: 20px;
+    padding: 20px;
+  }
+  .view-btn{
+
+    line-height: 1;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.75em 1em;
+  padding-right: 1.25em;
+  color: #fff;
+  border: 1px solid transparent;
+  font-weight: 500;
+  border-radius: 2em;
+  font-size: 1rem;
+  box-shadow: 0 0.7em 1.5em -0.5em hsla(249, 62%, 51%, 0.745);
+  transition: transform 0.3s;
+
+  background: linear-gradient(
+    90deg,
+    rgba(77, 54, 208, 1) 0%,
+    rgba(132, 116, 254, 1) 100%
+  );
+  }
+  .close-btn{
+    line-height: 1;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.75em 1em;
+  padding-right: 1.25em;
+  color: #fff;
+  border: 1px solid transparent;
+  font-weight: 500;
+  border-radius: 2em;
+  font-size: 1rem;
+  box-shadow: 0 0.7em 1.5em -0.5em hsla(11, 55%, 50%, 0.745);
+  transition: transform 0.3s;
+
+  background: linear-gradient(
+    90deg,
+    rgb(208, 64, 54) 0%,
+    rgb(220, 103, 86) 100%
+  );
+  }
+
+
+  .is-dragging {
+    border-color: var(--dashboard-accent) !important;
+    background: var(--dashboard-accent-soft) !important;
+  }
+
+  @keyframes upload-pop {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (max-width: 767px) {
+    .upload-dialog {
+      width: min(100vw - 1rem, 780px);
+      border-radius: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .upload-dialog { animation: none; }
   }
 </style>

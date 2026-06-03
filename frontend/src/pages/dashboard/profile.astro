@@ -2,6 +2,7 @@
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
 import UploadModal from "../../components/user/UploadModal.astro";
 import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchMyPosts } from "../../services/postService";
 
 const cookieHeader = Astro.request.headers.get("cookie") || "";
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
@@ -45,6 +46,18 @@ const profileUsername =
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/^\.+|\.+$/g, "") ||
   "Not set";
+
+const myPosts = currentUser.id
+  ? await fetchMyPosts({ cookieHeader })
+  : [];
+
+const formatUploadDate = (dateValue: string) => {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(dateValue));
+};
 ---
 
 <UserDashboardLayout title="Profile | RecursiveAuth" user={currentUser}>
@@ -89,6 +102,61 @@ const profileUsername =
           </div>
         </dl>
       </div>
+
+      <section class="my-posts-section mt-6 rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6">
+        <div class="flex items-center justify-between gap-4">
+          <div class="post-image-card">
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">Uploads</p>
+            <h2 class="mt-2 text-2xl font-semibold tracking-tight text-[color:var(--dashboard-text)]">My Posts</h2>
+          </div>
+          <div class="items-part rounded-full border border-[color:var(--dashboard-border)] px-3 py-1 text-xs font-medium text-[color:var(--dashboard-muted)]">
+            {myPosts.length} items
+          </div>
+        </div>
+
+        {
+          myPosts.length ? (
+            <div class="mt-5 grid gap-4">
+              {myPosts.map((post) => (
+                <article class="flex flex-col gap-4 rounded-[24px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] p-4 sm:flex-row sm:items-start">
+                  {/* <a class="post-image" href={`/posts/${post.slug}`} class="shrink-0 overflow-hidden rounded-[18px] border border-[color:var(--dashboard-border)] sm:w-36">
+                    
+                  </a> */}
+
+                  <img src={post.imageUrl} alt={post.altText || post.caption} class="img h-32 w-full object-cover sm:h-28 sm:w-36" />
+
+                  <div class="post-item-discription min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <a href={`/posts/${post.slug}`} class="truncate text-lg font-semibold text-[color:var(--dashboard-text)] transition hover:text-[color:var(--dashboard-accent)]">
+                        {post.title}
+                      </a>
+                      <span class="rounded-full border border-[color:var(--dashboard-border)] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[color:var(--dashboard-muted)]">
+                        {post.feedType === "personal" ? "Personal" : "Public"}
+                      </span>
+                    </div>
+
+                    <p class="mt-2 line-clamp-2 text-sm leading-6 text-[color:var(--dashboard-muted)]">
+                      {post.caption}
+                    </p>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-[color:var(--dashboard-muted)]">
+                      <span>{formatUploadDate(post.createdAt)}</span>
+                      {post.location ? <span>• {post.location}</span> : null}
+                      {post.category ? <span>• {post.category}</span> : null}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div class="mt-5 rounded-[24px] border border-dashed border-[color:var(--dashboard-border)] px-5 py-10 text-center text-sm text-[color:var(--dashboard-muted)]">
+              Your personal uploads will appear here after you choose Personal Feed in the upload modal.
+            </div>
+          )
+        }
+      </section>
+
+
     </div>
   </main>
   <UploadModal />
@@ -98,9 +166,40 @@ const profileUsername =
   .profile-card-container{
     padding: 20px;
   }
-
+ .profile-hero{
+  padding: 20px;
+ }
   .profile-account-card{
     margin-top: 30px;
     padding: 20px;
+    margin-bottom: 30px;
+  }
+  .my-posts-section{
+    padding:20px;
+  }
+  .post-image-card{
+    margin-bottom: 20px;
+  }
+  .items-part{
+    height: 35px;
+    width: 60px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    padding-top: 7px;
+  }
+  .post-item-discription{
+    padding: 10px;
+  }
+  .post-image{
+    padding: 10px;
+    
+  }
+
+  /* post image increase decrease */
+  .img{
+    border-radius: 20px;
+    height: 100%;
+    width: 30vh;
   }
 </style>

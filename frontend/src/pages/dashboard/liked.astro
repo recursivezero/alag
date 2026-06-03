@@ -1,58 +1,97 @@
 ---
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
-import Feed        from "../../components/user/Feed.astro";
-import FeedFilters from "../../components/user/FeedFilters.astro";
+import Feed from "../../components/user/Feed.astro";
 import UploadModal from "../../components/user/UploadModal.astro";
 
 import { fetchCurrentUserOrGuest } from "../../services/userService";
-import { fetchFeedPosts }           from "../../services/postService";
+import { fetchLikedPosts } from "../../services/postService";
 
-const cookieHeader  = Astro.request.headers.get("cookie") || "";
-const currentUser   = await fetchCurrentUserOrGuest({ cookieHeader });
-const posts         = currentUser.id
-  ? await fetchFeedPosts({ cookieHeader, userId: currentUser.id })
-  : [];
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
+// Liked Posts is private – guests see nothing useful here, redirect to login.
+if (!currentUser.id) {
+  return Astro.redirect("/auth/login");
+}
+
+// Fetch only this user's liked posts (authenticated, server-side)
+const posts = await fetchLikedPosts({ cookieHeader, userId: currentUser.id });
 ---
 
-<UserDashboardLayout title="Dashboard | RecursiveAuth" user={currentUser}>
+<UserDashboardLayout title="Liked Posts | RecursiveAuth" user={currentUser}>
 
   <div class="page-grid mx-auto w-full max-w-[1400px]" style="padding: 28px 28px 40px 28px;">
 
     <!-- ══════════════ LEFT / MAIN FEED ══════════════ -->
     <section class="feed-col min-w-0">
-      <!-- Hero greeting -->
+
+      <!-- Page heading -->
       <div class="mb-6">
-        <h1 class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]">
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
           Liked Posts
         </h1>
-        <p class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]">
-          Discover fresh image posts, Like what inspires you, and stay
-          connected with the people and moments you follow.
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          All posts you liked will appear here. Only you can see this section.
         </p>
       </div>
 
-      <!-- Category filters -->
-      <div class="mb-5">
-        <FeedFilters current="all" />
-      </div>
-
-      <!-- Posts feed -->
-      <Feed posts={posts} />
+      <!-- Posts feed or empty state -->
+      {posts.length > 0 ? (
+        <Feed posts={posts} />
+      ) : (
+        <!-- Empty state – shown when user hasn't liked anything yet -->
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+          <div
+            class="mb-5 grid h-16 w-16 place-items-center rounded-full bg-rose-500/10 text-rose-400"
+          >
+            <svg
+              class="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <path
+                d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"
+              />
+            </svg>
+          </div>
+          <h2
+            class="text-[20px] font-bold text-[color:var(--dashboard-text)]"
+          >
+            No liked posts yet
+          </h2>
+          <p
+            class="mt-2 max-w-sm text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+          >
+            When you like a post by clicking the heart icon, it will appear
+            here. Only you can see your liked posts.
+          </p>
+          <a
+            href="/dashboard"
+            class="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
+          >
+            Browse Dashboard
+          </a>
+        </div>
+      )}
     </section>
 
-    <!-- ══════════════ RIGHT SIDEBAR ══════════════ -->
   </div>
 
   <UploadModal />
 </UserDashboardLayout>
 
 <style>
-  /* ── 2-column layout ── */
+  /* Same 2-column layout token as the other dashboard pages */
   .page-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    /* inline style handles padding — beats Tailwind preflight */
   }
 
   @media (min-width: 1280px) {
@@ -60,47 +99,5 @@ const posts         = currentUser.id
       grid-template-columns: minmax(0, 1fr) 308px;
       gap: 2rem;
     }
-  }
-
-  /* ── Profile card glass ── */
-  .profile-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    box-shadow: var(--dashboard-shadow);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  /* ── Divider ── */
-  .section-divider {
-    height: 1px;
-    background: var(--dashboard-border);
-    margin: 0 1.25rem;
-  }
-
-  /* ── Stat chips ── */
-  .stat-chip {
-    background: var(--dashboard-surface);
-    border: 1px solid var(--dashboard-border);
-  }
-
-  /* ── Tag chips ── */
-  .tag-chip {
-    border-color: var(--dashboard-border);
-    background: var(--dashboard-surface);
-  }
-  .tag-chip:hover {
-    border-color: rgba(124,58,237,0.25);
-    background: var(--dashboard-accent-soft);
-    color: var(--dashboard-accent);
-  }
-
-  /* ── Section heading ── */
-  .section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.20em;
-    text-transform: uppercase;
-    color: var(--dashboard-muted);
   }
 </style>

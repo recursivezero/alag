@@ -1,621 +1,105 @@
 ---
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import Feed from "../../components/user/Feed.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+
 import { fetchCurrentUserOrGuest } from "../../services/userService";
-import { fetchFeedPosts } from "../../services/postService";
+import { fetchSavedPosts } from "../../services/postService";
 
 const cookieHeader = Astro.request.headers.get("cookie") || "";
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
 
-// ── Real saved posts ─────────────────────────────────────────────────────────
-const rawPosts = currentUser.id
-  ? (await fetchFeedPosts({ cookieHeader, userId: currentUser.id })).filter(
-      (post) => post.userState?.saved,
-    )
-  : [];
-
-// ── Current user display name (from DB: full_name or name) ──────────────────
-const currentUserName: string =
-  (currentUser as any).full_name ??
-  (currentUser as any).name ??
-  "You";
-
-const currentUserHandle: string = currentUserName
-  .toLowerCase()
-  .replace(/\s+/g, "");
-
-// ── Demo posts — shown ONLY when no real saved posts exist ───────────────────
-const demoPosts = [
-  {
-    id: "demo-1",
-    isDemo: true,
-    author: {
-      name: currentUserName,
-      handle: currentUserHandle,
-      avatar: (currentUser as any).avatar ?? null,
-      verified: false,
-    },
-    title: "City Lights After Rain",
-    description: "Reflections, traffic glow, and a moody skyline after an evening shower.",
-    content: "The only way to do great work is to love what you do. 🚀",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    location: "Mumbai, Maharashtra",
-    media: {
-      type: "image",
-      url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80",
-      alt: "Mountain lake at sunset",
-    },
-    stats: { likes: 0, replies: 0, reposts: 0 },
-    userState: { saved: true, liked: false },
-  },
-  {
-    id: "demo-2",
-    isDemo: true,
-    author: {
-      name: currentUserName,
-      handle: currentUserHandle,
-      avatar: (currentUser as any).avatar ?? null,
-      verified: false,
-    },
-    title: "Developer Mindset",
-    description: "Clean code always looks like it was written by someone who cares.",
-    content: "Clean code always looks like it was written by someone who cares. 💻",
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    location: "Bengaluru, Karnataka",
-    media: {
-      type: "code",
-      html: `<span style="color:#d4a7ff">function</span> <span style="color:#80cbc4">developerMindset</span><span style="color:#cdd6f4">() {</span>
-  <span style="color:#81d4fa">return</span> <span style="color:#cdd6f4">{</span>
-    <span style="color:#80cbc4">consistency</span><span style="color:#cdd6f4">: </span><span style="color:#80deea">true</span><span style="color:#cdd6f4">,</span>
-    <span style="color:#80cbc4">discipline</span><span style="color:#cdd6f4">: </span><span style="color:#80deea">true</span><span style="color:#cdd6f4">,</span>
-    <span style="color:#80cbc4">patience</span><span style="color:#cdd6f4">: </span><span style="color:#80deea">true</span><span style="color:#cdd6f4">,</span>
-    <span style="color:#80cbc4">passion</span><span style="color:#cdd6f4">: </span><span style="color:#80deea">true</span>
-  <span style="color:#cdd6f4">};</span>
-<span style="color:#cdd6f4">}</span>`,
-    },
-    stats: { likes: 342, replies: 18, reposts: 76 },
-    userState: { saved: true, liked: false },
-  },
-  {
-    id: "demo-3",
-    isDemo: true,
-    author: {
-      name: currentUserName,
-      handle: currentUserHandle,
-      avatar: (currentUser as any).avatar ?? null,
-      verified: false,
-    },
-    title: "Mountain Sunrise",
-    description: "Golden hour painting the peaks in warm amber, the world still and silent.",
-    content: "Don't wait for opportunity. Create it. ✨",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    location: "Manali, Himachal Pradesh",
-    media: {
-      type: "image",
-      url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900&q=80",
-      alt: "Mountain sunrise",
-    },
-    stats: { likes: 95, replies: 12, reposts: 21 },
-    userState: { saved: true, liked: false },
-  },
-];
-
-const isShowingDemo = rawPosts.length === 0;
-const posts = isShowingDemo ? (demoPosts as any[]) : rawPosts;
-const savedCount = isShowingDemo ? 0 : rawPosts.length;
-
-// ── Filter & search from URL params ─────────────────────────────────────────
-const filter = Astro.url.searchParams.get("filter") ?? "latest";
-const search = Astro.url.searchParams.get("q") ?? "";
-
-// ── Tab config (no Videos) ───────────────────────────────────────────────────
-const tabs = [
-  { key: "latest",   label: "Latest"   },
-  { key: "popular",  label: "Popular"  },
-  { key: "oldest",   label: "Oldest"   },
-  { key: "media",    label: "Media"    },
-  { key: "articles", label: "Articles" },
-];
-
-// ── Sort / filter logic ──────────────────────────────────────────────────────
-let displayPosts = [...posts];
-
-if (search) {
-  const q = search.toLowerCase();
-  displayPosts = displayPosts.filter((p) =>
-    (p.title ?? "").toLowerCase().includes(q) ||
-    (p.description ?? "").toLowerCase().includes(q) ||
-    (p.content ?? "").toLowerCase().includes(q)
-  );
+// Saved Posts is private – guests are redirected to login.
+if (!currentUser.id) {
+  return Astro.redirect("/auth/login");
 }
 
-if (filter === "popular") {
-  displayPosts.sort((a, b) => (b.stats?.likes ?? 0) - (a.stats?.likes ?? 0));
-} else if (filter === "oldest") {
-  displayPosts.sort(
-    (a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
-  );
-} else if (filter === "media") {
-  displayPosts = displayPosts.filter((p) => p.media?.type === "image");
-} else if (filter === "articles") {
-  displayPosts = displayPosts.filter((p) => !p.media || p.media?.type === "text");
-} else {
-  // latest (default)
-  displayPosts.sort(
-    (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
-  );
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function timeAgo(dateStr: string | undefined): string {
-  if (!dateStr) return "";
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d === 1) return "1 day ago";
-  if (d < 7) return `${d} days ago`;
-  return `${Math.floor(d / 7)}w ago`;
-}
-
-function initials(name: string | undefined): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-const avatarPalette = [
-  { bg: "#7c3aed", text: "#fff" },
-  { bg: "#0ea5e9", text: "#fff" },
-  { bg: "#10b981", text: "#fff" },
-  { bg: "#f59e0b", text: "#fff" },
-  { bg: "#ef4444", text: "#fff" },
-  { bg: "#ec4899", text: "#fff" },
-];
-function avatarColor(name: string | undefined) {
-  const idx = (name?.charCodeAt(0) ?? 0) % avatarPalette.length;
-  return avatarPalette[idx];
-}
+// Fetch only this user's saved posts (authenticated, server-side, cookie-forwarded)
+const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
 ---
 
 <UserDashboardLayout title="Saved Posts | RecursiveAuth" user={currentUser}>
 
-  <div class="min-h-screen bg-white dark:bg-[#0a0b14] text-gray-900 dark:text-gray-100">
+  <div class="page-grid mx-auto w-full max-w-[1400px]" style="padding: 28px 28px 40px 28px;">
 
-    <!-- ════════════════════════════════════════════════
-         HERO
-    ════════════════════════════════════════════════ -->
-    <section
-      class="relative overflow-hidden border-b px-8 py-10
-             border-gray-200 dark:border-white/[0.07]
-             bg-gradient-to-br from-slate-50 via-white to-violet-50/30
-             dark:from-[#0a0b14] dark:via-[#0d0e1f] dark:to-[#110d25]">
+    <!-- ══════════════ MAIN FEED COLUMN ══════════════ -->
+    <section class="feed-col min-w-0">
 
-      <!-- dark purple glow blobs -->
-      <div
-        class="pointer-events-none absolute -right-10 -top-20 h-[380px] w-[520px] hidden dark:block rounded-full"
-        style="background:radial-gradient(ellipse at 60% 40%,rgba(100,60,210,0.62) 0%,rgba(60,30,160,0.28) 45%,transparent 70%)">
-      </div>
-      <div
-        class="pointer-events-none absolute bottom-[-90px] right-[130px] h-[260px] w-[260px] hidden dark:block rounded-full"
-        style="background:radial-gradient(ellipse,rgba(110,60,210,0.2) 0%,transparent 65%)">
+      <!-- Page heading -->
+      <div class="mb-6">
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
+          Saved Posts
+        </h1>
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          All posts you saved will appear here. Only you can see this section.
+        </p>
       </div>
 
-      <div class="relative z-10 flex flex-wrap items-center justify-between gap-8">
-
-        <!-- Left -->
-        <div>
-          <!-- badge -->
-          <div class="mb-4 inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[12px] font-medium
-                      border-gray-200 bg-white/80 text-gray-600
-                      dark:border-white/[0.13] dark:bg-white/[0.07] dark:text-gray-400">
-            <span
-              class="h-[7px] w-[7px] rounded-full bg-emerald-500"
-              style="box-shadow:0 0 7px rgba(34,197,94,0.7)">
-            </span>
-            Personal collection
-          </div>
-
-          <h1 class="mb-3 text-[2.75rem] font-extrabold tracking-tight leading-[1.05]
-                     text-gray-900 dark:text-white">
-            Saved posts
-          </h1>
-          <p class="max-w-[360px] text-[13.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-            Your curated feed of bookmarked posts, ideas, and inspirations —
-            organized for quick access whenever you need them.
-          </p>
-        </div>
-
-        <!-- Right: SAVED / STATUS stat card -->
-        <div
-          class="flex shrink-0 overflow-hidden rounded-2xl border shadow-md
-                 border-gray-200/80 bg-white/90 backdrop-blur-sm
-                 dark:border-white/[0.11] dark:bg-[#ffffff08] dark:shadow-none">
-          <!-- Saved -->
-          <div class="flex min-w-[110px] flex-col gap-2 px-8 py-6">
-            <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-              Saved
-            </span>
-            <span class="text-[2.25rem] font-extrabold leading-none text-gray-900 dark:text-white">
-              {savedCount}
-            </span>
-          </div>
-          <!-- divider -->
-          <div class="my-5 w-px bg-gray-200 dark:bg-white/[0.09]"></div>
-          <!-- Status -->
-          <div class="flex min-w-[130px] flex-col gap-2 px-8 py-6">
-            <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-              Status
-            </span>
-            <span class="flex items-center gap-2 text-[15px] font-bold text-gray-900 dark:text-white">
-              <span
-                class="h-[8px] w-[8px] rounded-full bg-emerald-500"
-                style="box-shadow:0 0 7px rgba(34,197,94,0.6)">
-              </span>
-              Synced
-            </span>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ════════════════════════════════════════════════
-         FILTER / SEARCH BAR
-    ════════════════════════════════════════════════ -->
-    <nav
-      class="sticky top-0 z-20 flex items-center justify-between gap-6 px-8
-             border-b border-gray-200 dark:border-white/[0.07]
-             bg-white/95 dark:bg-[#0d0e1f]/96 backdrop-blur-sm">
-
-      <!-- Tab buttons -->
-      <div class="flex items-center gap-2 overflow-x-auto py-3 scrollbar-none">
-        {tabs.map((tab) => {
-          const active = filter === tab.key;
-          return (
-            <a
-              href={`?filter=${tab.key}${search ? `&q=${encodeURIComponent(search)}` : ""}`}
-              class={
-                active
-                  ? [
-                      "inline-flex items-center gap-2 rounded-full px-5 py-2",
-                      "text-[13px] font-semibold text-white",
-                      "bg-violet-600 hover:bg-violet-700",
-                      "shadow-sm transition-all duration-150",
-                    ].join(" ")
-                  : [
-                      "inline-flex items-center gap-2 rounded-full px-5 py-2",
-                      "text-[13px] font-medium",
-                      "text-gray-600 dark:text-gray-400",
-                      "bg-gray-100 dark:bg-white/[0.06]",
-                      "hover:bg-gray-200 dark:hover:bg-white/[0.11]",
-                      "hover:text-gray-900 dark:hover:text-white",
-                      "border border-gray-200 dark:border-white/[0.07]",
-                      "transition-all duration-150",
-                    ].join(" ")
-              }
-            >
-              {/* Clock – Latest */}
-              {tab.key === "latest" && (
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-                  <circle cx="8" cy="8" r="6.3"/>
-                  <polyline points="8,5 8,8 10.5,10.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              )}
-              {/* Fire – Popular */}
-              {tab.key === "popular" && (
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-                  <path d="M8 14c-3.3 0-5.5-2.2-5.5-5 0-2.5 2-4 2.8-5.3.4 1.2.9 1.8 1.4 1.8 0-1.8 1.8-3 1.8-4.2C10 2.8 13 4.7 13 9c0 2.8-1.7 5-5 5z" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              )}
-              {/* Calendar – Oldest */}
-              {tab.key === "oldest" && (
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-                  <rect x="2" y="2.5" width="12" height="11" rx="2"/>
-                  <line x1="5" y1="1" x2="5" y2="4" stroke-linecap="round"/>
-                  <line x1="11" y1="1" x2="11" y2="4" stroke-linecap="round"/>
-                  <line x1="2" y1="7" x2="14" y2="7"/>
-                </svg>
-              )}
-              {/* Photo – Media */}
-              {tab.key === "media" && (
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-                  <rect x="1.5" y="3" width="13" height="10" rx="2"/>
-                  <circle cx="5.5" cy="6.5" r="1.2"/>
-                  <path d="M1.5 11.5 5 8.5l2.5 2 2-1.5 4 3.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              )}
-              {/* File – Articles */}
-              {tab.key === "articles" && (
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-                  <path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/>
-                  <line x1="5" y1="6" x2="11" y2="6" stroke-linecap="round"/>
-                  <line x1="5" y1="9" x2="9" y2="9" stroke-linecap="round"/>
-                </svg>
-              )}
-              {tab.label}
-            </a>
-          );
-        })}
-      </div>
-
-      <!-- Search -->
-      <form method="GET" class="flex shrink-0 items-center py-3">
-        <input type="hidden" name="filter" value={filter} />
-        <div class="relative">
-          <svg
-            class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-            viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" width="13" height="13">
-            <circle cx="6.5" cy="6.5" r="4.3"/>
-            <line x1="10" y1="10" x2="14" y2="14" stroke-linecap="round"/>
-          </svg>
-          <input
-            type="search"
-            name="q"
-            value={search}
-            placeholder="Search saved posts..."
-            class="w-60 rounded-full border py-2.5 pl-9 pr-4 text-[13px] outline-none transition-colors
-                   border-gray-200 bg-gray-100 text-gray-800 placeholder-gray-400
-                   focus:border-violet-500 focus:bg-white
-                   dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-gray-100
-                   dark:placeholder-gray-600 dark:focus:border-violet-500 dark:focus:bg-[#1a2040]"
-          />
-        </div>
-      </form>
-    </nav>
-
-    <!-- ════════════════════════════════════════════════
-         DEMO NOTICE
-    ════════════════════════════════════════════════ -->
-    {isShowingDemo && (
-      <div
-        class="mx-8 mt-5 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-[12.5px] font-medium
-               border-amber-200 bg-amber-50 text-amber-700
-               dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-400">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" width="14" height="14" class="shrink-0">
-          <circle cx="8" cy="8" r="6.3"/>
-          <line x1="8" y1="5.5" x2="8" y2="8.5" stroke-linecap="round"/>
-          <circle cx="8" cy="10.5" r="0.6" fill="currentColor" stroke="none"/>
-        </svg>
-        These are demo posts — start bookmarking from your feed and they'll appear here instead.
-      </div>
-    )}
-
-    <!-- ════════════════════════════════════════════════
-         FEED — single column like image 3 (liked page)
-    ════════════════════════════════════════════════ -->
-    <main class="mx-auto max-w-3xl px-8 py-6">
-
-      {displayPosts.length > 0 ? (
-        <div class="flex flex-col gap-5">
-          {displayPosts.map((post) => {
-            const av = avatarColor(post.author?.name);
-            return (
-              <article
-                class="overflow-hidden rounded-2xl border transition-all duration-200
-                       border-gray-200 bg-white shadow-sm hover:shadow-md
-                       dark:border-white/[0.08] dark:bg-[#111827] dark:shadow-none dark:hover:border-white/[0.14]">
-
-                <!-- ── Author row ── -->
-                <div class="flex items-center justify-between px-5 pt-5 pb-1">
-                  <div class="flex items-center gap-3">
-                    {post.author?.avatar ? (
-                      <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        class="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-white/10"
-                      />
-                    ) : (
-                      <div
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[13px] font-bold uppercase"
-                        style={`background:${av.bg};color:${av.text}`}
-                      >
-                        {initials(post.author?.name)}
-                      </div>
-                    )}
-                    <div>
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-[14px] font-bold uppercase tracking-wide text-gray-900 dark:text-white">
-                          {post.author?.name ?? "Unknown"}
-                        </span>
-                        {post.author?.verified && (
-                          <svg viewBox="0 0 16 16" fill="#3b82f6" width="14" height="14">
-                            <circle cx="8" cy="8" r="8"/>
-                            <polyline points="5,8 7,10 11,6" fill="none" stroke="#fff" stroke-width="1.6"
-                                      stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        )}
-                        {/* NEW badge for recent posts (< 7 days) */}
-                        {post.createdAt && (Date.now() - new Date(post.createdAt).getTime() < 7 * 86400000) && (
-                          <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-600 dark:bg-violet-500/20 dark:text-violet-400">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-                      <p class="text-[12px] text-gray-400 dark:text-gray-500">
-                        {timeAgo(post.createdAt)}
-                        {post.location && ` · ${post.location}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- 3-dot menu -->
-                  <button
-                    aria-label="More options"
-                    class="rounded-full p-1.5 text-gray-400 transition-colors
-                           hover:bg-gray-100 hover:text-gray-600
-                           dark:text-gray-600 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
-                    <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                      <circle cx="4"  cy="10" r="1.6"/>
-                      <circle cx="10" cy="10" r="1.6"/>
-                      <circle cx="16" cy="10" r="1.6"/>
-                    </svg>
-                  </button>
-                </div>
-
-                <!-- ── Media ── -->
-                {post.media?.type === "image" && (
-                  <div class="mx-5 mt-4 overflow-hidden rounded-xl">
-                    <img
-                      src={post.media.url}
-                      alt={post.media.alt ?? ""}
-                      loading="lazy"
-                      class="h-[340px] w-full object-cover"
-                    />
-                  </div>
-                )}
-
-                {post.media?.type === "code" && (
-                  <div
-                    class="mx-5 mt-4 overflow-x-auto rounded-xl border border-white/[0.06] p-5"
-                    style="background:#0d1422">
-                    <pre class="font-mono text-[12.5px] leading-[1.85]" set:html={post.media.html} />
-                  </div>
-                )}
-
-                <!-- ── Title + description ── -->
-                {(post.title || post.description) && (
-                  <div class="px-5 pt-4">
-                    {post.title && (
-                      <h2 class="text-[1.15rem] font-bold text-gray-900 dark:text-white mb-1">
-                        {post.title}
-                      </h2>
-                    )}
-                    {post.description && (
-                      <p class="text-[13.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                        {post.description}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <!-- ── Post text (if no title/description) ── -->
-                {!post.title && !post.description && post.content && (
-                  <div class="px-5 pt-4">
-                    <p class="text-[14.5px] leading-relaxed text-gray-800 dark:text-gray-200">
-                      {post.content}
-                    </p>
-                  </div>
-                )}
-
-                <!-- ── Action bar ── -->
-                <div
-                  class="mt-4 flex items-center border-t px-5 py-3.5
-                         border-gray-100 dark:border-white/[0.07]">
-
-                  <!-- Like -->
-                  <button
-                    class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors
-                           text-gray-500 hover:bg-rose-50 hover:text-rose-500
-                           dark:text-gray-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15">
-                      <path d="M8 13.5S1.5 9.5 1.5 5.5a3.5 3.5 0 016.5-1.8A3.5 3.5 0 0114.5 5.5C14.5 9.5 8 13.5 8 13.5z"
-                            stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    {post.stats?.likes ?? 0}
-                  </button>
-
-                  <!-- Comment -->
-                  <button
-                    class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors
-                           text-gray-500 hover:bg-sky-50 hover:text-sky-500
-                           dark:text-gray-500 dark:hover:bg-sky-500/10 dark:hover:text-sky-400">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15">
-                      <path d="M14 9.5a6 6 0 01-6 4.5H2l2.5-2.5A5.95 5.95 0 012 7.5 6 6 0 018 1.5a6 6 0 016 6z"
-                            stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    {post.stats?.replies ?? 0}
-                  </button>
-
-                  <!-- Right side: Save (unsave) + Share -->
-                  <div class="ml-auto flex items-center gap-1">
-                    <!-- Save / Unsave -->
-                    {post.isDemo ? (
-                      <button
-                        disabled
-                        title="Demo — cannot unsave"
-                        class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium
-                               text-violet-400 opacity-50 cursor-not-allowed">
-                        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15">
-                          <path d="M3 2h10a1 1 0 011 1v11l-6-3.5L2 14V3a1 1 0 011-1z"/>
-                        </svg>
-                        Save
-                      </button>
-                    ) : (
-                      <form method="POST" action={`/api/posts/${post.id}/unsave`}>
-                        <button
-                          type="submit"
-                          title="Remove from saved"
-                          class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors
-                                 text-violet-600 hover:bg-violet-50 hover:text-violet-700
-                                 dark:text-violet-400 dark:hover:bg-violet-500/10 dark:hover:text-violet-300">
-                          <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15">
-                            <path d="M3 2h10a1 1 0 011 1v11l-6-3.5L2 14V3a1 1 0 011-1z"/>
-                          </svg>
-                          Save
-                        </button>
-                      </form>
-                    )}
-
-                    <!-- Share -->
-                    <button
-                      class="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors
-                             text-gray-500 hover:bg-gray-100 hover:text-gray-700
-                             dark:text-gray-500 dark:hover:bg-white/[0.07] dark:hover:text-gray-300">
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15">
-                        <circle cx="12.5" cy="3.5" r="1.8"/>
-                        <circle cx="12.5" cy="12.5" r="1.8"/>
-                        <circle cx="3.5" cy="8" r="1.8"/>
-                        <line x1="5.2" y1="7.1" x2="10.8" y2="4.4" stroke-linecap="round"/>
-                        <line x1="5.2" y1="8.9" x2="10.8" y2="11.6" stroke-linecap="round"/>
-                      </svg>
-                      Share
-                    </button>
-                  </div>
-
-                </div>
-              </article>
-            );
-          })}
-        </div>
-
+      <!-- Posts feed or empty state -->
+      {posts.length > 0 ? (
+        <Feed posts={posts} />
       ) : (
-        <!-- ── Empty state ── -->
-        <div class="flex flex-col items-center justify-center py-28 text-center">
+        <!-- Empty state – shown when the user hasn't saved anything yet -->
+        <div class="flex flex-col items-center justify-center py-24 text-center">
           <div
-            class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border
-                   border-gray-200 bg-gray-100 dark:border-white/[0.09] dark:bg-white/[0.05]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                 class="h-8 w-8 text-gray-400 dark:text-gray-600">
-              <path d="M5 3h14a1 1 0 011 1v17l-8-4.5L4 21V4a1 1 0 011-1z"
-                    stroke-linecap="round" stroke-linejoin="round"/>
+            class="mb-5 grid h-16 w-16 place-items-center rounded-full bg-violet-500/10 text-violet-400"
+          >
+            <svg
+              class="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <path
+                d="M7 4h10a1 1 0 0 1 1 1v16l-6-3-6 3V5a1 1 0 0 1 1-1Z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
-          <h3 class="mb-1.5 text-base font-bold text-gray-800 dark:text-gray-200">
-            {search ? `No results for "${search}"` : "No saved posts yet"}
-          </h3>
-          <p class="text-[13px] text-gray-500 dark:text-gray-500">
-            {search
-              ? "Try a different search term."
-              : "Bookmark posts from your feed and they'll appear here."}
+          <h2
+            class="text-[20px] font-bold text-[color:var(--dashboard-text)]"
+          >
+            No saved posts yet
+          </h2>
+          <p
+            class="mt-2 max-w-sm text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+          >
+            When you save a post by clicking the bookmark icon, it will appear
+            here. Only you can see your saved posts.
           </p>
-          {search && (
-            <a
-              href={`?filter=${filter}`}
-              class="mt-6 rounded-full bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white
-                     hover:bg-violet-700 transition-colors">
-              Clear search
-            </a>
-          )}
+          <a
+            href="/dashboard"
+            class="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
+          >
+            Browse Dashboard
+          </a>
         </div>
       )}
+    </section>
 
-    </main>
   </div>
+
+  <UploadModal />
 </UserDashboardLayout>
+
+<style>
+  /* Same grid token used by dashboard/index.astro and liked.astro */
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1280px) {
+    .page-grid {
+      grid-template-columns: minmax(0, 1fr) 308px;
+      gap: 2rem;
+    }
+  }
+</style>

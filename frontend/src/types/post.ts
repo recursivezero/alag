@@ -18,6 +18,9 @@ export type PostItem = {
   title: string
   caption: string
   imageUrl: string
+  altText?: string | null
+  category?: string | null
+  feedType?: 'public' | 'personal'
   location: string | null
   createdAt: string
   author: UserProfile

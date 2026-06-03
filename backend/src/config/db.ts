@@ -244,13 +244,42 @@ await db.execute(`
     slug VARCHAR(180) NOT NULL UNIQUE,
     title VARCHAR(180) NOT NULL,
     caption TEXT NOT NULL,
-    image_url VARCHAR(500) NOT NULL,
+    image_url LONGTEXT NOT NULL,
     location VARCHAR(180) NULL,
+    alt_text VARCHAR(255) NULL,
+    category VARCHAR(80) NULL,
+    feed_type VARCHAR(20) NOT NULL DEFAULT 'public',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_created_at (created_at)
   )
 `)
+
+const [postColumns]: any = await db.execute(`
+  SELECT COLUMN_NAME
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts'
+`)
+
+const existingPostColumns = new Set(
+  postColumns.map((row: { COLUMN_NAME: string }) => row.COLUMN_NAME)
+)
+
+if (!existingPostColumns.has('alt_text')) {
+  await db.execute('ALTER TABLE posts ADD COLUMN alt_text VARCHAR(255) NULL AFTER location')
+}
+
+if (!existingPostColumns.has('category')) {
+  await db.execute('ALTER TABLE posts ADD COLUMN category VARCHAR(80) NULL AFTER alt_text')
+}
+
+if (!existingPostColumns.has('feed_type')) {
+  await db.execute("ALTER TABLE posts ADD COLUMN feed_type VARCHAR(20) NOT NULL DEFAULT 'public' AFTER category")
+}
+
+await db.execute("UPDATE posts SET feed_type = COALESCE(feed_type, 'public')")
+await db.execute("UPDATE posts SET feed_type = 'public' WHERE feed_type NOT IN ('public', 'personal')")
+await db.execute('ALTER TABLE posts MODIFY image_url LONGTEXT NOT NULL')
 
 await db.execute(`
   CREATE TABLE IF NOT EXISTS likes (

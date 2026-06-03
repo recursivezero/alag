@@ -78,6 +78,11 @@ const applyUserProfileUpdate = (user: UserProfile | null | undefined) => {
   })
 
   setStoredUser(user)
+  document.dispatchEvent(
+    new CustomEvent("alag-user-profile-updated", {
+      detail: user,
+    }),
+  )
 }
 
 const syncTopbarThemeIcons = () => {

@@ -68,5 +68,55 @@ CREATE TABLE IF NOT EXISTS user_activity_logs (
   INDEX idx_created_at (created_at)
 );
 
+-- Posts table (referenced by interactions below)
+CREATE TABLE IF NOT EXISTS posts (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT           NOT NULL,
+  slug        VARCHAR(255)  NOT NULL UNIQUE,
+  title       VARCHAR(255)  NOT NULL,
+  caption     TEXT          NOT NULL,
+  image_url   MEDIUMTEXT    NOT NULL,
+  alt_text    VARCHAR(255)  NOT NULL,
+  category    VARCHAR(100)  NULL,
+  feed_type   VARCHAR(20)   NOT NULL DEFAULT 'public',
+  location    VARCHAR(255)  NULL,
+  created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_slug (slug),
+  INDEX idx_feed_type (feed_type),
+  INDEX idx_created_at (created_at)
+);
 
+-- Likes: one row per user/post pair. Toggled by POST /api/posts/:slug/like.
+-- Visible only to the liking user (Liked section is private).
+CREATE TABLE IF NOT EXISTS likes (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT           NOT NULL,
+  post_id     INT           NOT NULL,
+  created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY  uq_user_post  (user_id, post_id),
+  INDEX idx_post_id (post_id),
+  INDEX idx_user_id (user_id)
+);
 
+-- Saved posts: one row per user/post pair.
+CREATE TABLE IF NOT EXISTS saved_posts (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT           NOT NULL,
+  post_id     INT           NOT NULL,
+  created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY  uq_saved_user_post (user_id, post_id),
+  INDEX idx_post_id (post_id),
+  INDEX idx_user_id (user_id)
+);
+
+-- Comments on posts (visible to everyone).
+CREATE TABLE IF NOT EXISTS post_comments (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  post_id     INT           NOT NULL,
+  user_id     INT           NOT NULL,
+  body        TEXT          NOT NULL,
+  created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_post_id (post_id),
+  INDEX idx_user_id (user_id)
+);
