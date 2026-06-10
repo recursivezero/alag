@@ -5,6 +5,7 @@ import type { PostDetail, PostItem } from '../types/post'
 type SessionOptions = {
   cookieHeader?: string
   userId?: number | null
+  filter?: string
 }
 
 const buildHeaders = (options?: SessionOptions): HeadersInit => {
@@ -23,7 +24,11 @@ const buildHeaders = (options?: SessionOptions): HeadersInit => {
 
 export const fetchFeedPosts = async (options?: SessionOptions) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts`, {
+    const query = options?.filter
+      ? `?filter=${encodeURIComponent(options.filter)}`
+      : ''
+
+    const response = await fetch(`${getApiBaseUrl()}/posts${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -129,16 +134,9 @@ export const deletePost = async (slug: string) => {
 
   return true
 }
-// ─────────────────────────────────────────────
-// LIKED POSTS  (private – current user only)
-// ─────────────────────────────────────────────
 
-/**
- * Fetch all posts liked by the authenticated user.
- * Mirrors the same PostItem shape returned by fetchFeedPosts so the
- * existing Feed / PostCard components work without any changes.
- * Returns an empty array if the user is not authenticated or on error.
- */
+// LIKED POSTS  (private – current user only)
+
 export const fetchLikedPosts = async (options?: SessionOptions) => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/posts/liked`, {
@@ -158,15 +156,9 @@ export const fetchLikedPosts = async (options?: SessionOptions) => {
   }
 }
 
-// ─────────────────────────────────────────────
-// TOGGLE LIKE  (POST /api/posts/:slug/like)
-// ─────────────────────────────────────────────
 
-/**
- * Toggle the like state for the given post slug.
- * Returns { liked: boolean, likeCount: number } on success,
- * or throws on network / auth error.
- */
+// TOGGLE LIKE  (POST /api/posts/:slug/like)
+
 export const togglePostLike = async (
   slug: string,
 ): Promise<{ liked: boolean; likeCount: number }> => {
@@ -186,16 +178,9 @@ export const togglePostLike = async (
   return response.json() as Promise<{ liked: boolean; likeCount: number }>
 }
 
-// ─────────────────────────────────────────────
-// SAVED POSTS  (private – current user only)
-// ─────────────────────────────────────────────
 
-/**
- * Fetch all posts saved by the authenticated user.
- * Returns the same PostItem shape as fetchFeedPosts so the existing
- * Feed / PostCard components work with zero changes.
- * Returns an empty array if the user is not authenticated or on error.
- */
+// SAVED POSTS  (private – current user only)
+
 export const fetchSavedPosts = async (options?: SessionOptions) => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/posts/saved`, {
@@ -215,15 +200,8 @@ export const fetchSavedPosts = async (options?: SessionOptions) => {
   }
 }
 
-// ─────────────────────────────────────────────
 // TOGGLE SAVE  (POST /api/posts/:slug/save)
-// ─────────────────────────────────────────────
 
-/**
- * Toggle the saved state for the given post slug.
- * Returns { saved: boolean, saveCount: number } on success,
- * or throws on network / auth error.
- */
 export const togglePostSave = async (
   slug: string,
 ): Promise<{ saved: boolean; saveCount: number }> => {

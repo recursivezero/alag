@@ -68,16 +68,12 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
       <!-- LEFT SIDEBAR -->
       <Sidebar currentPath={currentPath} user={user} />
 
-      <!--
-        MAIN AREA
-        margin-left: 8px  → visible gap between sidebar glass card right edge and content
-        border-left       → subtle separator line
-      -->
+      
       <div class="main-col flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar user={user} />
 
         <main
-          class="dashboard-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 pb-8 md:px-7"
+          class="dashboard-scrollbar flex-1 overflow-y-auto overflow-x-hidden pt-5 pb-8"
         >
           <slot />
         </main>
@@ -90,17 +86,16 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
 </html>
 
 <style>
-  /*
-    8px left margin on the main column creates a clear visual
-    gap between the sidebar glass card and the page content.
-    The sidebar already has p-2.5 internally so its glass card
-    doesn't touch the viewport edge — this margin separates the
-    two columns from each other.
-  */
-  .main-col {
+  
+  /* .main-col {
     margin-left: 25px;
-    /* padding: 22px; */
+    padding: 22px; *
     padding-left: 20px;
     border-left: 1px solid var(--dashboard-border);
-  }
+  } */
+   .main-col {
+  margin-left: 5px;
+  padding-left: 12px;
+  border-left: 1px solid var(--dashboard-border);
+}
 </style>

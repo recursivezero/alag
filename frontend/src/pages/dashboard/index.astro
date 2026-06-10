@@ -8,19 +8,27 @@ import { fetchCurrentUserOrGuest } from "../../services/userService";
 import { fetchFeedPosts } from "../../services/postService";
 
 const cookieHeader = Astro.request.headers.get("cookie") || "";
+
+const filter = Astro.url.searchParams.get("filter") || "all";
+
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
 const posts = currentUser.id
-  ? await fetchFeedPosts({ cookieHeader, userId: currentUser.id })
+  ? await fetchFeedPosts({
+      cookieHeader,
+      userId: currentUser.id,
+      filter,
+    })
   : [];
 ---
 
 <UserDashboardLayout title="Dashboard | RecursiveAuth" user={currentUser}>
   <div
-    class="page-grid mx-auto w-full max-w-[1400px] px-5 py-6 lg:px-6 lg:py-7"
+    class="page-grid  w-full max-w-[1400px] px-5 py-6 lg:px-6 lg:py-7"
   >
-    <!-- ══════════════ LEFT / MAIN FEED ══════════════ -->
-    <section class="feed-col min-w-0">
-      <!-- Hero greeting -->
+   
+    <section class="feed-col mx-auto min-w-0 w-full max-w-[1150px]">
+     
       <div class="mb-6">
         <p
           class="text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-400"
@@ -40,33 +48,37 @@ const posts = currentUser.id
         </p>
       </div>
 
-      <!-- Category filters -->
-      <div class="mb-5">
-        <FeedFilters current="all" />
-      </div>
+    
+<div class="filters-wrapper">
+  <FeedFilters current={filter} />
+</div>
 
       <!-- Posts feed -->
-      <Feed posts={posts} />
+   <div class="posts-wrapper">
+     <Feed posts={posts} />
+   </div>
     </section>
 
-    <!-- ══════════════ RIGHT SIDEBAR ══════════════ -->
+    
   </div>
 
   <UploadModal />
 </UserDashboardLayout>
 
 <style>
-  /* ── 2-column layout ── */
-  .page-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    padding-top: 24px !important;
-    padding-bottom: 32px !important;
-  }
 
+  
+ .page-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  padding-left: 0 !important;
+  padding-right: 20px !important;
+
+  padding-top: 24px !important;
+  padding-bottom: 32px !important;
+}
   @media (min-width: 1024px) {
     .page-grid {
       padding-left: 28px !important;
@@ -74,14 +86,19 @@ const posts = currentUser.id
     }
   }
 
-  @media (min-width: 1280px) {
-    .page-grid {
-      grid-template-columns: minmax(0, 1fr) 308px;
-      gap: 2rem;
-    }
+ /* @media (min-width: 1280px) {
+  .page-grid {
+    grid-template-columns: 1fr;
   }
-
-  /* ── Profile card glass ── */
+} */
+@media (min-width: 1280px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+}
+ 
   .profile-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -90,20 +107,20 @@ const posts = currentUser.id
     -webkit-backdrop-filter: blur(20px);
   }
 
-  /* ── Divider ── */
+ 
   .section-divider {
     height: 1px;
     background: var(--dashboard-border);
     margin: 0 1.25rem;
   }
 
-  /* ── Stat chips ── */
+  
   .stat-chip {
     background: var(--dashboard-surface);
     border: 1px solid var(--dashboard-border);
   }
 
-  /* ── Tag chips ── */
+
   .tag-chip {
     border-color: var(--dashboard-border);
     background: var(--dashboard-surface);
@@ -114,7 +131,7 @@ const posts = currentUser.id
     color: var(--dashboard-accent);
   }
 
-  /* ── Section heading ── */
+  
   .section-label {
     font-size: 10px;
     font-weight: 700;
@@ -122,4 +139,14 @@ const posts = currentUser.id
     text-transform: uppercase;
     color: var(--dashboard-muted);
   }
+  .posts-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.filters-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  
+}
 </style>

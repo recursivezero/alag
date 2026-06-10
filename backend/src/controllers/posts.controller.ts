@@ -131,10 +131,17 @@ export const listPosts = async (c: Context) => {
   const limit = Math.min(20, Math.max(1, Number(c.req.query('limit') || 12)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
   const userId = getSessionUserId(c)
+  const filter = c.req.query('filter')
+
+  const whereClause =
+   filter && filter !== 'all'
+    ? "WHERE COALESCE(p.feed_type, 'public') = 'public' AND LOWER(p.category) = LOWER(?)"
+    : "WHERE COALESCE(p.feed_type, 'public') = 'public'"
 
   const [rows]: any = await db.execute(
-    `${buildPostQuery("WHERE COALESCE(p.feed_type, 'public') = 'public'")} LIMIT ${limit} OFFSET ${offset}`
-  )
+  `${buildPostQuery(whereClause)} LIMIT ${limit} OFFSET ${offset}`,
+  filter && filter !== 'all' ? [filter] : []
+)
 
   const postIds = (rows as Array<{ id: number }>).map((row) => Number(row.id))
   let likedPostIds = new Set<number>()
@@ -376,7 +383,7 @@ export const deletePost = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
-  // Find the post owned by the user
+  
   const [rows]: any = await db.execute(
     'SELECT id FROM posts WHERE slug = ? AND user_id = ? LIMIT 1',
     [slug, user.id],
@@ -388,8 +395,7 @@ export const deletePost = async (c: Context) => {
 
   const postId = Number(rows[0].id)
 
-  // Remove dependent data (likes, comments, saved) then the post itself.
-  // Keep operations simple and best-effort; wrap in a transaction if DB supports it.
+ 
   try {
     await db.execute('DELETE FROM likes WHERE post_id = ?', [postId])
     await db.execute('DELETE FROM post_comments WHERE post_id = ?', [postId])
@@ -401,12 +407,9 @@ export const deletePost = async (c: Context) => {
 
   return c.json({ success: true })
 }
-// ─────────────────────────────────────────────
+
 // LIKE / UNLIKE  (POST /api/posts/:slug/like)
-// ─────────────────────────────────────────────
-// Toggles the like state for the authenticated user on the given post.
-// Returns { liked: boolean, likeCount: number }.
-// The Liked section is private – only the liking user can see it.
+
 export const toggleLike = async (c: Context) => {
   const slug = c.req.param('slug')
   const user = await getAuthenticatedUser(c)
@@ -414,7 +417,7 @@ export const toggleLike = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
-  // Resolve post id from slug
+ 
   const [postRows]: any = await db.execute(
     "SELECT id FROM posts WHERE slug = ? LIMIT 1",
     [slug],
@@ -424,7 +427,6 @@ export const toggleLike = async (c: Context) => {
   }
   const postId = Number(postRows[0].id)
 
-  // Check existing like
   const [existingRows]: any = await db.execute(
     'SELECT id FROM likes WHERE user_id = ? AND post_id = ? LIMIT 1',
     [user.id, postId],
@@ -433,11 +435,9 @@ export const toggleLike = async (c: Context) => {
   let liked: boolean
 
   if (existingRows.length) {
-    // Already liked → unlike
     await db.execute('DELETE FROM likes WHERE user_id = ? AND post_id = ?', [user.id, postId])
     liked = false
   } else {
-    // Not yet liked → like
     await db.execute(
       'INSERT INTO likes (user_id, post_id) VALUES (?, ?)',
       [user.id, postId],
@@ -445,7 +445,7 @@ export const toggleLike = async (c: Context) => {
     liked = true
   }
 
-  // Return current like count so the client can update the counter accurately
+ 
   const [countRows]: any = await db.execute(
     'SELECT COUNT(*) AS likeCount FROM likes WHERE post_id = ?',
     [postId],
@@ -455,11 +455,9 @@ export const toggleLike = async (c: Context) => {
   return c.json({ liked, likeCount })
 }
 
-// ─────────────────────────────────────────────
+
 // LIKED POSTS  (GET /api/posts/liked)
-// ─────────────────────────────────────────────
-// Returns all posts that the authenticated user has liked.
-// Visible only to the logged-in user (private, per the flow spec).
+
 export const getLikedPosts = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
   if (!user) {
@@ -469,7 +467,7 @@ export const getLikedPosts = async (c: Context) => {
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') || 20)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
 
-  // Join posts with likes filtered to this user, newest like first
+  
   const [rows]: any = await db.execute(
     `
     SELECT
@@ -503,7 +501,7 @@ export const getLikedPosts = async (c: Context) => {
     [user.id],
   )
 
-  // Check which posts the user has also saved (to populate userState.saved)
+  
   const postIds = (rows as Array<{ id: number }>).map((r) => Number(r.id))
   let savedPostIds = new Set<number>()
 
@@ -518,7 +516,7 @@ export const getLikedPosts = async (c: Context) => {
   return c.json({
     posts: (rows as any[]).map((row) => ({
       ...mapPostRow(row),
-      // liked is always true here – user is viewing their own liked list
+     
       userState: {
         liked: true,
         saved: savedPostIds.has(Number(row.id)),
@@ -527,12 +525,9 @@ export const getLikedPosts = async (c: Context) => {
   })
 }
 
-// ─────────────────────────────────────────────
+
 // SAVE / UNSAVE  (POST /api/posts/:slug/save)
-// ─────────────────────────────────────────────
-// Toggles the saved state for the authenticated user on the given post.
-// Returns { saved: boolean, saveCount: number }.
-// The Saved section is private – only the saving user can see it.
+
 export const toggleSave = async (c: Context) => {
   const slug = c.req.param('slug')
   const user = await getAuthenticatedUser(c)
@@ -540,7 +535,7 @@ export const toggleSave = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
-  // Resolve post id from slug
+ 
   const [postRows]: any = await db.execute(
     'SELECT id FROM posts WHERE slug = ? LIMIT 1',
     [slug],
@@ -550,7 +545,7 @@ export const toggleSave = async (c: Context) => {
   }
   const postId = Number(postRows[0].id)
 
-  // Check for an existing saved row
+  
   const [existingRows]: any = await db.execute(
     'SELECT id FROM saved_posts WHERE user_id = ? AND post_id = ? LIMIT 1',
     [user.id, postId],
@@ -559,14 +554,14 @@ export const toggleSave = async (c: Context) => {
   let saved: boolean
 
   if (existingRows.length) {
-    // Already saved → unsave
+   
     await db.execute(
       'DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?',
       [user.id, postId],
     )
     saved = false
   } else {
-    // Not yet saved → save
+    
     await db.execute(
       'INSERT INTO saved_posts (user_id, post_id) VALUES (?, ?)',
       [user.id, postId],
@@ -574,7 +569,7 @@ export const toggleSave = async (c: Context) => {
     saved = true
   }
 
-  // Return the authoritative count after the change
+  
   const [countRows]: any = await db.execute(
     'SELECT COUNT(*) AS saveCount FROM saved_posts WHERE post_id = ?',
     [postId],
@@ -584,11 +579,8 @@ export const toggleSave = async (c: Context) => {
   return c.json({ saved, saveCount })
 }
 
-// ─────────────────────────────────────────────
 // SAVED POSTS  (GET /api/posts/saved)
-// ─────────────────────────────────────────────
-// Returns all posts that the authenticated user has saved.
-// Visible only to the logged-in user (private, per the flow spec).
+
 export const getSavedPosts = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
   if (!user) {
@@ -598,7 +590,7 @@ export const getSavedPosts = async (c: Context) => {
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') || 20)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
 
-  // Join posts with saved_posts filtered to this user, newest save first
+ 
   const [rows]: any = await db.execute(
     `
     SELECT
@@ -632,7 +624,7 @@ export const getSavedPosts = async (c: Context) => {
     [user.id],
   )
 
-  // Cross-check which of these posts the user has also liked
+
   const postIds = (rows as Array<{ id: number }>).map((r) => Number(r.id))
   let likedPostIds = new Set<number>()
 
@@ -647,7 +639,7 @@ export const getSavedPosts = async (c: Context) => {
   return c.json({
     posts: (rows as any[]).map((row) => ({
       ...mapPostRow(row),
-      // saved is always true here – user is viewing their own saved list
+     
       userState: {
         liked: likedPostIds.has(Number(row.id)),
         saved: true,

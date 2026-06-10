@@ -12,9 +12,7 @@ const previewPlaceholder = modal?.querySelector("[data-upload-preview-placeholde
 const replaceButton = modal?.querySelector("[data-upload-replace]")
 const removeButton = modal?.querySelector("[data-upload-remove]")
 const captionInput = modal?.querySelector("[data-upload-caption]")
-const altInput = modal?.querySelector("[data-upload-alt]")
 const categoryInput = modal?.querySelector("[data-upload-category]")
-const locationInput = modal?.querySelector("[data-upload-location]")
 const feedTypeInputs = modal?.querySelectorAll("[data-upload-feed-type]")
 const submitButton = modal?.querySelector("[data-upload-submit]")
 const cancelButton = modal?.querySelector("[data-upload-cancel]")
@@ -27,7 +25,6 @@ const progressLabel = modal?.querySelector("[data-upload-progress-label]")
 const successLink = modal?.querySelector("[data-upload-success-link]")
 const toastRegion = modal?.querySelector("[data-upload-toast-region]")
 const captionCount = modal?.querySelector("[data-upload-caption-count]")
-const altCount = modal?.querySelector("[data-upload-alt-count]")
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"])
 const maxFileSize = 10 * 1024 * 1024
@@ -69,7 +66,6 @@ const clearToasts = () => {
     window.clearTimeout(toastDismissTimer)
     toastDismissTimer = null
   }
-
   if (toastRegion) {
     toastRegion.querySelectorAll("[data-upload-toast]").forEach((toast) => toast.remove())
   }
@@ -77,7 +73,6 @@ const clearToasts = () => {
 
 const dismissToast = (toast) => {
   if (!toast) return
-
   toast.dataset.state = "closing"
   window.setTimeout(() => {
     toast.remove()
@@ -134,7 +129,6 @@ const showToast = ({ tone = "info", title, message }) => {
 
 const updateCounters = () => {
   if (captionCount && captionInput) captionCount.textContent = `${captionInput.value.length} / 500`
-  if (altCount && altInput) altCount.textContent = `${altInput.value.length} / 200`
 }
 
 const getFeedType = () => {
@@ -143,8 +137,8 @@ const getFeedType = () => {
 }
 
 const syncSubmitState = () => {
-  if (!submitButton || !captionInput || !altInput) return
-  const canSubmit = Boolean(selectedImage && selectedImageUrl && captionInput.value.trim() && altInput.value.trim() && !uploadAbortController)
+  if (!submitButton || !captionInput) return
+  const canSubmit = Boolean(selectedImage && selectedImageUrl && captionInput.value.trim() && !uploadAbortController)
   submitButton.disabled = !canSubmit || Boolean(uploadAbortController)
 }
 
@@ -244,9 +238,7 @@ const closeModal = (shouldRestore = true) => {
   clearPreview()
 
   if (captionInput) captionInput.value = ""
-  if (altInput) altInput.value = ""
   if (categoryInput) categoryInput.value = "Nature"
-  if (locationInput) locationInput.value = ""
   if (feedTypeInputs) {
     feedTypeInputs.forEach((input) => {
       input.checked = input.value === "public"
@@ -288,9 +280,9 @@ const finishUploadAnimation = () => {
 
 const showSuccess = (post) => {
   currentSuccessSlug = post?.slug || ""
-  if (successLink) {
-    successLink.href = post?.slug ? `/posts/${post.slug}` : "#"
-  }
+  // if (successLink) {
+  //   successLink.href = post?.slug ? `/posts/${post.slug}` : "#"
+  // }
   showToast({
     tone: "success",
     title: "Upload successful",
@@ -307,9 +299,7 @@ const submitUpload = async (event) => {
   event.preventDefault()
 
   const caption = String(captionInput?.value || "").trim()
-  const altText = String(altInput?.value || "").trim()
   const category = String(categoryInput?.value || "").trim() || "Nature"
-  const location = String(locationInput?.value || "").trim()
   const feedType = getFeedType()
 
   let hasError = false
@@ -325,11 +315,6 @@ const submitUpload = async (event) => {
     missingRequiredField = true
   }
 
-  if (!altText) {
-    hasError = true
-    missingRequiredField = true
-  }
-
   if (selectedImage && !validateFile(selectedImage)) {
     hasError = true
   }
@@ -338,7 +323,7 @@ const submitUpload = async (event) => {
     showToast({
       tone: "error",
       title: "Missing required fields",
-      message: "Add an image, caption, and ALT text before publishing.",
+      message: "Add an image and caption before publishing.",
     })
     syncSubmitState()
     return
@@ -353,10 +338,10 @@ const submitUpload = async (event) => {
     const post = await createPost({
       imageUrl: selectedImageUrl,
       caption,
-      altText,
+      altText: caption,
       category,
       feedType,
-      location,
+      location: "",
     }, uploadAbortController.signal)
 
     finishUploadAnimation()
@@ -396,10 +381,10 @@ openButtons.forEach((button) => {
 
 closeButtons?.forEach((button) => {
   button.addEventListener("click", () => {
-    if (currentSuccessSlug) {
-      window.location.reload()
-      return
-    }
+    // if (currentSuccessSlug) {
+    //   window.location.reload()
+    //   return
+    // }
 
     closeModal(true)
   })
@@ -431,13 +416,7 @@ captionInput?.addEventListener("input", () => {
   syncSubmitState()
 })
 
-altInput?.addEventListener("input", () => {
-  updateCounters()
-  syncSubmitState()
-})
-
 categoryInput?.addEventListener("change", syncSubmitState)
-locationInput?.addEventListener("input", syncSubmitState)
 feedTypeInputs?.forEach((input) => input.addEventListener("change", syncSubmitState))
 
 form?.addEventListener("submit", submitUpload)
