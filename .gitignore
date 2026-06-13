@@ -49,7 +49,6 @@ out/
 .temp/
 
 # VS Code
-.vscode/
 .vscode-test/
 
 # Yarn
