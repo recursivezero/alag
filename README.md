@@ -1,51 +1,74 @@
 # Recursive Login Project
 
-Recursive Login is a full-stack authentication system with email OTP verification, JWT login, Google sign-in, password reset, and separate frontend and backend folders.
+Recursive Login is a full-stack authentication platform built with Astro, Node.js, Hono, and MySQL. It supports email OTP verification, JWT-based authentication, Google Sign-In, password reset functionality, user dashboards, post management, and admin features.
 
 ## Features
 
-- JWT authentication (access tokens issued from backend)
-- OTP-based email verification and verification flow
-- Google authentication (OAuth client integration)
-- Password reset flow with email tokens
-- User dashboard (feed, liked, saved, profile, settings, explore)
-- Post pages with per-post routes and comment section
-- Admin panel with user management and waitlist
-- Separate frontend and backend projects with clear service layers
+* JWT-based authentication
+* Email OTP verification
+* Google OAuth authentication
+* Password reset via email
+* User dashboard
+* Public feed and post management
+* Like and save post functionality
+* User profile and settings management
+* Admin dashboard and user management
+* MySQL database integration
 
 ## Tech Stack
 
-- Astro JS
-- Node.js
-- Hono
-- Express-style HTTP server
-- MySQL
-- Axios
-- Nodemailer
+### Frontend
+
+* Astro
+* TypeScript
+* Axios
+
+### Backend
+
+* Node.js
+* Hono
+* MySQL
+* JWT
+* Nodemailer
 
 ## Project Structure
 
-- `frontend/` — Astro frontend application
-  - `src/pages/` — public, auth, admin, and dashboard pages (login, register, verify-otp, reset-password, welcome, index, posts/[slug], dashboard/feed, dashboard/profile, dashboard/settings, dashboard/explore, dashboard/liked, dashboard/saved)
-  - `src/components/` — UI components (admin, auth, posts, ui, user)
-  - `src/services/` — client-side API and auth services (`api.ts`, `auth.ts`, `userService.ts`, `postService.ts`, `session.ts`, `google-auth.ts`)
-  - `src/stores/` — client state (user/session, theme)
-    `backend/` — Authentication API and database logic
-  - `src/controllers/` — `auth`, `posts`, `admin`
-  - `src/routes/` — API route definitions for auth, posts, admin
-  - `src/utils/` — helpers: OTP generator, mailer, JWT, hashing, session helper
-    `database/recursive.sql` — Database schema
+```text
+alag/
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── stores/
+│   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   └── utils/
+│   ├── .env.example
+│   ├── package.json
+│   └── README.md
+│
+├── database/
+│   ├── recursive.sql
+│   └── migrations/
+│       └── 001_add_post_draft_support.sql
+│
+└── README.md
+```
 
-## Requirements
+## Prerequisites
 
-- Node.js
-- MySQL
-- Email account for OTP delivery
-- Google OAuth client ID for Google login
+* Node.js (v18 or later recommended)
+* npm
+* MySQL
 
 ## Installation
 
-Install dependencies in both project folders:
+Install dependencies for both frontend and backend:
 
 ```bash
 cd backend
@@ -55,107 +78,117 @@ cd ../frontend
 npm install
 ```
 
-## Database Setup
-
-Create the database and tables using the SQL file:
-
-```bash
-mysql -u root -p < database/recursive.sql
-```
-
 ## Environment Variables
 
-Create a `.env` file inside `backend/` with these values:
+Copy:
 
 ```bash
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=recursive
-PORT=5001
-JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_email
-EMAIL_PASSWORD=your_email_password
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=465
-EMAIL_SECURE=true
-GOOGLE_CLIENT_ID=your_google_client_id
+backend/.env.example
 ```
 
-If needed, set the frontend API URL in `frontend/.env`:
+to:
 
 ```bash
+backend/.env
+```
+
+and provide the required values.
+
+If required, configure the frontend environment:
+
+```env
 PUBLIC_API_BASE_URL=http://localhost:5001/api
 ```
 
-Note: the frontend relies on `src/services/*` to communicate with the backend; keep `PUBLIC_API_BASE_URL` aligned with the running backend.
+## Database Setup
 
-## How to Start the Project
+Create the database:
 
-### Terminal 1 — Backend first
+```sql
+CREATE DATABASE recursive;
+```
 
-1. Open Terminal 1.
-2. Go to the backend folder:
+Import the database dump:
+
+```bash
+mysql -u root -p recursive < database/recursive.sql
+```
+
+## Database Migration
+
+After importing the database dump, execute:
+
+```bash
+mysql -u root -p recursive < database/migrations/001_add_post_draft_support.sql
+```
+
+## Running the Application
+
+Open two separate terminals to run the backend and frontend simultaneously.
+
+### Terminal 1 — Start Backend
 
 ```bash
 cd backend
-```
-
-3. Install backend dependencies:
-
-```bash
-npm install
-```
-
-4. Start the backend server:
-
-```bash
 npm run dev
 ```
 
 Backend URL:
 
-- `http://localhost:5001`
+```text
+http://localhost:5001
+```
 
-### Terminal 2 — Frontend second
-
-1. Open Terminal 2.
-2. Go to the frontend folder:
+### Terminal 2 — Start Frontend
 
 ```bash
 cd frontend
-```
-
-3. Install Astro frontend dependencies:
-
-```bash
-npm install
-```
-
-4. Start the Astro frontend:
-
-```bash
 npm run dev
 ```
 
 Frontend URL:
 
-- `http://localhost:4321`
+```text
+http://localhost:4321
+```
 
-## Scripts
+### Start Backend
+
+```bash
+cd backend
+npm run dev
+```
+
+Backend URL:
+
+```text
+http://localhost:5001
+```
+
+### Start Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend URL:
+
+```text
+http://localhost:4321
+```
+
+## Available Scripts
 
 ### Backend
-
-From inside `backend/`:
 
 ```bash
 npm run dev
 npm run build
+npm start
 ```
 
 ### Frontend
-
-From inside `frontend/`:
 
 ```bash
 npm run dev
@@ -165,32 +198,26 @@ npm run preview
 
 ## Important Notes
 
-- Keep backend and frontend dependencies separate.
-- The frontend implements a small service layer (`src/services`) that centralizes API requests, auth handling, session storage, and remembered-account logic — prefer adding client API calls there instead of ad-hoc fetches in pages.
-- Authentication flow summary: users register/login via the backend auth endpoints; email OTP verification and password-reset flows are supported; JWTs are issued by the backend and consumed by the frontend services for Authorization headers. The frontend also maintains a lightweight session store (`src/stores/userStore.ts`) for client state.
-- Admin UI is available under `frontend/src/pages/admin/*` and uses the backend `admin` routes for user management and waitlist operations.
-- Database migrations are manual via `database/recursive.sql`. Back up data before applying schema changes.
+* Ensure MySQL is running before starting the backend.
+* Copy `.env.example` to `.env` before running the application.
+* Import `recursive.sql` before executing migration files.
+* Verify email and Google OAuth credentials before testing authentication flows.
+* Keep backend and frontend dependencies separate.
 
-## Clean Repository Rules
+## Repository Ignore Rules
 
-Recommended files to ignore:
-
-```bash
+```text
 node_modules/
 .astro/
 dist/
+.env
+.env.*
+!.env.example
 *.log
-*.pid
-package-lock.json
 .DS_Store
 ```
 
-## Summary
+## Application URLs
 
-- Backend starts first in Terminal 1
-- Frontend starts second in Terminal 2
-- Backend URL: `http://localhost:5001`
-- Frontend URL: `http://localhost:4321`
-
-Created by Sonu
-Last Updated: May 19, 2026
+* Backend: http://localhost:5001
+* Frontend: http://localhost:4321
