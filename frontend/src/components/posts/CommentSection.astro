@@ -1,0 +1,41 @@
+---
+import Avatar from "../ui/Avatar.astro";
+import type { CommentItem } from "../../types/comment";
+
+const { comments } = Astro.props as { comments: CommentItem[] };
+---
+
+<section class="rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+  <div class="flex items-center justify-between gap-4">
+    <h2 class="text-xl font-semibold text-[color:var(--dashboard-text)]">Comments</h2>
+    <span class="text-sm text-[color:var(--dashboard-muted)]">{comments.length} replies</span>
+  </div>
+
+  <div class="mt-5 grid gap-4">
+    {comments.length ? (
+      comments.map((comment) => (
+        <article class="flex gap-3 rounded-[22px] border border-[color:var(--dashboard-border)] bg-white/5 p-4">
+          <Avatar src={comment.author.picture || "/icon.png"} alt={comment.author.name} size="sm" />
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-semibold text-[color:var(--dashboard-text)]">{comment.author.name}</p>
+              <span class="text-xs text-[color:var(--dashboard-muted)]">{new Date(comment.createdAt).toLocaleDateString()}</span>
+            </div>
+            <p class="mt-1 text-sm leading-6 text-[color:var(--dashboard-muted)]">{comment.body}</p>
+          </div>
+        </article>
+      ))
+    ) : (
+      <p class="text-sm text-[color:var(--dashboard-muted)]">Be the first to comment.</p>
+    )}
+  </div>
+
+  <form class="mt-5 grid gap-3">
+    <textarea
+      rows="3"
+      placeholder="Write a comment..."
+      class="w-full rounded-[22px] border border-[color:var(--dashboard-border)] bg-transparent px-4 py-3 text-sm text-[color:var(--dashboard-text)] outline-none transition placeholder:text-[color:var(--dashboard-muted)] focus:border-[color:var(--dashboard-accent)]"
+    ></textarea>
+    <button type="button" class="inline-flex w-fit items-center rounded-full bg-[color:var(--dashboard-accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--dashboard-accent-strong)]">Post comment</button>
+  </form>
+</section>

@@ -1,0 +1,21 @@
+---
+import "../styles/global.css";
+import "../styles/tailwind.css";
+import "../styles/dashboard.css";
+import postThemeScriptUrl from "../scripts/post-theme.ts?url";
+const { title = "Post" } = Astro.props;
+---
+
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#7c3aed" />
+    <title>{title}</title>
+    <link rel="icon" type="image/png" href="/icon2.png" sizes="1024x1024" />
+  </head>
+  <body class="dashboard-shell antialiased transition-colors duration-300">
+    <script type="module" src={postThemeScriptUrl}></script>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,105 @@
+---
+import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import Feed from "../../components/user/Feed.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchSavedPosts } from "../../services/postService";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
+// Saved Posts is private – guests are redirected to login.
+if (!currentUser.id) {
+  return Astro.redirect("/auth/login");
+}
+
+// Fetch only this user's saved posts (authenticated, server-side, cookie-forwarded)
+const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
+---
+
+<UserDashboardLayout title="Saved Posts | RecursiveAuth" user={currentUser}>
+
+  <div class="page-grid mx-auto w-full max-w-[1400px]" style="padding: 28px 28px 40px 28px;">
+
+    <!-- ══════════════ MAIN FEED COLUMN ══════════════ -->
+    <section class="feed-col min-w-0">
+
+      <!-- Page heading -->
+      <div class="mb-6">
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
+          Saved Posts
+        </h1>
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          All posts you saved will appear here. Only you can see this section.
+        </p>
+      </div>
+
+      <!-- Posts feed or empty state -->
+      {posts.length > 0 ? (
+        <Feed posts={posts} />
+      ) : (
+        <!-- Empty state – shown when the user hasn't saved anything yet -->
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+          <div
+            class="mb-5 grid h-16 w-16 place-items-center rounded-full bg-violet-500/10 text-violet-400"
+          >
+            <svg
+              class="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <path
+                d="M7 4h10a1 1 0 0 1 1 1v16l-6-3-6 3V5a1 1 0 0 1 1-1Z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <h2
+            class="text-[20px] font-bold text-[color:var(--dashboard-text)]"
+          >
+            No saved posts yet
+          </h2>
+          <p
+            class="mt-2 max-w-sm text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+          >
+            When you save a post by clicking the bookmark icon, it will appear
+            here. Only you can see your saved posts.
+          </p>
+          <a
+            href="/dashboard"
+            class="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
+          >
+            Browse Dashboard
+          </a>
+        </div>
+      )}
+    </section>
+
+  </div>
+
+  <UploadModal />
+</UserDashboardLayout>
+
+<style>
+  /* Same grid token used by dashboard/index.astro and liked.astro */
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1280px) {
+    .page-grid {
+      grid-template-columns: minmax(0, 1fr) 308px;
+      gap: 2rem;
+    }
+  }
+</style>

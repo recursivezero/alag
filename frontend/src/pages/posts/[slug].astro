@@ -1,0 +1,79 @@
+---
+import PostLayout from "../../layouts/PostLayout.astro";
+import Topbar from "../../components/user/UserTopbar.astro";
+import PostHeader from "../../components/posts/PostHeader.astro";
+import CommentSection from "../../components/posts/CommentSection.astro";
+import RelatedPosts from "../../components/posts/RelatedPosts.astro";
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchPostBySlug } from "../../services/postService";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+const postData = await fetchPostBySlug(Astro.params.slug!, {
+  cookieHeader,
+  userId: currentUser.id || undefined,
+});
+
+const post = postData?.post;
+const comments = postData?.comments ?? [];
+const relatedPosts = postData?.relatedPosts ?? [];
+---
+
+<PostLayout title={`${post?.title || "Post"} | RecursiveAuth`}>
+  <div class="dashboard-shell">
+    <div class="lg:pl-0">
+      <Topbar user={currentUser} sidebarOffset={false} />
+
+      <main class="mx-auto grid w-full max-w-5xl gap-6 px-4 py-6 lg:px-8">
+        {
+          post ? (
+            <>
+              <PostHeader post={post} />
+
+              <article class="overflow-hidden rounded-[32px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+                <img
+                  src={post.imageUrl}
+                  alt={post.title}
+                  class="max-h-[620px] w-full object-cover"
+                />
+                <div class="space-y-4 p-6">
+                  <p class="text-base leading-7 text-[color:var(--dashboard-muted)]">
+                    {post.caption}
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--dashboard-muted)]">
+                    <span class="rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[color:var(--dashboard-accent)]">
+                      {post.counts.likes} likes
+                    </span>
+                    <span class="rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[color:var(--dashboard-accent)]">
+                      {post.counts.comments} comments
+                    </span>
+                    <span class="rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[color:var(--dashboard-accent)]">
+                      {post.counts.saves} saves
+                    </span>
+                  </div>
+                </div>
+              </article>
+
+              <CommentSection comments={comments} />
+              <RelatedPosts posts={relatedPosts} />
+            </>
+          ) : (
+            <section class="rounded-[32px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-8 text-center">
+              <p class="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent)]">
+                Content unavailable
+              </p>
+              <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[color:var(--dashboard-text)]">
+                This post could not be loaded right now.
+              </h1>
+              <p class="mt-3 text-sm leading-6 text-[color:var(--dashboard-muted)]">
+                The public dashboard is still available, but the backend API is
+                offline or unreachable.
+              </p>
+            </section>
+          )
+        }
+      </main>
+    </div>
+  </div>
+</PostLayout>
+

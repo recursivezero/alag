@@ -1,0 +1,21 @@
+---
+const {
+  src = "/icon.png",
+  alt = "Avatar",
+  size = "md",
+  class: className = "",
+} = Astro.props;
+
+const sizeClasses: Record<string, string> = {
+  sm: "h-8 w-8",
+  md: "h-10 w-10",
+  lg: "h-14 w-14",
+  xl: "h-20 w-20",
+};
+---
+
+<img
+  src={src}
+  alt={alt}
+  class={`rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10 ${sizeClasses[size] || sizeClasses.md} ${className}`}
+/>

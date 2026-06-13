@@ -1,0 +1,684 @@
+---
+import "../styles/tailwind.css";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "Admin Panel" } = Astro.props;
+---
+
+<html lang="en" class="h-full">
+  <head>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('admin_theme');
+          var theme = t === 'light' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-admin-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-full bg-[#020713] text-slate-100 antialiased">
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div
+        data-admin-bg="base"
+        class="absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(116,80,255,0.30),transparent_38%),radial-gradient(circle_at_82%_84%,rgba(23,174,255,0.14),transparent_42%),linear-gradient(160deg,#050b18_0%,#020611_46%,#050d22_100%)]"
+      >
+      </div>
+      <div
+        data-admin-bg="grid"
+        class="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(to_right,rgba(148,163,184,0.05)_1px,transparent_1px)] [background-size:44px_44px]"
+      >
+      </div>
+    </div>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    font-family: "Manrope", sans-serif;
+    color-scheme: dark;
+  }
+
+  .glass-panel {
+    border: 1px solid rgba(117, 141, 190, 0.22);
+    background: linear-gradient(
+      160deg,
+      rgba(9, 18, 38, 0.92),
+      rgba(7, 14, 30, 0.76)
+    );
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .neon-ring {
+    box-shadow:
+      0 0 0 1px rgba(118, 92, 255, 0.35),
+      0 0 24px rgba(118, 92, 255, 0.26);
+  }
+
+  .input-neon {
+    border: 1px solid rgba(120, 140, 180, 0.34);
+    background: rgba(3, 11, 26, 0.72);
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .input-neon:focus {
+    outline: none;
+    border-color: rgba(129, 92, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(129, 92, 255, 0.2);
+  }
+
+  .admin-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .admin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(10, 18, 34, 0.55);
+  }
+
+  .admin-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(124, 92, 252, 0.35);
+    border: 2px solid rgba(8, 14, 28, 0.78);
+  }
+
+  .card-enter {
+    animation: cardIn 300ms ease both;
+  }
+
+  @keyframes cardIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .light-mode {
+    filter: saturate(0.88) brightness(1.05);
+  }
+
+  html[data-admin-theme="light"] {
+    color-scheme: light;
+  }
+
+  html[data-admin-theme="light"] body {
+    background: #eef3fb;
+    color: #0f172a;
+  }
+
+  html[data-admin-theme="light"] [data-admin-bg="base"] {
+    background:
+      radial-gradient(
+        circle at 14% 12%,
+        rgba(124, 92, 252, 0.16),
+        transparent 34%
+      ),
+      radial-gradient(
+        circle at 82% 84%,
+        rgba(23, 174, 255, 0.1),
+        transparent 38%
+      ),
+      linear-gradient(160deg, #f8fbff 0%, #edf3fb 48%, #e7eef8 100%) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-bg="grid"] {
+    opacity: 0.26;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-shell] {
+    color: #0f172a;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="main"] {
+    background: linear-gradient(
+      180deg,
+      rgba(248, 250, 252, 0.9),
+      rgba(241, 245, 249, 0.96)
+    ) !important;
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    box-shadow:
+      0 20px 60px rgba(15, 23, 42, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"],
+  html[data-admin-theme="light"] [data-admin-surface="topbar"],
+  html[data-admin-theme="light"] [data-admin-surface="table"],
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"],
+  html[data-admin-theme="light"] [data-admin-surface="filters"],
+  html[data-admin-theme="light"] [data-admin-surface="modal"],
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"],
+  html[data-admin-theme="light"] [data-admin-surface="sidebar-info"] {
+    background: rgba(255, 255, 255, 0.84) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    box-shadow:
+      0 14px 40px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="topbar"] h1,
+  html[data-admin-theme="light"] [data-admin-surface="topbar"] p,
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"] h2,
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"] p,
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"] span,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] label,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] p,
+  html[data-admin-theme="light"] [data-admin-surface="table"] th,
+  html[data-admin-theme="light"] [data-admin-surface="table"] td,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] h2,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] p,
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] p,
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] h2,
+  html[data-admin-theme="light"] [data-admin-surface="modal"] p,
+  html[data-admin-theme="light"] [data-admin-surface="modal"] h2 {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] th,
+  html[data-admin-theme="dark"] [data-admin-surface="table"] td,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] h2,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] p,
+  html[data-admin-theme="dark"] [data-admin-surface="stat-card"] p,
+  html[data-admin-theme="dark"] [data-admin-surface="stat-card"] h2,
+  html[data-admin-theme="dark"] [data-admin-surface="filters"] label,
+  html[data-admin-theme="dark"] [data-admin-surface="filters"] p {
+    color: #f1f5f9 !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="topbar"] input,
+  html[data-admin-theme="light"] [data-admin-surface="topbar"] button,
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"] button,
+  html[data-admin-theme="light"] [data-admin-surface="sidebar"] a,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] input,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] select,
+  html[data-admin-theme="light"] [data-admin-surface="modal"] input,
+  html[data-admin-theme="light"] [data-admin-surface="modal"] button,
+  html[data-admin-theme="light"] [data-admin-surface="table"] button {
+    border-color: rgba(148, 163, 184, 0.22) !important;
+  }
+
+  /* Style topbar notification (bell) and theme (sun) buttons in light mode */
+  html[data-admin-theme="light"]
+    [data-admin-surface="topbar"]
+    button[aria-label="Notifications"] {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.08) !important;
+  }
+
+  html[data-admin-theme="light"] [data-theme-toggle] {
+    background: #ffffff !important;
+    color: #f59e0b !important;
+    border: 1px solid #000000 !important;
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06) !important;
+  }
+
+  html[data-admin-theme="light"] [data-theme-toggle] svg {
+    stroke: currentColor !important;
+    color: #f59e0b !important;
+  }
+
+  /* Ensure text in filters (Total Users count) is readable in light mode */
+  html[data-admin-theme="light"] [data-admin-surface="filters"] .total-count {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="topbar"] input,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] input,
+  html[data-admin-theme="light"] [data-admin-surface="filters"] select,
+  html[data-admin-theme="light"] [data-admin-surface="modal"] input {
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #0f172a !important;
+  }
+
+  /* Make inputs more visible in light mode with a subtle outline */
+  html[data-admin-theme="light"] [data-admin-surface="modal"] input,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] input {
+    border: 1px solid rgba(148, 163, 184, 0.3) !important;
+    box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.035) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="table"] thead tr {
+    background: linear-gradient(
+      180deg,
+      rgba(241, 245, 249, 0.96),
+      rgba(226, 232, 240, 0.85)
+    ) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="table"] tbody tr {
+    border-color: rgba(148, 163, 184, 0.16) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border-color: rgba(148, 163, 184, 0.18) !important;
+  }
+
+  /* Make search inputs and selects inside table-shell match light theme */
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] input,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] select {
+    background: rgba(255, 255, 255, 0.96) !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04) !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="table-shell"]
+    ::placeholder {
+    color: rgba(15, 23, 42, 0.45) !important;
+  }
+
+  /* Ensure the search icon inside inputs is visible in light mode */
+  html[data-admin-theme="light"]
+    [data-admin-surface="table-shell"]
+    .pointer-events-none {
+    color: rgba(15, 23, 42, 0.45) !important;
+  }
+
+  /* Tweak padding and border visibility for light mode cards */
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"],
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] {
+    padding: 1.5rem !important;
+    border: 1px solid rgba(148, 163, 184, 0.28) !important;
+    border-radius: 10px !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] h2,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] p,
+  html[data-admin-theme="light"] [data-admin-surface="table-shell"] span {
+    color: #0f172a !important;
+  }
+
+  /* Ensure stat cards adapt in light mode */
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] {
+    background: #ffffff !important;
+    border-color: rgba(148, 163, 184, 0.16) !important;
+    box-shadow:
+      0 8px 30px rgba(15, 23, 42, 0.06),
+      0 0 18px rgba(124, 92, 252, 0.03) !important;
+    border-radius: 10px !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] p,
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] h2,
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] span {
+    color: #0f172a !important;
+  }
+
+  /* Reduce neon glow and make icons readable on light */
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    > .pointer-events-none {
+    opacity: 0.02 !important;
+    background: radial-gradient(
+      circle at top_left,
+      rgba(124, 92, 252, 0.06),
+      transparent 55%
+    ) !important;
+  }
+
+  html[data-admin-theme="light"] [data-admin-surface="stat-card"] svg {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [class*="text-emerald-"],
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [class*="text-violet-"],
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [class*="text-amber-"],
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [class*="text-rose-"] {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [class*="border-violet-"] {
+    border-color: rgba(124, 92, 252, 0.28) !important;
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 252, 0.18),
+      0 0 28px rgba(124, 92, 252, 0.12) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [class*="border-emerald-"] {
+    border-color: rgba(16, 185, 129, 0.22) !important;
+    box-shadow:
+      0 0 0 1px rgba(16, 185, 129, 0.12),
+      0 0 28px rgba(16, 185, 129, 0.08) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [class*="border-amber-"] {
+    border-color: rgba(245, 158, 11, 0.22) !important;
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.12),
+      0 0 28px rgba(245, 158, 11, 0.08) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [class*="border-sky-"] {
+    border-color: rgba(56, 189, 248, 0.22) !important;
+    box-shadow:
+      0 0 0 1px rgba(56, 189, 248, 0.12),
+      0 0 28px rgba(56, 189, 248, 0.08) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [class*="border-rose-"] {
+    border-color: rgba(244, 63, 94, 0.22) !important;
+    box-shadow:
+      0 0 0 1px rgba(244, 63, 94, 0.12),
+      0 0 28px rgba(244, 63, 94, 0.08) !important;
+  }
+
+  /* Make stat cards use a darker background and neon glow in dark mode */
+  html[data-admin-theme="dark"] [data-admin-surface="stat-card"] {
+    background: #030712 !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(20, 24, 36, 0.5) !important;
+    padding: 1.25rem !important;
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 48px rgba(124, 92, 252, 0.06) !important;
+  }
+
+  /* Per-tone neon outer glow for stat cards (dark mode) */
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"][data-tone="violet"] {
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(124, 92, 252, 0.2) !important;
+    border-color: rgba(124, 92, 252, 0.18) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"][data-tone="emerald"] {
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(16, 185, 129, 0.14) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"][data-tone="amber"] {
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(245, 158, 11, 0.18) !important;
+    border-color: rgba(245, 158, 11, 0.12) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"][data-tone="sky"] {
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(56, 189, 248, 0.18) !important;
+    border-color: rgba(56, 189, 248, 0.12) !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"][data-tone="rose"] {
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(244, 63, 94, 0.18) !important;
+    border-color: rgba(244, 63, 94, 0.12) !important;
+  }
+
+  /* Subtle neon for light mode cards */
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"][data-tone="violet"] {
+    box-shadow:
+      0 6px 20px rgba(124, 92, 252, 0.06),
+      0 0 20px rgba(124, 92, 252, 0.06) !important;
+  }
+
+  /* Target icon wrapper specifically to ensure neon ring and background show */
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="violet"] {
+    border-color: rgba(124, 92, 252, 0.36) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(124, 92, 252, 0.24),
+      rgba(79, 70, 229, 0.12)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 252, 0.18),
+      0 0 28px rgba(124, 92, 252, 0.14) !important;
+    color: #eae8ff !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="emerald"] {
+    border-color: rgba(16, 185, 129, 0.36) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(16, 185, 129, 0.18),
+      rgba(20, 184, 166, 0.09)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(16, 185, 129, 0.12),
+      0 0 28px rgba(16, 185, 129, 0.12) !important;
+    color: #e6fff6 !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="amber"] {
+    border-color: rgba(245, 158, 11, 0.34) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(245, 158, 11, 0.18),
+      rgba(249, 115, 22, 0.09)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.12),
+      0 0 28px rgba(245, 158, 11, 0.1) !important;
+    color: #fff6e8 !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="sky"] {
+    border-color: rgba(56, 189, 248, 0.34) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(56, 189, 248, 0.18),
+      rgba(37, 99, 235, 0.09)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(56, 189, 248, 0.12),
+      0 0 28px rgba(56, 189, 248, 0.1) !important;
+    color: #e8f8ff !important;
+  }
+
+  html[data-admin-theme="dark"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="rose"] {
+    border-color: rgba(244, 63, 94, 0.34) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(244, 63, 94, 0.18),
+      rgba(190, 18, 60, 0.09)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(244, 63, 94, 0.12),
+      0 0 28px rgba(244, 63, 94, 0.1) !important;
+    color: #fff0f4 !important;
+  }
+
+  /* Ensure icon wrapper has consistent radius and padding */
+  [data-admin-icon] {
+    border-radius: 10px !important;
+    padding: 0.5rem !important;
+  }
+
+  /* ICON neon for light theme as well */
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="violet"] {
+    border-color: rgba(124, 92, 252, 0.36) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(124, 92, 252, 0.14),
+      rgba(79, 70, 229, 0.06)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 252, 0.12),
+      0 0 18px rgba(124, 92, 252, 0.08) !important;
+    color: #5b3ed9 !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="emerald"] {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(16, 185, 129, 0.12),
+      rgba(20, 184, 166, 0.04)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(16, 185, 129, 0.08),
+      0 0 18px rgba(16, 185, 129, 0.06) !important;
+    color: #059669 !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="amber"] {
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(245, 158, 11, 0.12),
+      rgba(249, 115, 22, 0.04)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(245, 158, 11, 0.08),
+      0 0 18px rgba(245, 158, 11, 0.06) !important;
+    color: #b45309 !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="sky"] {
+    border-color: rgba(56, 189, 248, 0.3) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(56, 189, 248, 0.12),
+      rgba(37, 99, 235, 0.04)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(56, 189, 248, 0.08),
+      0 0 18px rgba(56, 189, 248, 0.06) !important;
+    color: #0369a1 !important;
+  }
+
+  html[data-admin-theme="light"]
+    [data-admin-surface="stat-card"]
+    [data-admin-icon][data-tone="rose"] {
+    border-color: rgba(244, 63, 94, 0.3) !important;
+    background: linear-gradient(
+      180deg,
+      rgba(244, 63, 94, 0.12),
+      rgba(190, 18, 60, 0.04)
+    ) !important;
+    box-shadow:
+      0 0 0 1px rgba(244, 63, 94, 0.08),
+      0 0 18px rgba(244, 63, 94, 0.06) !important;
+    color: #be123c !important;
+  }
+
+  /* Slightly reduce stat card text sizes */
+  [data-admin-surface="stat-card"] p {
+    font-size: 0.95rem !important;
+  }
+
+  [data-admin-surface="stat-card"] h2 {
+    font-size: 2rem !important;
+    line-height: 1 !important;
+  }
+
+  /* === DARK MODE SURFACE FIXES (no revert - explicit dark backgrounds) === */
+  html[data-admin-theme="dark"] [data-admin-surface="sidebar"] {
+    background: linear-gradient(180deg, rgba(5,10,24,0.98), rgba(3,7,18,0.98)) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="shell"] {
+    background: #040b17 !important;
+    color: #f1f5f9 !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="topbar"] {
+    background: rgba(9, 14, 32, 0.92) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="main"] {
+    background: rgba(4, 11, 23, 0.98) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"],
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] {
+    background: rgba(9, 14, 32, 0.95) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] thead tr,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] thead tr {
+    background: rgba(14, 20, 40, 0.98) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] th,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] th {
+    color: #cbd5e1 !important;
+    background: rgba(14, 20, 40, 0.95) !important;
+  }
+
+  html[data-admin-theme="dark"] [data-admin-surface="table"] td,
+  html[data-admin-theme="dark"] [data-admin-surface="table-shell"] td {
+    color: #e2e8f0 !important;
+  }
+</style>

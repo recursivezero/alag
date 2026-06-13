@@ -1,0 +1,103 @@
+---
+import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import Feed from "../../components/user/Feed.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchLikedPosts } from "../../services/postService";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
+// Liked Posts is private – guests see nothing useful here, redirect to login.
+if (!currentUser.id) {
+  return Astro.redirect("/auth/login");
+}
+
+// Fetch only this user's liked posts (authenticated, server-side)
+const posts = await fetchLikedPosts({ cookieHeader, userId: currentUser.id });
+---
+
+<UserDashboardLayout title="Liked Posts | RecursiveAuth" user={currentUser}>
+
+  <div class="page-grid mx-auto w-full max-w-[1400px]" style="padding: 28px 28px 40px 28px;">
+
+    <!-- ══════════════ LEFT / MAIN FEED ══════════════ -->
+    <section class="feed-col min-w-0">
+
+      <!-- Page heading -->
+      <div class="mb-6">
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
+          Liked Posts
+        </h1>
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          All posts you liked will appear here. Only you can see this section.
+        </p>
+      </div>
+
+      <!-- Posts feed or empty state -->
+      {posts.length > 0 ? (
+        <Feed posts={posts} />
+      ) : (
+        <!-- Empty state – shown when user hasn't liked anything yet -->
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+          <div
+            class="mb-5 grid h-16 w-16 place-items-center rounded-full bg-rose-500/10 text-rose-400"
+          >
+            <svg
+              class="h-8 w-8"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <path
+                d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"
+              />
+            </svg>
+          </div>
+          <h2
+            class="text-[20px] font-bold text-[color:var(--dashboard-text)]"
+          >
+            No liked posts yet
+          </h2>
+          <p
+            class="mt-2 max-w-sm text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+          >
+            When you like a post by clicking the heart icon, it will appear
+            here. Only you can see your liked posts.
+          </p>
+          <a
+            href="/dashboard"
+            class="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
+          >
+            Browse Dashboard
+          </a>
+        </div>
+      )}
+    </section>
+
+  </div>
+
+  <UploadModal />
+</UserDashboardLayout>
+
+<style>
+  /* Same 2-column layout token as the other dashboard pages */
+  .page-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1280px) {
+    .page-grid {
+      grid-template-columns: minmax(0, 1fr) 308px;
+      gap: 2rem;
+    }
+  }
+</style>

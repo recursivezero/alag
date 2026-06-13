@@ -1,0 +1,82 @@
+---
+---
+
+<input
+  id="userLogoutToggle"
+  type="checkbox"
+  style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;"
+  aria-hidden="true"
+/
+>
+<div
+  id="userLogoutPopover"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="userLogoutTitle"
+  aria-describedby="userLogoutDescription"
+  tabindex="-1"
+  class="fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6 opacity-0 invisible pointer-events-none transition-[opacity,visibility] duration-200 ease-out"
+>
+  <div
+    data-user-logout-backdrop
+    class="absolute inset-0 bg-slate-950/40 opacity-0 backdrop-blur-2xl transition-opacity duration-200 ease-out dark:bg-black/70"
+    aria-hidden="true"
+  ></div>
+  <div
+    data-user-logout-dialog
+    class="relative w-full max-w-[480px] translate-y-3 scale-95 overflow-hidden rounded-[20px] border border-slate-200/70 bg-white/90 p-7 text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.24)] ring-1 ring-white/70 backdrop-blur-xl opacity-0 transition-[transform,opacity] duration-200 ease-out dark:border-white/10 dark:bg-slate-950/90 dark:text-slate-50 dark:shadow-[0_30px_90px_rgba(0,0,0,0.65)] dark:ring-white/5 sm:p-8"
+  >
+    <h3 id="userLogoutTitle" class="text-[1.35rem] font-bold tracking-tight leading-tight sm:text-[1.5rem]">
+      Are you sure you want to logout?
+    </h3>
+    <p id="userLogoutDescription" class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-[0.95rem]">
+      You will be signed out and redirected to the login page.
+    </p>
+    <div class="mt-8 flex justify-end gap-3.5">
+      <button
+        id="userLogoutCancelBtn"
+        class="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl border border-slate-200 bg-slate-100 px-5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400/40 focus:ring-offset-2 focus:ring-offset-white dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10 dark:focus:ring-slate-500/40 dark:focus:ring-offset-slate-950"
+        type="button"
+      >
+        Cancel
+      </button>
+      <button
+        id="userLogoutConfirmBtn"
+        class="inline-flex h-11 min-w-[96px] items-center justify-center rounded-xl bg-rose-600 px-5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(244,63,94,0.38)] transition-colors duration-200 hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400/50 focus:ring-offset-2 focus:ring-offset-white active:bg-rose-700 dark:focus:ring-offset-slate-950"
+        type="button"
+      >
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  #userLogoutPopover {
+    visibility: hidden;
+  }
+
+  #userLogoutToggle:checked ~ #userLogoutPopover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  #userLogoutToggle:checked ~ #userLogoutPopover > [data-user-logout-dialog] {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  #userLogoutToggle:checked ~ #userLogoutPopover > div[aria-hidden="true"] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #userLogoutPopover,
+    #userLogoutPopover > [data-user-logout-dialog],
+    #userLogoutPopover > div[aria-hidden="true"] {
+      transition: none !important;
+    }
+  }
+</style>

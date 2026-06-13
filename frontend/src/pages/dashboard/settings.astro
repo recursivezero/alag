@@ -1,0 +1,2680 @@
+---
+import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { getApiBaseUrl } from "../../services/api";
+
+type ActiveSession = {
+  id: number;
+  deviceName: string;
+  browserName: string;
+  location: string;
+  loginAtIst: string;
+  status: string;
+};
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+const apiBaseUrl = getApiBaseUrl();
+
+const fetchCurrentUserSessions = async () => {
+  if (!currentUser.id) return [] as ActiveSession[];
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/sessions`, {
+      method: "GET",
+      credentials: "include",
+      headers: cookieHeader ? { cookie: cookieHeader } : {},
+    });
+
+    if (!response.ok) return [] as ActiveSession[];
+
+    const data = (await response.json()) as { sessions?: ActiveSession[] };
+    return data.sessions || [];
+  } catch {
+    return [] as ActiveSession[];
+  }
+};
+
+const activeSessions = await fetchCurrentUserSessions();
+
+const buildAvatarFallback = (name: string) => {
+  const initials =
+    (name || "User")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0] || "")
+      .join("")
+      .toUpperCase() || "U";
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Profile avatar fallback">
+      <defs>
+        <linearGradient id="avatar-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8b5cf6" />
+          <stop offset="100%" stop-color="#d946ef" />
+        </linearGradient>
+      </defs>
+      <circle cx="60" cy="60" r="60" fill="url(#avatar-bg)" />
+      <circle cx="60" cy="48" r="22" fill="rgba(255,255,255,0.92)" />
+      <path d="M26 103c6.8-19 23.2-30 34-30s27.2 11 34 30" fill="rgba(255,255,255,0.92)" />
+      <text x="60" y="68" text-anchor="middle" font-size="30" font-family="Arial, sans-serif" font-weight="700" fill="#5b21b6">${initials}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const settingsItems = [
+  {
+    id: "notifications",
+    title: "Notifications",
+    description: "Manage your email and in-app alerts.",
+    icon: `
+      <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/>
+      <path d="M9 17a3 3 0 0 0 6 0"/>
+    `,
+  },
+  {
+    id: "security",
+    title: "Security",
+    description: "Manage your password and sessions.",
+    icon: `
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    `,
+  },
+  {
+    id: "appearance",
+    title: "Appearance",
+    description: "Customize the look and feel.",
+    icon: `
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    `,
+  },
+  {
+    id: "profile",
+    title: "Profile",
+    description: "Manage your profile information.",
+    icon: `
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+    `,
+  },
+];
+
+const notificationItems = [
+  {
+    id: "emailNotifications",
+    title: "Email Notifications",
+    description: "Receive important updates via email.",
+    icon: `
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <path d="m4 7 8 6 8-6"/>
+    `,
+  },
+  {
+    id: "loginAlerts",
+    title: "Login Alerts",
+    description: "Get notified when a new login is detected.",
+    icon: `
+      <rect x="4" y="4" width="16" height="16" rx="4"/>
+      <path d="M12 8v5"/>
+      <path d="M12 15h.01"/>
+    `,
+  },
+  {
+    id: "passwordChanged",
+    title: "Password Changed",
+    description: "Get notified when your password is changed.",
+    icon: `
+      <circle cx="10" cy="12" r="3"/>
+      <path d="M13 12h7"/>
+      <path d="M17 10v4"/>
+    `,
+  },
+  {
+    id: "productUpdates",
+    title: "Product Updates",
+    description: "Receive updates about new features and improvements.",
+    icon: `
+      <path d="M4 12h16"/>
+      <path d="M12 4v16"/>
+      <path d="M6.5 6.5l11 11"/>
+      <path d="M17.5 6.5l-11 11"/>
+    `,
+  },
+  {
+    id: "weeklySummary",
+    title: "Weekly Summary",
+    description: "Receive a weekly summary of your activity.",
+    icon: `
+      <rect x="4" y="5" width="16" height="15" rx="3"/>
+      <path d="M8 3v4"/>
+      <path d="M16 3v4"/>
+      <path d="M4 10h16"/>
+    `,
+  },
+];
+
+const appearanceModes = [
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+  { id: "system", label: "System" },
+];
+
+const accentColors = [
+  { id: "purple", label: "Purple", color: "#7c3aed" },
+  { id: "blue", label: "Blue", color: "#3b82f6" },
+  { id: "green", label: "Green", color: "#22c55e" },
+  { id: "orange", label: "Orange", color: "#f97316" },
+  { id: "pink", label: "Pink", color: "#ec4899" },
+];
+
+const profileDefaults = {
+  fullName:
+    currentUser.fullName ||
+    (currentUser.name !== "Guest" ? currentUser.name : ""),
+  username:
+    currentUser.username ||
+    (currentUser.fullName || currentUser.name || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ".")
+      .replace(/^\.+|\.+$/g, "") || "",
+  phoneNumber: currentUser.phoneNumber || "",
+  email: currentUser.email || "",
+  bio: currentUser.bio || "",
+  picture: currentUser.picture || null,
+};
+
+const profileAvatarFallback = buildAvatarFallback(
+  profileDefaults.fullName || currentUser.name || "User",
+);
+
+---
+
+<UserDashboardLayout title="Settings | RecursiveAuth" user={currentUser}>
+  <section class="settings-shell">
+    <div class="settings-container-card">
+      <div class="settings-top-section">
+        <h1>Settings</h1>
+        <p>Manage your preferences and account settings.</p>
+      </div>
+
+      <div class="settings-inner-card">
+        <div class="settings-view settings-view-main" data-settings-view="main">
+          <div class="settings-list">
+            {
+              settingsItems.map((item, index) => (
+                <button
+                  type="button"
+                  class:list={[
+                    "settings-row",
+                    index === 0 && "settings-row-active",
+                  ]}
+                  data-settings-card
+                  data-settings-card-id={item.id}
+                  aria-label={`${item.title} settings`}
+                  aria-pressed={index === 0 ? "true" : "false"}
+                >
+                  <div class="settings-icon-card">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.9"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="settings-icon"
+                      set:html={item.icon}
+                    />
+                  </div>
+                  <div class="settings-content">
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                </button>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="settings-view" data-settings-view="notifications" hidden>
+          <div class="settings-detail-header">
+            <button
+              type="button"
+              class="settings-back-button"
+              data-settings-back
+              aria-label="Back to settings"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg
+              >
+              <span>Back</span>
+            </button>
+            <div class="settings-detail-copy">
+              <h2>Notifications</h2>
+              <p>Choose what you want to be notified about.</p>
+            </div>
+          </div>
+          <div
+            class="settings-detail-panel settings-notifications-panel"
+            aria-label="Notification settings"
+          >
+            {
+              notificationItems.map((item, index) => (
+                <label
+                  class:list={[
+                    "settings-notification-row",
+                    index === notificationItems.length - 1 &&
+                      "settings-notification-row-last",
+                  ]}
+                >
+                  <span class="settings-notification-main">
+                    <span class="settings-notification-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.9"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        set:html={item.icon}
+                      />
+                    </span>
+                    <span class="settings-notification-copy">
+                      <span class="settings-notification-title">
+                        {item.title}
+                      </span>
+                      <span class="settings-notification-description">
+                        {item.description}
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-toggle-wrap">
+                    <input
+                      type="checkbox"
+                      class="settings-toggle-input"
+                      data-notification-toggle
+                      data-notification-id={item.id}
+                      aria-label={item.title}
+                    />
+                    <span class="settings-toggle-track" aria-hidden="true">
+                      <span class="settings-toggle-thumb" />
+                    </span>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="settings-view" data-settings-view="security" hidden>
+          <div class="settings-detail-header">
+            <button
+              type="button"
+              class="settings-back-button"
+              data-settings-back
+              aria-label="Back to settings"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg
+              >
+              <span>Back</span>
+            </button>
+            <div class="settings-detail-copy">
+              <h2>Security</h2>
+              <p>Manage your password and active sessions.</p>
+            </div>
+          </div>
+
+          <div class="settings-detail-stack">
+            <form
+              class="settings-detail-panel settings-form-panel"
+              data-security-form
+              novalidate
+            >
+              <div class="settings-panel-heading-block">
+                <h3>Change Password</h3>
+              </div>
+              <div class="settings-form-grid">
+                <label class="settings-field">
+                  <span class="settings-field-label">Current Password</span>
+                  <div class="settings-password-control">
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      autocomplete="current-password"
+                      required
+                      placeholder="Enter current password"
+                      data-security-current-password
+                    />
+                    <button
+                      type="button"
+                      class="settings-password-toggle"
+                      data-security-password-toggle="currentPassword"
+                      aria-label="Show current password"
+                      aria-pressed="false"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.95"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        data-security-password-icon="currentPassword"
+                      >
+                        <path
+                          d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z"
+                        ></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                </label>
+
+                <label class="settings-field">
+                  <span class="settings-field-label">New Password</span>
+                  <div class="settings-password-control">
+                    <input
+                      type="password"
+                      name="newPassword"
+                      autocomplete="new-password"
+                      required
+                      placeholder="Enter new password"
+                      data-security-new-password
+                    />
+                    <button
+                      type="button"
+                      class="settings-password-toggle"
+                      data-security-password-toggle="newPassword"
+                      aria-label="Show new password"
+                      aria-pressed="false"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.95"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        data-security-password-icon="newPassword"
+                      >
+                        <path
+                          d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z"
+                        ></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <p
+                    class="settings-field-message"
+                    data-security-new-password-message
+                    hidden
+                  >
+                  </p>
+                </label>
+
+                <label class="settings-field">
+                  <span class="settings-field-label">Confirm New Password</span>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    autocomplete="new-password"
+                    required
+                    placeholder="Confirm new password"
+                    data-security-confirm-password
+                  />
+                  <p
+                    class="settings-field-message"
+                    data-security-confirm-password-message
+                    hidden
+                  >
+                  </p>
+                </label>
+              </div>
+              <div class="settings-form-actions settings-form-actions-left">
+                <button type="submit" class="settings-primary-button"
+                  >Update Password</button
+                >
+              </div>
+            </form>
+
+            <div class="settings-detail-panel settings-session-panel">
+              <div class="settings-panel-heading-block">
+                <h3>Active Sessions</h3>
+                <p>Manage your active sessions.</p>
+              </div>
+              <div class="settings-session-list" aria-label="Session history">
+                {
+                  activeSessions.length ? (
+                    activeSessions.map((session) => (
+                      <article class="settings-session-card settings-session-card-list">
+                        <div class="settings-session-copy">
+                          <strong>
+                            {session.deviceName} • {session.browserName}
+                          </strong>
+                          <span>{session.location}</span>
+                          <span class="settings-session-date">
+                            {session.loginAtIst}
+                          </span>
+                        </div>
+                        <div class="settings-session-meta">
+                          <span
+                            class:list={[
+                              "settings-status-badge",
+                              session.status === "Logged Out" &&
+                                "settings-status-badge-logged-out",
+                            ]}
+                          >
+                            {session.status}
+                          </span>
+                        </div>
+                      </article>
+                    ))
+                  ) : (
+                    <div class="settings-session-empty">
+                      <strong>No session history yet.</strong>
+                      <span>
+                        Your login sessions will appear here after you sign in.
+                      </span>
+                    </div>
+                  )
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-view" data-settings-view="appearance" hidden>
+          <div class="settings-detail-header">
+            <button
+              type="button"
+              class="settings-back-button"
+              data-settings-back
+              aria-label="Back to settings"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg
+              >
+              <span>Back</span>
+            </button>
+            <div class="settings-detail-copy">
+              <h2>Appearance</h2>
+              <p>Customize the look and feel.</p>
+            </div>
+          </div>
+          <div
+            class="settings-detail-panel settings-appearance-panel"
+            data-appearance-panel
+          >
+            <div class="settings-panel-heading-block">
+              <h3>Theme Mode</h3>
+              <p>Choose your preferred theme.</p>
+            </div>
+            <div
+              class="settings-choice-grid"
+              role="radiogroup"
+              aria-label="Theme mode"
+            >
+              {
+                appearanceModes.map((mode) => (
+                  <button
+                    type="button"
+                    class="settings-choice-button"
+                    data-theme-mode-option
+                    data-theme-mode-value={mode.id}
+                    aria-pressed={mode.id === "light" ? "true" : "false"}
+                  >
+                    <span
+                      class="settings-choice-indicator"
+                      aria-hidden="true"
+                    />
+                    <span>{mode.label}</span>
+                  </button>
+                ))
+              }
+            </div>
+            <div
+              class="settings-panel-heading-block settings-panel-heading-block-spaced"
+            >
+              <h3>Accent Color</h3>
+              <p>Choose your accent color.</p>
+            </div>
+            <div
+              class="settings-accent-grid"
+              role="radiogroup"
+              aria-label="Accent color"
+            >
+              {
+                accentColors.map((accent) => (
+                  <button
+                    type="button"
+                    class="settings-accent-button"
+                    data-accent-color-option
+                    data-accent-color-value={accent.id}
+                    style={`--accent-color: ${accent.color};`}
+                    aria-label={accent.label}
+                    aria-pressed={accent.id === "purple" ? "true" : "false"}
+                  >
+                    <span class="settings-accent-dot" aria-hidden="true" />
+                  </button>
+                ))
+              }
+            </div>
+            <div class="settings-form-actions settings-form-actions-right">
+              <button
+                type="button"
+                class="settings-primary-button"
+                data-appearance-save>Save Changes</button
+              >
+            </div>
+            <p
+              class="settings-form-status"
+              data-appearance-status
+              aria-live="polite"
+            >
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-view" data-settings-view="profile" hidden>
+          <div class="settings-detail-header">
+            <button
+              type="button"
+              class="settings-back-button"
+              data-settings-back
+              aria-label="Back to settings"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg
+              >
+              <span>Back</span>
+            </button>
+            <div class="settings-detail-copy">
+              <h2>Profile</h2>
+              <p>Manage your profile information.</p>
+            </div>
+          </div>
+          <form
+            class="settings-detail-panel settings-form-panel settings-profile-panel"
+            data-profile-form
+            novalidate
+          >
+            <div class="settings-panel-heading-block">
+              <h3>Profile Information</h3>
+            </div>
+            <div class="settings-profile-grid">
+              <label class="settings-field">
+                <span class="settings-field-label">Full Name</span>
+                <input
+                  type="text"
+                  name="fullName"
+                  required
+                  placeholder="John Doe"
+                  value={profileDefaults.fullName}
+                />
+              </label>
+              <label class="settings-field">
+                <span class="settings-field-label">Username</span>
+                <input
+                  type="text"
+                  name="username"
+                  required
+                  placeholder="johndoe"
+                  value={profileDefaults.username}
+                />
+              </label>
+              <label class="settings-field settings-field-full">
+                <span class="settings-field-label">Phone Number (Optional)</span>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  placeholder="+91 9876543210"
+                  value={profileDefaults.phoneNumber}
+                />
+              </label>
+              <label class="settings-field settings-field-full">
+                <span class="settings-field-label">Email Address</span>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="john.doe@example.com"
+                  value={profileDefaults.email}
+                />
+              </label>
+              <label class="settings-field settings-field-full">
+                <span class="settings-field-label">Bio</span>
+                <textarea
+                  name="bio"
+                  rows="4"
+                  placeholder="Tell us about yourself."
+                  >{profileDefaults.bio}</textarea
+                >
+              </label>
+            </div>
+            <div class="settings-picture-section">
+              <div class="settings-picture-preview">
+                <img
+                  src={currentUser.picture || profileAvatarFallback}
+                  alt="Profile picture preview"
+                  data-profile-picture-preview
+                />
+              </div>
+              <div class="settings-picture-actions">
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="settings-file-input"
+                  data-profile-photo-input
+                />
+                <button
+                  type="button"
+                  class="settings-secondary-button"
+                  data-profile-change-photo>Change Photo</button
+                >
+                <button
+                  type="button"
+                  class="settings-secondary-button settings-secondary-button-danger"
+                  data-profile-remove-photo>Remove</button
+                >
+              </div>
+            </div>
+            <div class="settings-form-actions settings-form-actions-right">
+              <button type="submit" class="settings-primary-button"
+                >Save Changes</button
+              >
+            </div>
+            <p
+              class="settings-form-status"
+              data-profile-status
+              aria-live="polite"
+            >
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <UploadModal />
+
+  <!-- Toast region: rendered at body level so styles always reach it -->
+  <div id="toastRegion" class="sec-toast-region"></div>
+</UserDashboardLayout>
+
+<!-- GLOBAL toast styles — must be is:global so dynamically-created elements get them -->
+<style is:global>
+  /* ─── Toast Region ─── */
+  .sec-toast-region {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 340px;
+    z-index: 999999;
+    pointer-events: none;
+  }
+  
+  /* ─── Toast Card ─── */
+  .sec-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 14px 14px;
+    border-radius: 12px;
+    background: #1e2235;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.35),
+      0 16px 40px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateX(calc(100% + 28px));
+    transition:
+      opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  .sec-toast[data-state="open"] {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .sec-toast[data-state="closing"] {
+    opacity: 0;
+    transform: translateX(calc(100% + 28px));
+    transition:
+      opacity 260ms ease,
+      transform 260ms ease;
+  }
+
+  /* ─── Icon circle ─── */
+  .sec-toast__icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  .sec-toast--success .sec-toast__icon {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1.5px solid rgba(34, 197, 94, 0.28);
+  }
+
+  .sec-toast--error .sec-toast__icon {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+    border: 1.5px solid rgba(249, 115, 22, 0.28);
+  }
+
+  /* ─── Body ─── */
+  .sec-toast__body {
+    flex: 1;
+    min-width: 0;
+    padding-top: 1px;
+  }
+
+  .sec-toast__title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .sec-toast--success .sec-toast__title {
+    color: #22c55e;
+  }
+  .sec-toast--error .sec-toast__title {
+    color: #f97316;
+  }
+
+  .sec-toast__message {
+    margin: 4px 0 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: rgba(148, 163, 184, 0.92);
+  }
+
+  /* ─── Close button ─── */
+  .sec-toast__close {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: rgba(148, 163, 184, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    padding: 0;
+    margin-top: 1px;
+    transition:
+      color 150ms ease,
+      background 150ms ease;
+    line-height: 1;
+  }
+
+  .sec-toast__close:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  @media (max-width: 640px) {
+    .sec-toast-region {
+      width: calc(100vw - 32px);
+      right: 16px;
+      top: 16px;
+    }
+  }
+</style>
+
+<script
+  is:inline
+  define:vars={{ profileDefaults, profileAvatarFallback, apiBaseUrl }}
+>
+  const dashboardThemeKey = "alag-user-theme";
+  const dashboardAccentKey = "alag-user-accent";
+  const settingsViewKey = "alag-settings-view";
+  const settingsCardKey = "alag-settings-card";
+  const settingsNotificationsKey = "alag-settings-notifications";
+  const settingsAppearanceKey = "alag-settings-appearance";
+
+  const views = new Map(
+    Array.from(document.querySelectorAll("[data-settings-view]")).map(
+      (view) => [view.getAttribute("data-settings-view"), view],
+    ),
+  );
+
+  const settingsCards = Array.from(
+    document.querySelectorAll("[data-settings-card]"),
+  );
+  const backButtons = Array.from(
+    document.querySelectorAll("[data-settings-back]"),
+  );
+  const notificationToggles = Array.from(
+    document.querySelectorAll("[data-notification-toggle]"),
+  );
+  const themeModeButtons = Array.from(
+    document.querySelectorAll("[data-theme-mode-option]"),
+  );
+  const accentButtons = Array.from(
+    document.querySelectorAll("[data-accent-color-option]"),
+  );
+  const appearancePanel = document.querySelector("[data-appearance-panel]");
+  const securityForm = document.querySelector("[data-security-form]");
+  const currentPasswordInput = document.querySelector(
+    "[data-security-current-password]",
+  );
+  const newPasswordInput = document.querySelector(
+    "[data-security-new-password]",
+  );
+  const confirmPasswordInput = document.querySelector(
+    "[data-security-confirm-password]",
+  );
+  const newPasswordMessage = document.querySelector(
+    "[data-security-new-password-message]",
+  );
+  const confirmPasswordMessage = document.querySelector(
+    "[data-security-confirm-password-message]",
+  );
+  const passwordToggleButtons = Array.from(
+    document.querySelectorAll("[data-security-password-toggle]"),
+  );
+  const appearanceSaveButton = document.querySelector("[data-appearance-save]");
+  const appearanceStatus = document.querySelector("[data-appearance-status]");
+  const profileForm = document.querySelector("[data-profile-form]");
+  const profileStatus = document.querySelector("[data-profile-status]");
+  const profilePhotoInput = document.querySelector(
+    "[data-profile-photo-input]",
+  );
+  const profileChangePhotoButton = document.querySelector(
+    "[data-profile-change-photo]",
+  );
+  const profileRemovePhotoButton = document.querySelector(
+    "[data-profile-remove-photo]",
+  );
+  const profilePicturePreview = document.querySelector(
+    "[data-profile-picture-preview]",
+  );
+  const currentView = { value: "main" };
+
+  const passwordHelpMessage =
+    "You must create a password with at least 8 characters and include uppercase, lowercase, and a number.";
+  const passwordClosedIcon =
+    '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+  const passwordOpenIcon =
+    '<path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />';
+
+  const isThemeMode = (value) =>
+    value === "light" || value === "dark" || value === "system";
+
+  const isAccentColor = (value) =>
+    value === "purple" ||
+    value === "blue" ||
+    value === "green" ||
+    value === "orange" ||
+    value === "pink";
+
+  const getStoredThemeMode = () => {
+    const stored = window.sessionStorage.getItem(dashboardThemeKey);
+    return isThemeMode(stored) ? stored : "light";
+  };
+
+  const getStoredAccentColor = () => {
+    const stored = window.sessionStorage.getItem(dashboardAccentKey);
+    return isAccentColor(stored) ? stored : "purple";
+  };
+
+  const resolveEffectiveTheme = (themeMode) => {
+    if (themeMode === "light" || themeMode === "dark") return themeMode;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  };
+
+  const syncDashboardTheme = (themeMode) => {
+    const effectiveTheme = resolveEffectiveTheme(themeMode);
+    const root = document.documentElement;
+    root.classList.toggle("dark", effectiveTheme === "dark");
+    root.style.colorScheme = effectiveTheme;
+    root.dataset.theme = effectiveTheme;
+    root.dataset.themeMode = themeMode;
+    window.sessionStorage.setItem(dashboardThemeKey, themeMode);
+    document.dispatchEvent(new CustomEvent("alag-theme-change"));
+  };
+
+  const syncDashboardAccent = (accentColor) => {
+    document.documentElement.dataset.accentColor = accentColor;
+    window.sessionStorage.setItem(dashboardAccentKey, accentColor);
+    document.dispatchEvent(new CustomEvent("alag-theme-change"));
+  };
+
+  const defaultNotificationState = {
+    emailNotifications: true,
+    loginAlerts: true,
+    passwordChanged: true,
+    productUpdates: false,
+    weeklySummary: false,
+  };
+
+  const defaultAppearanceState = {
+    themeMode: getStoredThemeMode(),
+    accentColor: getStoredAccentColor(),
+  };
+
+  const readJson = (key, fallback) => {
+    try {
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) return { ...fallback };
+      return { ...fallback, ...JSON.parse(raw) };
+    } catch {
+      return { ...fallback };
+    }
+  };
+
+  const writeJson = (key, value) => {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  };
+
+  const setStatus = (node, message, tone = "info") => {
+    if (!node) return;
+    node.textContent = message;
+    node.dataset.tone = tone;
+  };
+
+  /* ═══════════════════════════════════════════
+     TOAST SYSTEM
+     No auto-dismiss — user must click X to close
+  ═══════════════════════════════════════════ */
+  const showSecurityToast = ({ message, tone }) => {
+    const region = document.getElementById("toastRegion");
+    if (!region) return;
+
+    // Remove any existing toast with slide-out animation
+    const existing = region.querySelector("[data-security-toast]");
+    if (existing instanceof HTMLElement) {
+      existing.dataset.state = "closing";
+      setTimeout(() => {
+        if (existing.parentNode) existing.parentNode.removeChild(existing);
+      }, 280);
+    }
+
+    // Build the toast card
+    const toastEl = document.createElement("div");
+    toastEl.className = "sec-toast sec-toast--" + tone;
+    toastEl.setAttribute("data-security-toast", "");
+    toastEl.setAttribute("role", "alert");
+    toastEl.setAttribute("aria-live", "assertive");
+    toastEl.setAttribute("aria-atomic", "true");
+
+    // ── Icon circle ──
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "sec-toast__icon";
+
+    if (tone === "success") {
+      iconWrap.innerHTML =
+        '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    } else {
+      iconWrap.innerHTML =
+        '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    }
+
+    // ── Body (title + message) ──
+    const body = document.createElement("div");
+    body.className = "sec-toast__body";
+
+    const titleEl = document.createElement("p");
+    titleEl.className = "sec-toast__title";
+    titleEl.textContent = tone === "success" ? "Success" : "Error";
+
+    const msgEl = document.createElement("p");
+    msgEl.className = "sec-toast__message";
+    msgEl.textContent = message;
+
+    body.appendChild(titleEl);
+    body.appendChild(msgEl);
+
+    // ── Close (X) button ──
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "sec-toast__close";
+    closeBtn.setAttribute("aria-label", "Dismiss notification");
+    closeBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+    // Dismiss handler — only triggered by X click (no auto-dismiss)
+    const dismiss = () => {
+      toastEl.dataset.state = "closing";
+      setTimeout(() => {
+        if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+      }, 280);
+    };
+
+    closeBtn.addEventListener("click", dismiss);
+
+    toastEl.appendChild(iconWrap);
+    toastEl.appendChild(body);
+    toastEl.appendChild(closeBtn);
+    region.prepend(toastEl);
+
+    // Trigger slide-in on next paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        toastEl.dataset.state = "open";
+      });
+    });
+  };
+
+  const toast = {
+    success(message) {
+      showSecurityToast({ message, tone: "success" });
+    },
+    error(message) {
+      showSecurityToast({ message, tone: "error" });
+    },
+  };
+
+  /* ══════════════════════════════════════════════════
+     PASSWORD VALIDATION
+  ══════════════════════════════════════════════════ */
+  const setPasswordMessage = (node, message) => {
+    if (!(node instanceof HTMLElement)) return;
+    node.textContent = message;
+    node.hidden = !message;
+  };
+
+  const isStrongPassword = (value) =>
+    value.length >= 8 &&
+    /[A-Z]/.test(value) &&
+    /[a-z]/.test(value) &&
+    /\d/.test(value);
+
+  const syncPasswordToggle = (input, button) => {
+    if (
+      !(input instanceof HTMLInputElement) ||
+      !(button instanceof HTMLButtonElement)
+    )
+      return;
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    const icon = button.querySelector("svg[data-security-password-icon]");
+    if (icon instanceof SVGElement) {
+      icon.innerHTML = isHidden ? passwordClosedIcon : passwordOpenIcon;
+    }
+    const fieldLabel = input.name === "currentPassword" ? "current" : "new";
+    button.setAttribute(
+      "aria-label",
+      isHidden ? `Hide ${fieldLabel} password` : `Show ${fieldLabel} password`,
+    );
+    button.setAttribute("aria-pressed", String(isHidden));
+  };
+
+  const validateNewPassword = ({ shouldFocus = false } = {}) => {
+    if (!(newPasswordInput instanceof HTMLInputElement)) return true;
+    const valid = isStrongPassword(newPasswordInput.value);
+    if (!valid && newPasswordInput.value.length > 0) {
+      setPasswordMessage(newPasswordMessage, passwordHelpMessage);
+      newPasswordInput.setAttribute("aria-invalid", "true");
+      if (shouldFocus) newPasswordInput.focus();
+      return false;
+    }
+    setPasswordMessage(newPasswordMessage, "");
+    newPasswordInput.removeAttribute("aria-invalid");
+    return true;
+  };
+
+  const validatePasswordMatch = ({
+    shouldFocus = false,
+    showToastMessage = false,
+  } = {}) => {
+    if (
+      !(newPasswordInput instanceof HTMLInputElement) ||
+      !(confirmPasswordInput instanceof HTMLInputElement)
+    )
+      return true;
+    const hasValues = Boolean(
+      newPasswordInput.value && confirmPasswordInput.value,
+    );
+    const matches = newPasswordInput.value === confirmPasswordInput.value;
+    if (hasValues && !matches) {
+      setPasswordMessage(confirmPasswordMessage, "Passwords do not match");
+      confirmPasswordInput.setAttribute("aria-invalid", "true");
+      if (showToastMessage)
+        toast.error("New password and confirm password must match.");
+      if (shouldFocus) confirmPasswordInput.focus();
+      return false;
+    }
+    setPasswordMessage(confirmPasswordMessage, "");
+    confirmPasswordInput.removeAttribute("aria-invalid");
+    return true;
+  };
+
+  const syncPasswordValidation = () => {
+    validateNewPassword();
+    validatePasswordMatch();
+  };
+
+  /* ══════════════════════════════════════════════════
+     STATE
+  ══════════════════════════════════════════════════ */
+  const notificationState = readJson(
+    settingsNotificationsKey,
+    defaultNotificationState,
+  );
+  const appearanceState = readJson(
+    settingsAppearanceKey,
+    defaultAppearanceState,
+  );
+  const profileState = {
+    fullName: profileDefaults.fullName,
+    username: profileDefaults.username,
+    phoneNumber: profileDefaults.phoneNumber,
+    email: profileDefaults.email,
+    bio: profileDefaults.bio,
+    picture: profileDefaults.picture,
+  };
+
+  /* ══════════════════════════════════════════════════
+     VIEW MANAGEMENT
+  ══════════════════════════════════════════════════ */
+  const applyView = (viewName) => {
+    currentView.value = viewName;
+    writeJson(settingsViewKey, { view: viewName });
+    views.forEach((view, key) => {
+      const isActive = key === viewName;
+      if (!view) return;
+      view.hidden = !isActive;
+      view.setAttribute("aria-hidden", String(!isActive));
+    });
+    if (viewName === "main") {
+      settingsCards[0]?.focus({ preventScroll: true });
+    }
+  };
+
+  const updateActiveCard = (cardId) => {
+    settingsCards.forEach((button) => {
+      const isActive = button.getAttribute("data-settings-card-id") === cardId;
+      button.classList.toggle("settings-row-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    writeJson(settingsCardKey, { cardId });
+  };
+
+  const openView = (viewName, cardId) => {
+    updateActiveCard(cardId);
+    applyView(viewName);
+  };
+
+  /* ══════════════════════════════════════════════════
+     RENDER STATE
+  ══════════════════════════════════════════════════ */
+  const renderNotificationState = () => {
+    notificationToggles.forEach((toggle) => {
+      const id = toggle.getAttribute("data-notification-id");
+      toggle.checked = Boolean(notificationState[id]);
+    });
+  };
+
+  const renderAppearanceState = () => {
+    themeModeButtons.forEach((button) => {
+      const isActive =
+        button.getAttribute("data-theme-mode-value") ===
+        appearanceState.themeMode;
+      button.classList.toggle("settings-choice-button-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    accentButtons.forEach((button) => {
+      const isActive =
+        button.getAttribute("data-accent-color-value") ===
+        appearanceState.accentColor;
+      button.classList.toggle("settings-accent-button-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    if (appearancePanel) {
+      appearancePanel.setAttribute(
+        "data-theme-mode",
+        appearanceState.themeMode,
+      );
+      appearancePanel.setAttribute(
+        "data-accent-color",
+        appearanceState.accentColor,
+      );
+      const accentMap = {
+        purple: "#7c3aed",
+        blue: "#3b82f6",
+        green: "#22c55e",
+        orange: "#f97316",
+        pink: "#ec4899",
+      };
+      const accent = accentMap[appearanceState.accentColor] || accentMap.purple;
+      appearancePanel.style.setProperty("--settings-accent", accent);
+      appearancePanel.style.setProperty(
+        "--settings-accent-soft",
+        `color-mix(in srgb, ${accent} 16%, transparent)`,
+      );
+    }
+    syncDashboardTheme(appearanceState.themeMode);
+    syncDashboardAccent(appearanceState.accentColor);
+  };
+
+  const renderProfileState = () => {
+    if (profilePicturePreview) {
+      profilePicturePreview.setAttribute(
+        "src",
+        profileState.picture || profileAvatarFallback,
+      );
+    }
+    const form = profileForm;
+    if (!form) return;
+    const fullNameInput = form.querySelector("[name='fullName']");
+    const usernameInput = form.querySelector("[name='username']");
+    const phoneNumberInput = form.querySelector("[name='phoneNumber']");
+    const emailInput = form.querySelector("[name='email']");
+    const bioInput = form.querySelector("[name='bio']");
+    if (fullNameInput instanceof HTMLInputElement)
+      fullNameInput.value = profileState.fullName || "";
+    if (usernameInput instanceof HTMLInputElement)
+      usernameInput.value = profileState.username || "";
+    if (phoneNumberInput instanceof HTMLInputElement)
+      phoneNumberInput.value = profileState.phoneNumber || "";
+    if (emailInput instanceof HTMLInputElement)
+      emailInput.value = profileState.email || "";
+    if (bioInput instanceof HTMLTextAreaElement)
+      bioInput.value = profileState.bio || "";
+  };
+
+  /* ══════════════════════════════════════════════════
+     EVENT LISTENERS
+  ══════════════════════════════════════════════════ */
+  settingsCards.forEach((button) => {
+    button.addEventListener("click", () => {
+      const cardId =
+        button.getAttribute("data-settings-card-id") || "notifications";
+      openView(cardId, cardId);
+    });
+  });
+
+  backButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      applyView("main");
+    });
+  });
+
+  notificationToggles.forEach((toggle) => {
+    toggle.addEventListener("change", () => {
+      const id = toggle.getAttribute("data-notification-id");
+      if (!id) return;
+      notificationState[id] = toggle.checked;
+      writeJson(settingsNotificationsKey, notificationState);
+    });
+  });
+
+  themeModeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const mode = button.getAttribute("data-theme-mode-value");
+      if (!mode) return;
+      appearanceState.themeMode = mode;
+      writeJson(settingsAppearanceKey, appearanceState);
+      renderAppearanceState();
+      setStatus(
+        appearanceStatus,
+        `${mode.charAt(0).toUpperCase()}${mode.slice(1)} mode selected.`,
+      );
+    });
+  });
+
+  accentButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const accent = button.getAttribute("data-accent-color-value");
+      if (!accent) return;
+      appearanceState.accentColor = accent;
+      writeJson(settingsAppearanceKey, appearanceState);
+      renderAppearanceState();
+      setStatus(
+        appearanceStatus,
+        `${accent.charAt(0).toUpperCase()}${accent.slice(1)} accent selected.`,
+      );
+    });
+  });
+
+  appearanceSaveButton?.addEventListener("click", () => {
+    writeJson(settingsAppearanceKey, appearanceState);
+    setStatus(
+      appearanceStatus,
+      "Appearance changes saved for this session.",
+      "success",
+    );
+  });
+
+  passwordToggleButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.getAttribute("data-security-password-toggle");
+      const input =
+        target === "currentPassword"
+          ? currentPasswordInput
+          : target === "newPassword"
+            ? newPasswordInput
+            : null;
+      if (input instanceof HTMLInputElement) syncPasswordToggle(input, button);
+    });
+  });
+
+  currentPasswordInput?.addEventListener("input", () => {
+    if (currentPasswordInput instanceof HTMLInputElement)
+      currentPasswordInput.removeAttribute("aria-invalid");
+  });
+
+  newPasswordInput?.addEventListener("input", () => {
+    validateNewPassword();
+    validatePasswordMatch();
+  });
+  newPasswordInput?.addEventListener("blur", () => {
+    validateNewPassword();
+    validatePasswordMatch();
+  });
+  confirmPasswordInput?.addEventListener("input", () => {
+    validatePasswordMatch();
+  });
+  confirmPasswordInput?.addEventListener("blur", () => {
+    validatePasswordMatch();
+  });
+
+  securityForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const currentPassword = form.elements.namedItem("currentPassword");
+    const newPassword = form.elements.namedItem("newPassword");
+    const confirmPassword = form.elements.namedItem("confirmPassword");
+
+    const passwordFields = [
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    ].filter((field) => field instanceof HTMLInputElement);
+    const missingField = passwordFields.find((field) => !field.value.trim());
+
+    if (missingField) {
+      toast.error("All password fields are required.");
+      missingField.focus();
+      return;
+    }
+
+    if (!validateNewPassword({ shouldFocus: true })) {
+      toast.error(passwordHelpMessage);
+      return;
+    }
+
+    if (
+      newPassword instanceof HTMLInputElement &&
+      confirmPassword instanceof HTMLInputElement &&
+      newPassword.value !== confirmPassword.value
+    ) {
+      setPasswordMessage(confirmPasswordMessage, "Passwords do not match");
+      confirmPassword.setAttribute("aria-invalid", "true");
+      toast.error("New password and confirm password must match.");
+      confirmPassword.focus();
+      return;
+    }
+
+    const currentPasswordValue =
+      currentPassword instanceof HTMLInputElement ? currentPassword.value : "";
+    const newPasswordValue =
+      newPassword instanceof HTMLInputElement ? newPassword.value : "";
+
+    (async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/password`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            currentPassword: currentPasswordValue,
+            newPassword: newPasswordValue,
+          }),
+        });
+
+        let payload = {};
+        try {
+          payload = await response.json();
+        } catch {
+          payload = {};
+        }
+
+        if (!response.ok) {
+          if (
+            response.status === 401 &&
+            payload.message === "Current password is incorrect"
+          ) {
+            toast.error("The current password you entered is incorrect.");
+            if (currentPassword instanceof HTMLInputElement) {
+              currentPassword.setAttribute("aria-invalid", "true");
+              currentPassword.focus();
+            }
+            return;
+          }
+          if (payload.message === passwordHelpMessage) {
+            setPasswordMessage(newPasswordMessage, passwordHelpMessage);
+            if (newPassword instanceof HTMLInputElement) {
+              newPassword.setAttribute("aria-invalid", "true");
+              newPassword.focus();
+            }
+            toast.error(passwordHelpMessage);
+            return;
+          }
+          toast.error("Unable to update password. Please try again.");
+          return;
+        }
+
+        form.reset();
+        setPasswordMessage(newPasswordMessage, "");
+        setPasswordMessage(confirmPasswordMessage, "");
+        if (currentPasswordInput instanceof HTMLInputElement)
+          currentPasswordInput.removeAttribute("aria-invalid");
+        if (newPasswordInput instanceof HTMLInputElement)
+          newPasswordInput.removeAttribute("aria-invalid");
+        if (confirmPasswordInput instanceof HTMLInputElement)
+          confirmPasswordInput.removeAttribute("aria-invalid");
+
+        passwordToggleButtons.forEach((button) => {
+          const target = button.getAttribute("data-security-password-toggle");
+          const input =
+            target === "currentPassword"
+              ? currentPasswordInput
+              : target === "newPassword"
+                ? newPasswordInput
+                : null;
+          if (input instanceof HTMLInputElement && input.type === "text")
+            syncPasswordToggle(input, button);
+        });
+
+        toast.success("Your password has been updated successfully.");
+      } catch {
+        toast.error("Unable to update password. Please try again.");
+      }
+    })();
+  });
+
+  profileChangePhotoButton?.addEventListener("click", () => {
+    if (profilePhotoInput instanceof HTMLInputElement)
+      profilePhotoInput.click();
+  });
+
+  profilePhotoInput?.addEventListener("change", () => {
+    const input = profilePhotoInput;
+    if (!(input instanceof HTMLInputElement)) return;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setStatus(profileStatus, "Please choose a valid image file.", "error");
+      input.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== "string") return;
+      profileState.picture = result;
+      if (profilePicturePreview)
+        profilePicturePreview.setAttribute("src", result);
+      setStatus(profileStatus, "Profile photo selected.", "info");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  profileRemovePhotoButton?.addEventListener("click", () => {
+    profileState.picture = null;
+    if (profilePicturePreview) {
+      profilePicturePreview.setAttribute("src", profileAvatarFallback);
+    }
+    if (profilePhotoInput instanceof HTMLInputElement)
+      profilePhotoInput.value = "";
+    setStatus(profileStatus, "Profile photo removed.", "info");
+  });
+
+  profileForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const fullNameInput = form.elements.namedItem("fullName");
+    const usernameInput = form.elements.namedItem("username");
+    const phoneNumberInput = form.elements.namedItem("phoneNumber");
+    const emailInput = form.elements.namedItem("email");
+    const bioInput = form.elements.namedItem("bio");
+
+    const requiredFields = [
+      fullNameInput,
+      usernameInput,
+      emailInput,
+    ].filter(
+      (field) =>
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement,
+    );
+    const missingField = requiredFields.find((field) => !field.value.trim());
+
+    if (missingField) {
+      setStatus(profileStatus, "All profile fields are required.", "error");
+      missingField.focus();
+      return;
+    }
+    if (
+      emailInput instanceof HTMLInputElement &&
+      !emailInput.value.includes("@")
+    ) {
+      setStatus(profileStatus, "Enter a valid email address.", "error");
+      emailInput.focus();
+      return;
+    }
+
+    const normalizedPhoneNumber =
+      phoneNumberInput instanceof HTMLInputElement
+        ? phoneNumberInput.value.trim()
+        : "";
+
+    profileState.fullName =
+      fullNameInput instanceof HTMLInputElement
+        ? fullNameInput.value.trim()
+        : "";
+    profileState.username =
+      usernameInput instanceof HTMLInputElement
+        ? usernameInput.value.trim()
+        : "";
+    profileState.phoneNumber = normalizedPhoneNumber;
+    profileState.email =
+      emailInput instanceof HTMLInputElement ? emailInput.value.trim() : "";
+    profileState.bio =
+      bioInput instanceof HTMLTextAreaElement ? bioInput.value.trim() : "";
+
+    (async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/user`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: profileState.fullName,
+            username: profileState.username,
+            phoneNumber: profileState.phoneNumber || null,
+            email: profileState.email,
+            bio: profileState.bio || null,
+            picture: profileState.picture,
+          }),
+        });
+
+        let payload = {};
+        try {
+          payload = await response.json();
+        } catch {
+          payload = {};
+        }
+
+        if (!response.ok) {
+          setStatus(
+            profileStatus,
+            payload.message || "Unable to update profile. Please try again.",
+            "error",
+          );
+          return;
+        }
+
+        const updatedUser = payload.user || {
+          ...profileState,
+          name: profileState.fullName,
+          fullName: profileState.fullName,
+          phoneNumber: profileState.phoneNumber || null,
+          bio: profileState.bio || null,
+          picture: profileState.picture || null,
+        };
+
+        profileState.fullName = updatedUser.fullName || updatedUser.name || profileState.fullName;
+        profileState.username = updatedUser.username || profileState.username;
+        profileState.phoneNumber = updatedUser.phoneNumber || "";
+        profileState.email = updatedUser.email || profileState.email;
+        profileState.bio = updatedUser.bio || "";
+        profileState.picture = updatedUser.picture || null;
+
+        renderProfileState();
+
+        window.localStorage.setItem(
+          "alag-user-profile",
+          JSON.stringify(updatedUser),
+        );
+        document.dispatchEvent(
+          new CustomEvent("alag-user-profile-updated", {
+            detail: updatedUser,
+          }),
+        );
+
+        setStatus(profileStatus, "Profile updated successfully.", "success");
+        toast.success("Profile updated successfully.");
+      } catch {
+        setStatus(
+          profileStatus,
+          "Unable to update profile. Please try again.",
+          "error",
+        );
+      }
+    })();
+  });
+
+  /* ══════════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════════ */
+  const storedCard = readJson(settingsCardKey, {
+    cardId:
+      settingsCards[0]?.getAttribute("data-settings-card-id") ||
+      "notifications",
+  });
+  if (storedCard.cardId) updateActiveCard(storedCard.cardId);
+
+  if (window.sessionStorage.getItem(settingsViewKey)) {
+    const storedView = readJson(settingsViewKey, { view: "main" });
+    applyView(storedView.view || "main");
+  } else {
+    applyView("main");
+  }
+
+  renderNotificationState();
+  renderAppearanceState();
+  renderProfileState();
+
+  if (window.matchMedia) {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const syncSystemPreview = () => {
+      if (appearanceState.themeMode !== "system") return;
+      syncDashboardTheme("system");
+      renderAppearanceState();
+    };
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncSystemPreview);
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(syncSystemPreview);
+    }
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && currentView.value !== "main")
+      applyView("main");
+  });
+</script>
+
+<style>
+  .settings-shell {
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    padding: 12px 18px 40px;
+  }
+
+  .settings-container-card {
+    width: 100%;
+    max-width: 1080px;
+    border-radius: 38px;
+    padding: 42px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.68)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(22px);
+  }
+
+  html.dark .settings-container-card {
+    background: linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.92),
+      rgba(15, 23, 42, 0.84)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .settings-top-section {
+    margin-bottom: 34px;
+  }
+
+  .settings-top-section h1 {
+    font-size: 4rem;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    color: var(--dashboard-text);
+  }
+
+  .settings-top-section p {
+    margin-top: 18px;
+    font-size: 1.08rem;
+    color: var(--dashboard-muted);
+  }
+
+  .settings-inner-card {
+    width: 90%;
+    border-radius: 32px;
+    padding: 20px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.18)
+    );
+    border: 1px solid rgba(139, 92, 246, 0.08);
+  }
+
+  html.dark .settings-inner-card {
+    background: linear-gradient(
+      180deg,
+      rgba(30, 41, 59, 0.6),
+      rgba(15, 23, 42, 0.4)
+    );
+  }
+
+  .settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .settings-view[hidden] {
+    display: none !important;
+  }
+
+  .settings-row {
+    width: 100%;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 24px;
+    border-radius: 20px;
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface);
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .settings-row:hover {
+    transform: translateY(-2px);
+    border-color: rgba(139, 92, 246, 0.22);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.08);
+  }
+
+  .settings-row-active {
+    border-color: rgba(139, 92, 246, 0.26);
+    background: linear-gradient(
+      180deg,
+      rgba(139, 92, 246, 0.08),
+      rgba(139, 92, 246, 0.03)
+    );
+  }
+
+  .settings-row-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20px;
+    bottom: 20px;
+    width: 5px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #8b5cf6, #7c3aed);
+  }
+
+  .settings-icon-card {
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+    color: #7c3aed;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .settings-row:hover .settings-icon-card {
+    transform: scale(1.04);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
+  }
+
+  .settings-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .settings-content {
+    min-width: 0;
+  }
+
+  .settings-content h3 {
+    font-size: 1.4rem;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    color: var(--dashboard-text);
+  }
+  
+
+  .settings-content p {
+    margin-top: 10px;
+    font-size: 1.rem;
+    line-height: 1.5;
+    color: var(--dashboard-muted);
+  }
+
+  .settings-row:focus-visible,
+  .settings-back-button:focus-visible,
+  .settings-choice-button:focus-visible,
+  .settings-accent-button:focus-visible,
+  .settings-secondary-button:focus-visible,
+  .settings-primary-button:focus-visible,
+  .settings-toggle-input:focus-visible + .settings-toggle-track,
+  .settings-session-menu:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dashboard-accent) 60%, white);
+    outline-offset: 3px;
+  }
+
+  .settings-detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .settings-back-button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface);
+    color: var(--dashboard-text);
+    box-shadow: var(--dashboard-shadow);
+    cursor: pointer;
+  }
+
+  .settings-back-button:hover,
+  .settings-back-button:focus-visible,
+  .settings-back-button:active {
+    background: color-mix(
+      in srgb,
+      var(--dashboard-accent) 8%,
+      var(--dashboard-surface)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--dashboard-accent) 24%,
+      var(--dashboard-border)
+    );
+    box-shadow:
+      0 8px 22px color-mix(in srgb, var(--dashboard-accent) 12%, transparent),
+      var(--dashboard-shadow);
+    color: var(--dashboard-text);
+  }
+
+  .settings-back-button:active {
+    transform: translateY(0);
+  }
+
+  .settings-view[data-settings-view="security"] .settings-back-button {
+    transition:
+      transform 180ms ease,
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease;
+  }
+
+  .settings-view[data-settings-view="security"] .settings-back-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .settings-view[data-settings-view="security"] .settings-back-button:active {
+    transform: translateY(0);
+  }
+
+  .settings-back-button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .settings-detail-copy h2 {
+    font-size: 1.65rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+  }
+
+  .settings-detail-copy p {
+    margin-top: 8px;
+    color: var(--dashboard-muted);
+    font-size: 0.98rem;
+  }
+
+  .settings-detail-stack {
+    display: grid;
+    gap: 18px;
+  }
+
+  .settings-detail-panel {
+    border-radius: 30px;
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+    box-shadow: var(--dashboard-shadow);
+    padding: 20px;
+  }
+
+  .settings-panel-heading-block h3 {
+    font-size: 1.05rem;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .settings-panel-heading-block p {
+    margin-top: 6px;
+    color: var(--dashboard-muted);
+    font-size: 0.92rem;
+  }
+
+  .settings-panel-heading-block-spaced {
+    margin-top: 24px;
+  }
+
+  .settings-notifications-panel {
+    padding: 6px 0;
+  }
+
+  .settings-notification-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--dashboard-border);
+  }
+
+  .settings-notification-row-last {
+    border-bottom: none;
+  }
+
+  .settings-notification-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .settings-notification-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--dashboard-accent) 10%, transparent);
+    color: var(--dashboard-accent);
+  }
+
+  .settings-notification-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .settings-notification-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .settings-notification-title {
+    font-size: 0.97rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .settings-notification-description {
+    margin-top: 4px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--dashboard-muted);
+  }
+
+  .settings-toggle-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .settings-toggle-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .settings-toggle-track {
+    width: 52px;
+    height: 28px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.32);
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    transition:
+      background 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .settings-toggle-thumb {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+    transform: translateX(0);
+    transition:
+      transform 180ms ease,
+      background 180ms ease;
+  }
+
+  .settings-toggle-input:checked + .settings-toggle-track {
+    background: var(--dashboard-accent);
+    border-color: color-mix(in srgb, var(--dashboard-accent) 50%, white);
+  }
+
+  .settings-toggle-input:checked
+    + .settings-toggle-track
+    .settings-toggle-thumb {
+    transform: translateX(24px);
+  }
+
+  .settings-form-panel {
+    display: grid;
+    gap: 18px;
+  }
+  .settings-form-grid {
+    display: grid;
+    gap: 30px;
+  }
+  .settings-field {
+    display: grid;
+    gap: 10px;
+  }
+  .settings-field-full {
+    grid-column: 1 / -1;
+  }
+
+  .settings-profile-panel .settings-field-label {
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--dashboard-text);
+    margin: 5px;
+  }
+
+  html[data-theme="light"] .settings-profile-panel .settings-field-label {
+    color: #334155;
+  }
+
+  html[data-theme="dark"] .settings-profile-panel .settings-field-label {
+    color: #f8fafc;
+  }
+
+  .settings-field input,
+  .settings-field textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 16px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface-strong);
+    color: var(--dashboard-text);
+    font: inherit;
+    font-size: 0.95rem;
+    resize: none;
+  }
+
+  .settings-field textarea {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .settings-view[data-settings-view="security"] .settings-field input {
+    min-height: 48px;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.2;
+    resize: none;
+    appearance: none;
+  }
+
+  .settings-view[data-settings-view="security"] .settings-field input::placeholder {
+    opacity: 1;
+  }
+
+  html[data-theme="light"]
+    .settings-view[data-settings-view="security"]
+    .settings-field input::placeholder {
+    color: #6b7280;
+  }
+
+  html[data-theme="dark"]
+    .settings-view[data-settings-view="security"]
+    .settings-field input::placeholder {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .settings-password-control {
+    position: relative;
+  }
+  .settings-password-control input {
+    padding-right: 48px;
+  }
+
+  .settings-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dashboard-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .settings-password-toggle:hover {
+    color: var(--dashboard-text);
+    background: color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
+  }
+
+  .settings-password-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--dashboard-accent) 35%, white);
+    outline-offset: 2px;
+  }
+
+  .settings-field-message {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: #ef4444;
+  }
+
+  .settings-field textarea {
+    min-height: 110px;
+  }
+
+  .settings-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings-form-actions-left {
+    justify-content: flex-start;
+  }
+  .settings-form-actions-right {
+    justify-content: flex-end;
+  }
+
+  .settings-appearance-panel {
+    display: grid;
+    gap: 18px;
+  }
+
+  .settings-primary-button,
+  .settings-secondary-button {
+    border-radius: 14px;
+    padding: 12px 18px;
+    font: inherit;
+    font-size: 0.93rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease,
+      background 180ms ease;
+  }
+
+  .settings-primary-button {
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 70%, white);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dashboard-accent) 94%, white),
+      var(--dashboard-accent-strong)
+    );
+    color: white;
+    box-shadow: 0 12px 24px
+      color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+  }
+
+  .settings-secondary-button {
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface-strong);
+    color: var(--dashboard-text);
+  }
+
+  .settings-secondary-button-danger {
+    color: #ef4444;
+  }
+
+  .settings-primary-button:hover,
+  .settings-secondary-button:hover,
+  .settings-choice-button:hover,
+  .settings-accent-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .settings-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .settings-choice-button {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 18px;
+    min-height: 108px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid var(--dashboard-border);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dashboard-surface-strong) 92%, white),
+      var(--dashboard-surface-strong)
+    );
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.38) inset,
+      0 10px 24px rgba(15, 23, 42, 0.04);
+    color: var(--dashboard-text);
+    cursor: pointer;
+  }
+
+  .settings-choice-button > span:last-child {
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .settings-choice-indicator {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1.5px solid
+      color-mix(in srgb, var(--dashboard-accent) 32%, var(--dashboard-border));
+    background: color-mix(in srgb, var(--dashboard-accent) 3%, transparent);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) inset;
+    position: relative;
+  }
+
+  .settings-choice-button-active {
+    border-color: color-mix(in srgb, var(--dashboard-accent) 40%, white);
+    background: linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--dashboard-accent) 9%,
+        var(--dashboard-surface-strong)
+      ),
+      color-mix(
+        in srgb,
+        var(--dashboard-accent) 4%,
+        var(--dashboard-surface-strong)
+      )
+    );
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--dashboard-accent) 20%, transparent),
+      0 14px 28px color-mix(
+        in srgb,
+        var(--dashboard-accent) 10%,
+        transparent
+      );
+  }
+
+  .settings-choice-button-active .settings-choice-indicator {
+    border-color: var(--dashboard-accent);
+    background: color-mix(
+      in srgb,
+      var(--dashboard-accent) 8%,
+      var(--dashboard-surface-strong)
+    );
+  }
+
+  .settings-choice-button-active .settings-choice-indicator::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: inherit;
+    background: var(--dashboard-accent);
+  }
+
+  .settings-accent-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .settings-accent-button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--dashboard-border) 86%, white);
+    background: var(--dashboard-surface-strong);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 6px 12px rgba(15, 23, 42, 0.04);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .settings-accent-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--accent-color);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85);
+  }
+
+  .settings-accent-button-active {
+    border-color: var(--accent-color);
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--accent-color) 18%, transparent),
+      0 10px 18px color-mix(in srgb, var(--accent-color) 12%, transparent);
+  }
+
+  .settings-session-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 22px;
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface-strong);
+  }
+
+  .settings-session-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .settings-session-card-list {
+    align-items: flex-start;
+  }
+
+  .settings-session-copy {
+    display: grid;
+    gap: 6px;
+  }
+  .settings-session-copy strong {
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  .settings-session-copy span {
+    font-size: 0.88rem;
+    color: var(--dashboard-muted);
+  }
+
+  .settings-session-copy .settings-session-date {
+    font-size: 0.82rem;
+  }
+
+  .settings-session-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .settings-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .settings-status-badge-logged-out {
+    background: rgba(148, 163, 184, 0.16);
+    color: #64748b;
+  }
+
+  .settings-form-status {
+    min-height: 1.2rem;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    color: var(--dashboard-muted);
+  }
+  .settings-form-status[data-tone="success"] {
+    color: #16a34a;
+  }
+  .settings-form-status[data-tone="error"] {
+    color: #ef4444;
+  }
+  .settings-form-status[data-tone="info"] {
+    color: var(--dashboard-accent);
+  }
+
+  .settings-session-empty {
+    display: grid;
+    gap: 6px;
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px dashed color-mix(in srgb, var(--dashboard-border) 90%, var(--dashboard-accent));
+    background: color-mix(in srgb, var(--dashboard-accent) 4%, var(--dashboard-surface-strong));
+  }
+
+  .settings-session-empty strong {
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .settings-session-empty span {
+    color: var(--dashboard-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .settings-picture-section {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px;
+    border-radius: 24px;
+    border: 1px solid var(--dashboard-border);
+    background: var(--dashboard-surface-strong);
+  }
+
+  .settings-picture-preview {
+    width: 76px;
+    height: 76px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 2px solid
+      color-mix(in srgb, var(--dashboard-accent) 22%, transparent);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  }
+
+  .settings-picture-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .settings-picture-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .settings-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 768px) {
+    .settings-shell {
+      padding-inline: 10px;
+    }
+    .settings-container-card {
+      padding: 24px;
+      border-radius: 28px;
+    }
+    .settings-top-section {
+      margin-bottom: 24px;
+    }
+    .settings-top-section h1 {
+      font-size: 2.8rem;
+    }
+    .settings-top-section p {
+      font-size: 0.95rem;
+    }
+    .settings-inner-card {
+      padding: 12px;
+      border-radius: 24px;
+    }
+    .settings-row {
+      gap: 16px;
+      padding: 18px;
+      border-radius: 22px;
+    }
+    .settings-icon-card {
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
+    }
+    .settings-icon {
+      width: 26px;
+      height: 26px;
+    }
+    .settings-content h3 {
+      font-size: 1.25rem;
+    }
+    .settings-content p {
+      font-size: 0.92rem;
+    }
+    .settings-detail-header {
+      gap: 12px;
+    }
+    .settings-detail-copy h2 {
+      font-size: 1.35rem;
+    }
+    .settings-detail-panel {
+      padding: 16px;
+      border-radius: 24px;
+    }
+    .settings-notification-row {
+      padding: 16px 14px;
+    }
+    .settings-notification-main {
+      gap: 12px;
+    }
+    .settings-choice-grid {
+      grid-template-columns: 1fr;
+    }
+    .settings-session-card,
+    .settings-picture-section {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .settings-form-actions-right {
+      justify-content: stretch;
+    }
+    .settings-primary-button,
+    .settings-secondary-button {
+      width: 100%;
+    }
+  }
+</style>

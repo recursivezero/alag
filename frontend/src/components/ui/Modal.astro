@@ -1,0 +1,29 @@
+---
+const {
+  open = false,
+  id = "",
+  class: className = "",
+  role = "dialog",
+  ariaModal = true,
+  ariaLabelledby,
+  ariaDescribedby,
+  panelClass = "",
+} = Astro.props;
+---
+
+<div
+  id={id}
+  role={role}
+  aria-modal={ariaModal ? "true" : undefined}
+  aria-labelledby={ariaLabelledby}
+  aria-describedby={ariaDescribedby}
+  class:list={[
+    "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 px-4 py-6 backdrop-blur-sm transition-opacity duration-200",
+    open ? "opacity-100 visible" : "pointer-events-none invisible opacity-0",
+    className,
+  ]}
+>
+  <div class:list={panelClass || "dashboard-surface-strong w-full max-w-2xl rounded-[28px] p-6 shadow-[0_24px_100px_rgba(0,0,0,0.4)]"}>
+    <slot />
+  </div>
+</div>

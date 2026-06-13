@@ -1,0 +1,184 @@
+---
+interface Item {
+  id?: string;
+  title: string;
+  value: string | number;
+  trendValue?: string;
+  trendLabel?: string;
+  trendDirection?: "up" | "down";
+  tone?: "violet" | "emerald" | "amber" | "rose";
+  kind?: "total" | "active" | "disabled" | "deleted" | "generic";
+}
+
+const { items } = Astro.props as { items: Item[] };
+
+const iconWrap = (kind: string) => {
+  if (kind === "active") {
+    return `
+      border border-emerald-400/20
+      bg-[linear-gradient(180deg,rgba(16,185,129,0.22),rgba(16,185,129,0.08))]
+      text-emerald-300
+    `;
+  }
+
+  if (kind === "disabled") {
+    return `
+      border border-amber-400/20
+      bg-[linear-gradient(180deg,rgba(245,158,11,0.20),rgba(245,158,11,0.08))]
+      text-amber-300
+    `;
+  }
+
+  if (kind === "deleted") {
+    return `
+      border border-rose-400/20
+      bg-[linear-gradient(180deg,rgba(244,63,94,0.20),rgba(244,63,94,0.08))]
+      text-rose-300
+    `;
+  }
+
+  return `
+    border border-violet-400/20
+    bg-[linear-gradient(180deg,rgba(124,92,255,0.24),rgba(124,92,255,0.08))]
+    text-violet-300
+  `;
+};
+---
+
+<section
+  class="
+    mt-6
+    grid
+    grid-cols-1
+    gap-5
+    md:grid-cols-2
+    xl:grid-cols-4
+  "
+>
+  {
+    items.map((item) => {
+      const kind = item.kind || "generic";
+
+      return (
+        <div
+          data-admin-surface="stat-card"
+          class="
+            relative
+            overflow-hidden
+            rounded-[22px]
+            border
+            border-[#1b2a46]
+            bg-[linear-gradient(180deg,#0a1627,#07111d)]
+            px-6
+            py-5
+            h-[150px]
+            shadow-[0_6px_30px_rgba(0,0,0,0.22)]
+          "
+        >
+          <!-- SOFT GLOW -->
+          <div
+            class="
+              pointer-events-none
+              absolute
+              inset-0
+              opacity-[0.04]
+              bg-[radial-gradient(circle_at_top_left,rgba(124,92,255,0.6),transparent_55%)]
+            "
+          ></div>
+
+          <!-- CONTENT -->
+          <div class="relative z-10 flex items-start gap-4">
+
+            <!-- ICON -->
+            <div
+              class={`
+                flex
+                h-[58px]
+                w-[58px]
+                shrink-0
+                items-center
+                justify-center
+                rounded-[18px]
+                ${iconWrap(kind)}
+              `}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-7 w-7"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                {kind === "active" ? (
+                  <>
+                    <path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-4z" />
+                    <path d="M9 12l2 2 4-4" />
+                  </>
+                ) : kind === "disabled" ? (
+                  <>
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 3-7 8-7" />
+                    <path d="M17 11l4 4" />
+                    <path d="M21 11l-4 4" />
+                  </>
+                ) : kind === "deleted" ? (
+                  <>
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" />
+                  </>
+                ) : (
+                  <>
+                    <circle cx="9" cy="8" r="3" />
+                    <circle cx="17" cy="11" r="3" />
+                    <path d="M2 20c0-3.5 3-6 7-6" />
+                    <path d="M14 20c0-2.5 2-4.5 5-4.5" />
+                  </>
+                )}
+              </svg>
+            </div>
+
+            <!-- TEXT -->
+            <div class="flex flex-col pt-[2px]">
+
+              <!-- TITLE -->
+              <p
+                class="
+                  text-[15px]
+                  font-medium
+                  leading-[1.4]
+                  text-slate-300
+                "
+              >
+                {item.title}
+              </p>
+
+              <!-- VALUE -->
+              <h2
+                id={item.id}
+                class="
+                  mt-2
+                  text-[26px]
+                  font-semibold
+                  leading-none
+                  tracking-[-0.03em]
+                  text-white
+                "
+              >
+                {item.value}
+              </h2>
+
+              <!-- TREND -->
+              
+
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</section>

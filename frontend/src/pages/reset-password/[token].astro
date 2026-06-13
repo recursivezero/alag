@@ -1,0 +1,601 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+
+const token = Astro.params.token || "";
+export const prerender = false;
+---
+
+<style>
+  :root {
+    --bg: #06101f;
+    --card: rgba(13, 22, 39, 0.78);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text: #f4f7ff;
+    --muted: #9ca9c7;
+    --line: rgba(255, 255, 255, 0.08);
+    --accent-start: #7c5cfc;
+    --accent-end: #8f5cff;
+    --accent-glow: rgba(124, 92, 252, 0.24);
+    --success: #76e3a8;
+    --error: #ff8fa3;
+  }
+
+  .page {
+    min-height: calc(100vh - 72px);
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.25rem 3rem;
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(124, 92, 252, 0.24),
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at bottom right,
+        rgba(79, 214, 255, 0.1),
+        transparent 26%
+      ),
+      linear-gradient(180deg, #06101f 0%, #050b15 64%, #02060d 100%);
+  }
+
+  .card {
+    width: min(100%, 560px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    background: var(--card);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+    padding: clamp(1.6rem, 4vw, 3rem);
+    position: relative;
+    overflow: hidden;
+    animation: floatIn 0.5s ease both;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.06),
+      transparent 35%
+    );
+    pointer-events: none;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 1.8rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 1rem;
+    border-radius: 18px;
+    background: rgba(124, 92, 252, 0.16);
+    color: #bba9ff;
+    box-shadow: 0 0 0 10px rgba(124, 92, 252, 0.05);
+  }
+
+  .eyebrow {
+    color: #d8deff;
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.45rem;
+  }
+
+  h1 {
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(2rem, 4vw, 3.1rem);
+    line-height: 1.04;
+  }
+
+  .description {
+    margin: 0.9rem auto 0;
+    max-width: 30rem;
+    color: var(--muted);
+    line-height: 1.65;
+    font-size: 1rem;
+  }
+
+  .form {
+    position: relative;
+    z-index: 1;
+  }
+
+  .field {
+    position: relative;
+    margin-bottom: 0.95rem;
+  }
+
+  .input {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    border-radius: 14px;
+    padding: 0.98rem 3.25rem 0.98rem 1rem;
+    font-size: 1rem;
+    outline: none;
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .input::placeholder {
+    color: #7f8aa6;
+  }
+
+  .input:focus {
+    border-color: rgba(124, 92, 252, 0.78);
+    box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.16);
+  }
+
+  .toggle {
+    position: absolute;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #b8c4e3;
+    cursor: pointer;
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease;
+  }
+
+  .toggle:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 0.98rem 1.35rem;
+    margin-top: 0.35rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+    box-shadow: 0 16px 32px var(--accent-glow);
+    transition:
+      transform 0.18s ease,
+      filter 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 18px 36px rgba(124, 92, 252, 0.34);
+  }
+
+  .button:disabled {
+    cursor: wait;
+    opacity: 0.78;
+    transform: none;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 1.25rem;
+    color: #aebcff;
+    text-decoration: none;
+    font-weight: 600;
+    transition:
+      color 0.18s ease,
+      gap 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .back-link:hover {
+    color: #d5dcff;
+    gap: 0.65rem;
+    transform: translateX(1px);
+  }
+
+  .meta {
+    margin-top: 0.9rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%) translateY(16px);
+    min-width: min(92vw, 460px);
+    max-width: 92vw;
+    padding: 0.95rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(7, 14, 28, 0.94);
+    color: var(--text);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s ease;
+    z-index: 30;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.success {
+    border-color: rgba(118, 227, 168, 0.24);
+    box-shadow:
+      0 0 0 1px rgba(118, 227, 168, 0.08),
+      0 22px 48px rgba(0, 0, 0, 0.35);
+  }
+
+  .toast.error {
+    border-color: rgba(255, 143, 163, 0.24);
+  }
+
+  .toast-title {
+    font-size: 0.95rem;
+    margin: 0;
+    color: var(--text);
+  }
+
+  .toast-text {
+    margin: 0.2rem 0 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  @keyframes floatIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+</style>
+
+<MainLayout page="login" title="Reset Password">
+  <div class="page">
+    <section class="card" aria-labelledby="reset-heading">
+      <div class="header">
+        <div class="badge" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            width="28"
+            height="28"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Z"
+            ></path>
+            <path d="M9 10V7a3 3 0 0 1 6 0v3"></path>
+          </svg>
+        </div>
+        <div class="eyebrow">Reset Password</div>
+        <h1 id="reset-heading">Set your password</h1>
+        <p class="description">Enter your new password below.</p>
+      </div>
+
+      <form id="resetForm" class="form" novalidate>
+        <div class="field">
+          <input
+            id="newPassword"
+            class="input"
+            type="password"
+            placeholder="New password"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            id="toggleNew"
+            class="toggle"
+            type="button"
+            aria-label="Show password"
+          >
+            <svg
+              id="newEyeIcon"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <div class="field">
+          <input
+            id="confirmPassword"
+            class="input"
+            type="password"
+            placeholder="Confirm your password"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            id="toggleConfirm"
+            class="toggle"
+            type="button"
+            aria-label="Show confirm password"
+          >
+            <svg
+              id="confirmEyeIcon"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <button id="submitBtn" class="button" type="submit">
+          Submit
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h13"></path>
+            <path d="m12 5 7 7-7 7"></path>
+          </svg>
+        </button>
+
+        <a href="/login" class="back-link">
+          Back to login
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h13"></path>
+            <path d="m12 5 7 7-7 7"></path>
+          </svg>
+        </a>
+
+        <p class="meta">
+          This reset link can only be used once and expires shortly after it is
+          issued.
+        </p>
+      </form>
+    </section>
+  </div>
+
+  <div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    <p id="toastTitle" class="toast-title"></p>
+    <p id="toastText" class="toast-text"></p>
+  </div>
+
+  <script>
+    const apiBase = (
+      import.meta.env.PUBLIC_API_BASE_URL?.trim() || "http://localhost:5001/api"
+    ).replace(/\/$/, "");
+    const token =
+      new URL(window.location.href).searchParams.get("token") ||
+      window.location.pathname.split("/").pop();
+    const form = document.getElementById("resetForm");
+    const newPasswordInput = document.getElementById("newPassword");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
+    const submitBtn = document.getElementById("submitBtn");
+    const toast = document.getElementById("toast");
+    const toastTitle = document.getElementById("toastTitle");
+    const toastText = document.getElementById("toastText");
+    const toggleNew = document.getElementById("toggleNew");
+    const toggleConfirm = document.getElementById("toggleConfirm");
+    const newEyeIcon = document.getElementById("newEyeIcon");
+    const confirmEyeIcon = document.getElementById("confirmEyeIcon");
+    let toastTimer;
+
+    const eyeOpen =
+      '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle>';
+    const eyeClosed =
+      '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+
+    const showToast = (title, text, type = "success") => {
+      if (!toast || !toastTitle || !toastText) return;
+      toast.classList.remove("success", "error", "show");
+      toast.classList.add(type);
+      toastTitle.textContent = title;
+      toastText.textContent = text;
+      requestAnimationFrame(() => toast.classList.add("show"));
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3800);
+    };
+
+    const setLoading = (loading) => {
+      if (!(submitBtn instanceof HTMLButtonElement)) return;
+      submitBtn.disabled = loading;
+      submitBtn.dataset.originalText ||= submitBtn.textContent || "Submit";
+      submitBtn.innerHTML = loading
+        ? 'Submitting… <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>'
+        : `${submitBtn.dataset.originalText} <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"></path><path d="m12 5 7 7-7 7"></path></svg>`;
+    };
+
+    const passwordIsStrongEnough = (value) => {
+      if (value.length < 8) return false;
+      return /[A-Za-z]/.test(value) && /\d/.test(value);
+    };
+
+    const toggleField = (input, icon, button) => {
+      if (
+        !(input instanceof HTMLInputElement) ||
+        !icon ||
+        !(button instanceof HTMLButtonElement)
+      )
+        return;
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      icon.innerHTML = isHidden ? eyeClosed : eyeOpen;
+      button.setAttribute(
+        "aria-label",
+        isHidden ? "Hide password" : "Show password",
+      );
+    };
+
+    if (toggleNew && newPasswordInput) {
+      toggleNew.addEventListener("click", () =>
+        toggleField(newPasswordInput, newEyeIcon, toggleNew),
+      );
+    }
+
+    if (toggleConfirm && confirmPasswordInput) {
+      toggleConfirm.addEventListener("click", () =>
+        toggleField(confirmPasswordInput, confirmEyeIcon, toggleConfirm),
+      );
+    }
+
+    if (form && token) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (
+          !(newPasswordInput instanceof HTMLInputElement) ||
+          !(confirmPasswordInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        if (!passwordIsStrongEnough(newPassword)) {
+          showToast(
+            "Use a stronger password",
+            "Use at least 8 characters with letters and numbers.",
+            "error",
+          );
+          newPasswordInput.focus();
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          showToast(
+            "Passwords do not match",
+            "Both password fields should match.",
+            "error",
+          );
+          confirmPasswordInput.focus();
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const response = await fetch(`${apiBase}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, newPassword }),
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(
+              data.message || `Request failed (${response.status})`,
+            );
+          }
+
+          showToast(
+            "Password updated",
+            data.message || "Your password has been reset successfully.",
+            "success",
+          );
+
+          newPasswordInput.value = "";
+          confirmPasswordInput.value = "";
+
+          window.setTimeout(() => {
+            window.location.href = "/login";
+          }, 1300);
+        } catch (error) {
+          showToast(
+            "Could not reset password",
+            error instanceof Error
+              ? error.message
+              : "Please request a new reset link.",
+            "error",
+          );
+        } finally {
+          setLoading(false);
+        }
+      });
+    } else if (!token) {
+      showToast(
+        "Missing reset token",
+        "Open the link from your email to continue.",
+        "error",
+      );
+    }
+  </script>
+</MainLayout>

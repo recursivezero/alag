@@ -1,0 +1,535 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminShell from "../../components/admin/AdminShell.astro";
+import DashboardStats from "../../components/admin/DashboardStats.astro";
+import UserFilters from "../../components/admin/UserFilters.astro";
+import UsersTable from "../../components/admin/UsersTable.astro";
+---
+
+<AdminLayout title="Admin Dashboard | RecursiveAuth">
+  <AdminShell
+    active="dashboard"
+    title="Dashboard"
+    eyebrow="Welcome back, Admin!"
+    description=""
+    searchPlaceholder="Search users..."
+    searchId="topSearch"
+    showAddUserAction={false}
+  >
+    <DashboardStats
+      items={[
+        {
+          id: "statTotalUsers",
+          title: "Total Users",
+          value: 0,
+          trendValue: "0%",
+          trendLabel: "from last month",
+          trendDirection: "up",
+          tone: "violet",
+          kind: "total",
+        },
+        {
+          id: "statActiveUsers",
+          title: "Active Users",
+          value: 0,
+          trendValue: "0%",
+          trendLabel: "from last month",
+          trendDirection: "up",
+          tone: "emerald",
+          kind: "active",
+        },
+        {
+          id: "statDisabledUsers",
+          title: "Disabled Users",
+          value: 0,
+          trendValue: "0%",
+          trendLabel: "from last month",
+          trendDirection: "down",
+          tone: "amber",
+          kind: "disabled",
+        },
+        {
+          id: "statDeletedUsers",
+          title: "Deleted Users",
+          value: 0,
+          trendValue: "0%",
+          trendLabel: "from last month",
+          trendDirection: "down",
+          tone: "rose",
+          kind: "deleted",
+        },
+      ]}
+    />
+
+    <div
+      data-admin-surface="table-shell"
+      class="mt-4 space-y-4 rounded-[10px]
+          border
+          border-[#16233d]
+          bg-[linear-gradient(180deg,#07101d,#040915)] p-4"
+    >
+      <!-- Recent Users header row -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          class="text-[1.15rem] font-bold tracking-[-0.03em] text-slate-50/95"
+        >
+          Recent Users
+        </h2>
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="relative min-w-[280px] flex-1">
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Search by name or email..."
+              class="h-11 w-full rounded-[18px] border border-white/10 bg-slate-950/60 py-2 pl-9 pr-4 text-[13px] text-slate-100 placeholder:text-slate-500/72 outline-none transition focus:border-violet-400/45 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18)]"
+            />
+            <span
+              class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"
+                ></path>
+              </svg>
+            </span>
+          </div>
+          <select
+            id="roleFilter"
+            aria-label="Filter by role"
+            class="h-11 w-[180px] shrink-0 cursor-pointer rounded-[18px] border border-white/10 bg-slate-950/60 px-3 text-[14px] text-slate-100 outline-none transition focus:border-violet-400/45"
+          >
+            <option value="all">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+          </select>
+          <select
+            id="statusFilter"
+            class="h-11 w-[180px] shrink-0 cursor-pointer rounded-[18px] border border-white/10 bg-slate-950/60 px-3 text-[14px] text-slate-100 outline-none transition focus:border-violet-400/45"
+          >
+            <option value="all">All Status</option>
+            <option value="enabled">Enabled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+      </div>
+
+      <UsersTable variant="dashboard" />
+    </div>
+
+    <div
+      id="toastRegion"
+      class="pointer-events-none fixed right-4 top-4 z-[70] flex flex-col gap-2"
+    >
+    </div>
+  </AdminShell>
+</AdminLayout>
+
+<script>
+  type AdminUser = {
+    id: number;
+    fullName: string;
+    email: string;
+    role: string;
+    createdAt: string;
+    isDisabled: boolean;
+  };
+
+  const apiBase = (() => {
+    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
+    if (configured) return configured.replace(/\/$/, "");
+    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
+  })();
+
+  const pageSize = 5;
+
+  const getPageFromUrl = () => {
+    const page = Number(
+      new URLSearchParams(window.location.search).get("page") || "1",
+    );
+    return Number.isFinite(page) && page > 0 ? page : 1;
+  };
+
+  const syncPageToUrl = (page: number) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("pageSize", String(pageSize));
+    window.history.replaceState({}, "", url);
+  };
+
+  const state: {
+    users: AdminUser[];
+    search: string;
+    role: "all" | "admin" | "user";
+    status: "all" | "enabled" | "disabled";
+    page: number;
+    loading: boolean;
+    totalUsers: number;
+    stats: {
+      totalUsers: number;
+      activeUsers: number;
+      disabledUsers: number;
+      deletedUsers: number;
+    };
+    totalPages: number;
+  } = {
+    users: [],
+    search: "",
+    role: "all",
+    status: "all",
+    page: getPageFromUrl(),
+    loading: true,
+    totalUsers: 0,
+    stats: {
+      totalUsers: 0,
+      activeUsers: 0,
+      disabledUsers: 0,
+      deletedUsers: 0,
+    },
+    totalPages: 1,
+  };
+
+  const redirectToLogin = () => {
+    window.location.href = "/admin";
+  };
+
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(value));
+
+  const setText = (id: string, value: string | number) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  };
+
+  const setTrend = (id: string, value: number) => {
+    const trendValue = document.getElementById(`${id}-trendValue`);
+    const trendArrow = document.getElementById(`${id}-trendArrow`);
+    const direction = value >= 0 ? "up" : "down";
+    const colorClass =
+      direction === "up" ? "text-emerald-400" : "text-rose-400";
+
+    if (trendValue) {
+      trendValue.textContent = `${Math.abs(value)}%`;
+      trendValue.className = `text-[14px] font-semibold ${colorClass}`;
+    }
+
+    if (trendArrow) {
+      trendArrow.textContent = direction === "up" ? "↑" : "↓";
+      trendArrow.className = `text-[14px] font-semibold ${colorClass}`;
+    }
+  };
+
+  const showToast = (
+    message: string,
+    variant: "success" | "error" = "success",
+  ) => {
+    const region = document.getElementById("toastRegion");
+    if (!region) return;
+
+    const toast = document.createElement("div");
+    toast.className =
+      variant === "success"
+        ? "pointer-events-auto rounded-2xl border border-emerald-400/25 bg-emerald-500/12 px-4 py-3 text-sm font-medium text-emerald-100 shadow-[0_0_24px_rgba(16,185,129,0.15)] backdrop-blur-xl"
+        : "pointer-events-auto rounded-2xl border border-rose-400/25 bg-rose-500/12 px-4 py-3 text-sm font-medium text-rose-100 shadow-[0_0_24px_rgba(244,63,94,0.15)] backdrop-blur-xl";
+    toast.textContent = message;
+    region.appendChild(toast);
+
+    window.setTimeout(() => {
+      toast.style.transition = "opacity 180ms ease, transform 180ms ease";
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-6px)";
+      window.setTimeout(() => toast.remove(), 180);
+    }, 2200);
+  };
+
+  const getFilteredUsers = () => {
+    const search = state.search.trim().toLowerCase();
+    return state.users.filter((user) => {
+      const matchesRole =
+        state.role === "all" || user.role.toLowerCase() === state.role;
+      const matchesStatus =
+        state.status === "all" ||
+        (state.status === "enabled" && !user.isDisabled) ||
+        (state.status === "disabled" && user.isDisabled);
+      const matchesSearch =
+        !search ||
+        user.fullName.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search);
+      return matchesRole && matchesStatus && matchesSearch;
+    });
+  };
+
+  const syncSearchInputs = (value: string) => {
+    ["topSearch", "searchInput"].forEach((id) => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el && el.value !== value) el.value = value;
+    });
+  };
+
+  const renderStats = () => {
+    setText("statTotalUsers", state.stats.totalUsers);
+    setText("statActiveUsers", state.stats.activeUsers);
+    setText("statDisabledUsers", state.stats.disabledUsers);
+    setText("statDeletedUsers", state.stats.deletedUsers);
+    setText("totalUsers", state.stats.totalUsers);
+  };
+
+  const renderPagination = (totalPages: number) => {
+    const pagination = document.getElementById("pagination");
+    if (!pagination) return;
+
+    const safeTotalPages = Math.max(1, totalPages);
+    if (state.page > safeTotalPages) state.page = safeTotalPages;
+
+    const createButton = (
+      label: string,
+      page: number,
+      disabled = false,
+      active = false,
+    ) => {
+      const isLight = document.documentElement.dataset.adminTheme === "light";
+      const activeCls =
+        "border-violet-400/40 bg-violet-500/20 text-white shadow-[0_0_20px_rgba(124,92,252,0.24)]";
+      const inactiveCls = isLight
+        ? "border-[#e6eef8]/30 bg-white text-[#0f172a] hover:border-violet-400/30 hover:bg-violet-500/10"
+        : "border-white/10 bg-white/5 text-slate-200 hover:border-violet-400/30 hover:bg-violet-500/10";
+
+      const disabledCls = disabled ? "cursor-not-allowed opacity-40" : "";
+
+      return `<button type="button" data-page="${page}" ${disabled ? "disabled" : ""} class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl border text-[13px] font-semibold transition ${active ? activeCls : inactiveCls} ${disabledCls}">${label}</button>`;
+    };
+
+    const pages = Array.from({ length: safeTotalPages }, (_, index) => {
+      const page = index + 1;
+      return createButton(String(page), page, false, page === state.page);
+    }).join("");
+
+    const prevIcon = `
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m15 18-6-6 6-6"></path>
+      </svg>
+    `;
+
+    const nextIcon = `
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m9 6 6 6-6 6"></path>
+      </svg>
+    `;
+
+    pagination.innerHTML = `
+      ${createButton(prevIcon, Math.max(1, state.page - 1), state.page <= 1)}
+      ${pages}
+      ${createButton(nextIcon, Math.min(safeTotalPages, state.page + 1), state.page >= safeTotalPages)}
+    `;
+  };
+
+  const renderUsers = () => {
+    const body = document.getElementById("usersTableBody");
+    const meta = document.getElementById("tableMeta");
+    if (!body || !meta) return;
+
+    renderStats();
+
+    const visibleUsers = state.users;
+    const total = state.totalUsers;
+    const totalPages = Math.max(1, state.totalPages);
+    if (state.page > totalPages) state.page = totalPages;
+
+    const start = (state.page - 1) * pageSize;
+
+    if (state.loading) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-4 py-14 text-center text-[13px] text-slate-400">Loading users...</td>
+        </tr>
+      `;
+      meta.textContent = "Showing 0 users";
+      renderPagination(totalPages);
+      return;
+    }
+
+    if (!visibleUsers.length) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-4 py-14 text-center text-[13px] text-slate-400">No users found.</td>
+        </tr>
+      `;
+      meta.textContent = "Showing 0 of 0 users";
+      renderPagination(totalPages);
+      return;
+    }
+
+    body.innerHTML = visibleUsers
+      .map((user, index) => {
+        const enabled = !user.isDisabled;
+        const isAdmin = user.role?.toLowerCase() === "admin";
+        const roleLabel = user.role
+          ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}`
+          : "User";
+        const roleBadge = isAdmin
+          ? `
+            <span class="inline-flex items-center rounded-full border border-violet-400/28 bg-violet-500/18 px-3 py-1 text-[12px] font-semibold text-violet-100 shadow-[0_0_16px_rgba(124,92,252,0.2)] backdrop-blur-xl">
+              ${roleLabel}
+            </span>
+          `
+          : `
+            <span class="inline-flex items-center rounded-full border border-sky-400/24 bg-sky-500/16 px-3 py-1 text-[12px] font-semibold text-sky-100 shadow-[0_0_16px_rgba(56,189,248,0.16)] backdrop-blur-xl">
+              ${roleLabel}
+            </span>
+          `;
+        const statusBadge = enabled
+          ? `
+            <span class="inline-flex items-center gap-2 rounded-[5px] border border-green-400/25 bg-green-400/25 px-3 py-1 text-[12px] font-semibold text-green-500 shadow-[0_0_16px_rgba(16,185,129,0.15)]">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+              Enabled
+            </span>
+          `
+          : `
+            <span class="inline-flex items-center gap-2 rounded-[5px] border border-rose-400/25 bg-rose-500/12 px-3 py-1 text-[12px] font-semibold text-red-500 shadow-[0_0_16px_rgba(244,63,94,0.15)]">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 8v5"></path>
+                <path d="M12 16h.01"></path>
+              </svg>
+              Disabled
+            </span>
+          `;
+
+        return `
+          <tr>
+            <td class="px-4 py-4 text-[14px] text-slate-300/85">${start + index + 1}</td>
+            <td class="px-4 py-4 text-[14px] font-medium text-white">${escapeHtml(user.fullName)}</td>
+            <td class="px-4 py-4 text-[14px] text-slate-200/88">${escapeHtml(user.email)}</td>
+            <td class="px-4 py-4 text-[14px] text-slate-200/85">${roleBadge}</td>
+            <td class="px-4 py-4">${statusBadge}</td>
+            <td class="px-4 py-4 text-[14px] text-slate-300/85">${formatDate(user.createdAt)}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    meta.textContent = `Showing ${start + 1} to ${Math.min(total, start + visibleUsers.length)} of ${total} users`;
+    renderPagination(totalPages);
+  };
+
+  const updateSearch = (value: string) => {
+    state.search = value;
+    syncSearchInputs(value);
+    state.page = 1;
+    syncPageToUrl(1);
+    loadDashboard();
+  };
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.max(1, Math.floor(page));
+    if (nextPage === state.page) return;
+    state.page = nextPage;
+    syncPageToUrl(nextPage);
+    loadDashboard();
+  };
+
+  const loadDashboard = async () => {
+    state.loading = true;
+    renderUsers();
+
+    try {
+      syncPageToUrl(state.page);
+      const params = new URLSearchParams({
+        search: state.search,
+        role: state.role,
+        status: state.status,
+        page: String(state.page),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(
+        `${apiBase}/admin/dashboard?${params.toString()}`,
+        {
+          credentials: "include",
+        },
+      );
+
+      if (res.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      const data = await res.json();
+      state.users = (data.users || []) as AdminUser[];
+      state.stats = data.stats || state.stats;
+      setTrend("statTotalUsers", data.trends?.totalUsers ?? 0);
+      setTrend("statActiveUsers", data.trends?.activeUsers ?? 0);
+      setTrend("statDisabledUsers", data.trends?.disabledUsers ?? 0);
+      setTrend("statDeletedUsers", data.trends?.deletedUsers ?? 0);
+      state.totalUsers = data.pagination?.total || state.users.length;
+      state.totalPages = data.pagination?.totalPages || 1;
+      state.page = data.pagination?.page || state.page;
+      state.loading = false;
+      renderUsers();
+    } catch {
+      redirectToLogin();
+    }
+  };
+
+  document.getElementById("topSearch")?.addEventListener("input", (event) => {
+    updateSearch((event.target as HTMLInputElement).value);
+  });
+
+  document.getElementById("searchInput")?.addEventListener("input", (event) => {
+    updateSearch((event.target as HTMLInputElement).value);
+  });
+
+  const roleFilter = document.getElementById(
+    "roleFilter",
+  ) as HTMLSelectElement | null;
+  if (roleFilter) {
+    roleFilter.value = state.role;
+    roleFilter.addEventListener("change", (event) => {
+      state.role = (event.target as HTMLSelectElement).value as
+        | "all"
+        | "admin"
+        | "user";
+      state.page = 1;
+      syncPageToUrl(1);
+      loadDashboard();
+    });
+  }
+  document
+    .getElementById("statusFilter")
+    ?.addEventListener("change", (event) => {
+      state.status = (event.target as HTMLSelectElement).value as
+        | "all"
+        | "enabled"
+        | "disabled";
+      state.page = 1;
+      syncPageToUrl(1);
+      loadDashboard();
+    });
+
+  document.getElementById("pagination")?.addEventListener("click", (event) => {
+    const button = (
+      event.target as HTMLElement | null
+    )?.closest<HTMLButtonElement>("button[data-page]");
+    if (!button || button.disabled) return;
+    goToPage(Number(button.dataset.page || "1"));
+  });
+
+  loadDashboard();
+</script>

@@ -1,0 +1,216 @@
+---
+import Avatar from "../ui/Avatar.astro";
+import type { UserProfile } from "../../types/user";
+
+const { user } = Astro.props as { user: UserProfile };
+---
+
+<details class="relative w-fit">
+  <summary
+    class="profile-summary list-none cursor-pointer rounded-full outline-none ring-0
+           transition focus-visible:ring-2 focus-visible:ring-[color:var(--dashboard-accent)]"
+  >
+    <span class="sr-only">Open profile menu</span>
+    <span class="profile-trigger flex items-center gap-2 rounded-full">
+      <span data-user-profile-trigger-avatar>
+        <Avatar src={user.picture || "/icon.png"} alt={user.name} size="md" />
+      </span>
+      <span
+        class="profile-caret grid h-7 w-7 place-items-center rounded-full border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] transition-all duration-200"
+      >
+        <svg
+          class="h-3.5 w-3.5 transition-transform duration-200"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </span>
+    </span>
+  </summary>
+
+  <!--
+    Dropdown panel
+    • right-0        : aligns to right edge of the avatar button
+    • top-[calc(100%+10px)] : 10px gap below the avatar
+    • w-72           : slightly narrower than before — fits mobile better
+    • z-[100]        : above topbar (topbar is z-40)
+  -->
+  <div
+    class="dropdown-panel absolute right-0 z-[100] mt-2 w-72
+           max-w-[calc(100vw-1.5rem)]
+           overflow-hidden rounded-[20px]
+           p-3
+           border border-[color:var(--dashboard-border)]
+           bg-[color:var(--dashboard-surface-strong)]
+           shadow-[0_20px_60px_rgba(0,0,0,0.30)]
+           backdrop-blur-2xl"
+  >
+    <!-- User info header -->
+    <div
+      class="profile-card-container flex items-center gap-3 border-b border-[color:var(--dashboard-border)] px-5 py-5"
+    >
+      <span data-user-profile-avatar>
+        <Avatar src={user.picture || "/icon.png"} alt={user.name} size="lg" />
+      </span>
+      <div class=" min-w-0">
+        <p
+          data-user-profile-name
+          class="truncate text-[15px] font-bold text-[color:var(--dashboard-text)]"
+        >
+          {user.fullName || user.name}
+        </p>
+        <p
+          data-user-profile-email
+          class="truncate pt-[30px] text-[12px] text-[color:var(--dashboard-muted)] mt-[5px]"
+        >
+          {user.email}
+        </p>
+        <p
+          data-user-profile-phone
+          class="truncate text-[12px] text-[color:var(--dashboard-muted)] mt-[5px]"
+        >
+          {user.phoneNumber || "Phone not set"}
+        </p>
+      </div>
+    </div>
+
+    <!-- Nav links -->
+    <div class="profile-card-container2 px-2 py-3">
+      <a
+        href="/dashboard/profile"
+        class="dropdown-item flex items-center gap-3 rounded-[12px] px-3 py-[10px]
+               text-[15px] font-medium text-[color:var(--dashboard-text)]
+               transition-all duration-150
+               hover:bg-[color:var(--dashboard-accent-soft)]
+               hover:text-[color:var(--dashboard-accent)]"
+      >
+        <svg
+          class="h-4 w-4 shrink-0 text-[color:var(--dashboard-muted)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4.5 20a7.5 7.5 0 0 1 15 0"></path>
+        </svg>
+        Profile
+      </a>
+
+      <a
+        href="/dashboard/settings"
+        class="dropdown-item flex items-center gap-3 rounded-[12px] px-3 py-[10px]
+               text-[15px] font-medium text-[color:var(--dashboard-text)]
+               transition-all duration-150
+               hover:bg-[color:var(--dashboard-accent-soft)]
+               hover:text-[color:var(--dashboard-accent)]"
+      >
+        <svg
+          class="h-4 w-4 shrink-0 text-[color:var(--dashboard-muted)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z"
+          ></path><path
+            d="M19.1 12a7.3 7.3 0 0 0-.1-1.1l2-1.6-2-3.4-2.3.9a7 7 0 0 0-1.9-1.1L14.5 3h-5l-.3 2.7a7 7 0 0 0-1.9 1.1L5 5.9l-2 3.4 2 1.6A7.3 7.3 0 0 0 5 12a7.3 7.3 0 0 0 .1 1.1l-2 1.6 2 3.4 2.3-.9a7 7 0 0 0 1.9 1.1l.3 2.7h5l.3-2.7a7 7 0 0 0 1.9-1.1l2.3.9 2-3.4-2-1.6c.1-.4.1-.7.1-1.1Z"
+          ></path>
+        </svg>
+        Settings
+      </a>
+
+      <!-- Divider before logout -->
+      <div class="mx-3 my-1 border-t border-[color:var(--dashboard-border)]">
+      </div>
+
+      <button
+        id="profileDropdownLogoutButton"
+        type="button"
+        data-logout-button
+        data-user-logout-button
+        class="dropdown-item flex w-full items-center gap-3 rounded-[12px] px-3 py-[10px]
+               text-[15px] font-medium text-left text-rose-400
+               transition-all duration-150
+               hover:bg-rose-500/10 hover:text-rose-300"
+      >
+        <svg
+          class="h-4 w-4 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+        >
+          <path d="M10 7V5a2 2 0 0 1 2-2h7v18h-7a2 2 0 0 1-2-2v-2"></path>
+          <path d="m15 12H3"></path>
+          <path d="m6 9-3 3 3 3"></path>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </div>
+</details>
+
+<style>
+.profile-card-container{
+  padding: 15px;
+}
+.profile-card-container2{
+  padding: 15px;
+}
+  .profile-summary {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .profile-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .profile-summary:hover .profile-caret,
+  details[open] .profile-caret {
+    border-color: color-mix(
+      in srgb,
+      var(--dashboard-accent) 30%,
+      var(--dashboard-border)
+    );
+    background: color-mix(
+      in srgb,
+      var(--dashboard-accent-soft) 70%,
+      var(--dashboard-surface)
+    );
+    color: var(--dashboard-accent);
+  }
+
+  details[open] .profile-caret svg {
+    transform: rotate(180deg);
+  }
+
+  /* Close dropdown when clicking outside — native <details> behaviour */
+  .dropdown-panel {
+    transform-origin: top right;
+    font-size: 30px;
+    animation: dropdown-in 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes dropdown-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  details:not([open]) .dropdown-panel {
+    display: none;
+  }
+</style>

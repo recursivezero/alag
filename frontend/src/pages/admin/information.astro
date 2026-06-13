@@ -1,0 +1,196 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminShell from "../../components/admin/AdminShell.astro";
+import AdminCard from "../../components/admin/AdminCard.astro";
+
+const lastLogin = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+}).format(new Date());
+---
+
+<AdminLayout title="Admin Information | RecursiveAuth">
+  <AdminShell
+    active="admin-information"
+    title="Admin Information"
+    eyebrow="Security Profile"
+    description="Review the signed-in administrator profile and session details."
+    showSearch={false}
+    showNotifications={false}
+    showThemeToggle={true}
+  >
+    <div
+      class="admin-profile-card mb-6 rounded-[10px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,16,34,0.96),rgba(6,12,24,0.9))] p-4"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="admin-profile-icon grid h-12 w-12 place-items-center rounded-[10px] border border-violet-400/25 bg-violet-500/10 text-violet-200"
+        >
+          <i class="fa-solid fa-shield-halved icon-font" aria-hidden="true"></i>
+        </div>
+        <div>
+          <p class="admin-profile-name text-[15px] font-semibold text-white">
+            Admin User
+          </p>
+          <p class="admin-profile-email text-[13px] text-slate-400">
+            admin@gmail.com
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <AdminCard
+        title="Session"
+        value="Active"
+        description="Your admin session is valid"
+        tone="emerald"
+      >
+        <span slot="icon">
+          <svg
+            viewBox="0 0 24 24"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M12 2l7 4v6c0 4.8-3.2 9-7 10-3.8-1-7-5.2-7-10V6l7-4z"
+            ></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+        </span>
+      </AdminCard>
+
+      <AdminCard
+        title="Access"
+        value="Admin"
+        description="Role-based dashboard permissions"
+        tone="violet"
+      >
+        <span slot="icon">
+          <svg
+            viewBox="0 0 24 24"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"
+            ></path>
+            <path d="M10 12h4"></path>
+            <path d="M9 15l1.5-3L9 9"></path>
+          </svg>
+        </span>
+      </AdminCard>
+
+      <AdminCard
+        title="Channel"
+        value="Direct URL"
+        description="Admin entry is intentionally hidden"
+        tone="sky"
+      >
+        <span slot="icon">
+          <svg
+            viewBox="0 0 24 24"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M10 14a4 4 0 010-6l1-1a4 4 0 015.7 5.7l-1 1"></path>
+            <path d="M14 10a4 4 0 010 6l-1 1a4 4 0 01-5.7-5.7l1-1"></path>
+          </svg>
+        </span>
+      </AdminCard>
+
+      <AdminCard
+        title="Last login"
+        value={lastLogin}
+        description="Current admin login timestamp"
+        tone="amber"
+      >
+        <span slot="icon">
+          <svg
+            viewBox="0 0 24 24"
+            class="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <circle cx="9.2" cy="7.4" r="3"></circle>
+            <path d="M3.8 19.2c.9-3.2 3.5-5.1 5.4-5.1s4.5 1.9 5.4 5.1"></path>
+            <circle cx="17.2" cy="16.8" r="4.8"></circle>
+            <path d="M17.2 14.6v2.8l1.9 1.5"></path>
+            <path d="M15.9 16.8h.01M17.2 13.5v.01M18.5 16.8h.01M17.2 20.1v.01"
+            ></path>
+          </svg>
+        </span>
+      </AdminCard>
+    </div>
+  </AdminShell>
+</AdminLayout>
+
+<style>
+  .admin-profile-card {
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow:
+      0 18px 44px rgba(15, 23, 42, 0.2),
+      0 0 0 1px rgba(124, 92, 252, 0.05);
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .admin-profile-icon {
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 252, 0.18),
+      0 0 18px rgba(124, 92, 252, 0.12);
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .admin-profile-name,
+  .admin-profile-email {
+    transition: color 0.2s ease;
+  }
+
+  html[data-admin-theme="light"] .admin-profile-card {
+    border-color: rgba(124, 92, 252, 0.18);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.92),
+      rgba(248, 245, 255, 0.94)
+    );
+    box-shadow:
+      0 18px 40px rgba(15, 23, 42, 0.08),
+      0 0 0 1px rgba(124, 92, 252, 0.06),
+      0 0 22px rgba(124, 92, 252, 0.08);
+  }
+
+  html[data-admin-theme="light"] .admin-profile-icon {
+    border-color: rgba(124, 92, 252, 0.22);
+    background: linear-gradient(
+      180deg,
+      rgba(249, 247, 255, 0.98),
+      rgba(237, 231, 255, 0.96)
+    );
+    color: #5b43b6;
+    box-shadow:
+      0 0 0 1px rgba(124, 92, 252, 0.12),
+      0 0 20px rgba(124, 92, 252, 0.18);
+  }
+
+  html[data-admin-theme="light"] .admin-profile-name {
+    color: #0f172a;
+  }
+
+  html[data-admin-theme="light"] .admin-profile-email {
+    color: rgba(71, 85, 105, 0.9);
+  }
+</style>

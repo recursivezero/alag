@@ -1,0 +1,131 @@
+---
+import ThemeToggle from "../user/ThemeToggle.astro";
+---
+
+<footer class="flex flex-col gap-2">
+  <ThemeToggle />
+
+  <!-- LOGOUT -->
+  <button
+    type="button"
+    data-user-logout-button
+    class="logout-btn group flex items-center transition-all duration-200"
+  >
+    <!-- Icon box — matches dark red style of Image 2 -->
+    <span
+      class="logout-icon grid shrink-0 place-items-center transition-all duration-200"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="logout-svg"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M10 7V5a2 2 0 0 1 2-2h7v18h-7a2 2 0 0 1-2-2v-2"></path>
+        <path d="m15 12H3"></path>
+        <path d="m6 9-3 3 3 3"></path>
+      </svg>
+    </span>
+
+    <!-- Text — hidden when collapsed -->
+    <span data-sidebar-footer-copy class="logout-copy">
+      <span class="logout-label">Logout</span>
+    </span>
+  </button>
+</footer>
+
+<style>
+  .logout-btn {
+    gap: 14px;
+    padding: 8px 10px;
+    min-height: 50px;
+    border-radius: 16px;
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    background: rgba(239, 68, 68, 0.09);
+    color: rgb(252, 165, 165);
+    width: 100%;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  /* Light mode adjustment */
+  html:not(.dark) .logout-btn {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.14);
+    color: rgb(220, 38, 38);
+  }
+  html:not(.dark) .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+  }
+
+  .logout-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.14);
+    color: rgb(252, 165, 165);
+  }
+
+  html:not(.dark) .logout-icon {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: rgb(220, 38, 38);
+  }
+
+  .logout-btn:hover .logout-icon {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.38);
+  }
+
+  .logout-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .logout-copy {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .logout-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    color: inherit;
+  }
+
+  /* ══ Collapsed ══ */
+  :global([data-user-sidebar][data-collapsed="true"]) .logout-btn {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    width: 100% !important;
+    margin: 0 !important;
+    min-height: 52px !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .logout-copy {
+    display: none !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .logout-icon {
+    background: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.22) !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+</style>
