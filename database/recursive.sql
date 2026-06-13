@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   user_id       INT            NOT NULL,
   session_hash  VARCHAR(255)   NOT NULL UNIQUE,
-  remember_me   BOOLEAN        NOT NULL DEFAULT FALSE,
+  remember_me   BOOLEAN        NOT NULL DEFAULT FALSE, 
   expires_at    DATETIME       NOT NULL,
   revoked_at    DATETIME       NULL,
   last_used_at  DATETIME       NULL,
@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS user_activity_logs (
   INDEX idx_created_at (created_at)
 );
 
--- Posts table (referenced by interactions below)
+-- Posts table.
+
 CREATE TABLE IF NOT EXISTS posts (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   user_id     INT           NOT NULL,
@@ -79,16 +80,19 @@ CREATE TABLE IF NOT EXISTS posts (
   alt_text    VARCHAR(255)  NOT NULL,
   category    VARCHAR(100)  NULL,
   feed_type   VARCHAR(20)   NOT NULL DEFAULT 'public',
+  status      VARCHAR(20)   NOT NULL DEFAULT 'published',
   location    VARCHAR(255)  NULL,
   created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_user_id (user_id),
   INDEX idx_slug (slug),
   INDEX idx_feed_type (feed_type),
+  INDEX idx_status (status),
+  INDEX idx_user_status (user_id, status),
   INDEX idx_created_at (created_at)
 );
 
--- Likes: one row per user/post pair. Toggled by POST /api/posts/:slug/like.
--- Visible only to the liking user (Liked section is private).
+-- Likes
 CREATE TABLE IF NOT EXISTS likes (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   user_id     INT           NOT NULL,
@@ -99,7 +103,7 @@ CREATE TABLE IF NOT EXISTS likes (
   INDEX idx_user_id (user_id)
 );
 
--- Saved posts: one row per user/post pair.
+-- Saved posts
 CREATE TABLE IF NOT EXISTS saved_posts (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   user_id     INT           NOT NULL,

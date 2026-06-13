@@ -14,6 +14,7 @@ const mapPostRow = (row: any) => ({
   altText: row.altText,
   category: row.category,
   feedType: row.feedType || 'public',
+  status: row.status || 'published',
   location: row.location,
   createdAt: row.createdAt,
   author: {
@@ -44,7 +45,7 @@ const hashSessionToken = (token: string) =>
 const getAuthenticatedUser = async (c: Context) => {
   const authHeader = c.req.header('Authorization')
   const cookieToken = getCookie(c, USER_SESSION_COOKIE)
-  const token = authHeader && authHeader.startsWith('Bearer ')
+  const token = authHeader && authHeader.startsWith('Bearer ') 
     ? authHeader.slice(7)
     : cookieToken
 
@@ -89,6 +90,7 @@ const getAuthenticatedUser = async (c: Context) => {
   return rows[0]
 }
 
+// Only selects published posts for feeds
 const buildPostQuery = (whereClause = '') => `
   SELECT
     p.id,
@@ -99,6 +101,7 @@ const buildPostQuery = (whereClause = '') => `
     p.alt_text AS altText,
     p.category,
     COALESCE(p.feed_type, 'public') AS feedType,
+    COALESCE(p.status, 'published') AS status,
     p.location,
     p.created_at AS createdAt,
     u.id AS authorId,
@@ -127,6 +130,8 @@ const isDataUrlTooLarge = (imageUrl: string) => {
   return estimatedSize > 10 * 1024 * 1024
 }
 
+// LIST POSTS (public feed — published only) 
+
 export const listPosts = async (c: Context) => {
   const limit = Math.min(20, Math.max(1, Number(c.req.query('limit') || 12)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
@@ -134,14 +139,14 @@ export const listPosts = async (c: Context) => {
   const filter = c.req.query('filter')
 
   const whereClause =
-   filter && filter !== 'all'
-    ? "WHERE COALESCE(p.feed_type, 'public') = 'public' AND LOWER(p.category) = LOWER(?)"
-    : "WHERE COALESCE(p.feed_type, 'public') = 'public'"
+    filter && filter !== 'all'
+      ? "WHERE COALESCE(p.status, 'published') = 'published' AND COALESCE(p.feed_type, 'public') = 'public' AND LOWER(p.category) = LOWER(?)"
+      : "WHERE COALESCE(p.status, 'published') = 'published' AND COALESCE(p.feed_type, 'public') = 'public'"
 
   const [rows]: any = await db.execute(
-  `${buildPostQuery(whereClause)} LIMIT ${limit} OFFSET ${offset}`,
-  filter && filter !== 'all' ? [filter] : []
-)
+    `${buildPostQuery(whereClause)} LIMIT ${limit} OFFSET ${offset}`,
+    filter && filter !== 'all' ? [filter] : []
+  )
 
   const postIds = (rows as Array<{ id: number }>).map((row) => Number(row.id))
   let likedPostIds = new Set<number>()
@@ -172,6 +177,8 @@ export const listPosts = async (c: Context) => {
   })
 }
 
+// LIST MY POSTS (personal feed — published only) 
+
 export const listMyPosts = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
   if (!user) {
@@ -179,7 +186,7 @@ export const listMyPosts = async (c: Context) => {
   }
 
   const [rows]: any = await db.execute(
-    `${buildPostQuery("WHERE p.user_id = ? AND COALESCE(p.feed_type, 'public') = 'personal'")} LIMIT 20`,
+    `${buildPostQuery("WHERE p.user_id = ? AND COALESCE(p.status, 'published') = 'published' AND COALESCE(p.feed_type, 'public') = 'personal'")} LIMIT 20`,
     [user.id]
   )
 
@@ -187,6 +194,8 @@ export const listMyPosts = async (c: Context) => {
     posts: (rows as any[]).map(mapPostRow),
   })
 }
+
+//  CREATE POST (publish immediately, status = 'published')
 
 export const createPost = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
@@ -201,6 +210,8 @@ export const createPost = async (c: Context) => {
   const category = typeof body?.category === 'string' ? body.category.trim() : ''
   const feedType = body?.feedType === 'personal' ? 'personal' : 'public'
   const location = typeof body?.location === 'string' ? body.location.trim() : ''
+  // If publishing from a draft, the draft post id may be supplied
+  const draftId = typeof body?.draftId === 'number' ? body.draftId : null
 
   if (!imageUrl || !caption || !altText) {
     return c.json({ message: 'Image, caption, and alt text are required' }, 400)
@@ -208,6 +219,40 @@ export const createPost = async (c: Context) => {
 
   if (isDataUrlTooLarge(imageUrl)) {
     return c.json({ message: 'Image must be 10MB or smaller' }, 413)
+  }
+
+  
+  if (draftId) {
+    const [draftRows]: any = await db.execute(
+      "SELECT id FROM posts WHERE id = ? AND user_id = ? AND status = 'draft' LIMIT 1",
+      [draftId, user.id]
+    )
+
+    if (draftRows.length) {
+      const slugBase = (caption || category || 'post')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60)
+      const slug = `${slugBase || 'post'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+      const title = caption.length > 90 ? `${caption.slice(0, 87).trimEnd()}...` : caption
+
+      await db.execute(
+        `UPDATE posts SET
+          slug = ?, title = ?, caption = ?, image_url = ?,
+          alt_text = ?, category = ?, feed_type = ?, location = ?,
+          status = 'published'
+         WHERE id = ? AND user_id = ?`,
+        [slug, title, caption, imageUrl, altText, category || null, feedType, location || null, draftId, user.id]
+      )
+
+      const [updatedRows]: any = await db.execute(
+        buildPostQuery('WHERE p.id = ?') + ' LIMIT 1',
+        [draftId]
+      )
+
+      return c.json({ post: mapPostRow(updatedRows[0]) }, 200)
+    }
   }
 
   const slugBase = (caption || category || 'post')
@@ -222,28 +267,11 @@ export const createPost = async (c: Context) => {
   const [result]: any = await db.execute(
     `
     INSERT INTO posts (
-      user_id,
-      slug,
-      title,
-      caption,
-      image_url,
-      location,
-      alt_text,
-      category,
-      feed_type
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      user_id, slug, title, caption, image_url,
+      location, alt_text, category, feed_type, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')
     `,
-    [
-      user.id,
-      slug,
-      title,
-      caption,
-      imageUrl,
-      location || null,
-      altText,
-      category || null,
-      feedType,
-    ]
+    [user.id, slug, title, caption, imageUrl, location || null, altText, category || null, feedType]
   )
 
   return c.json({
@@ -256,6 +284,7 @@ export const createPost = async (c: Context) => {
       altText,
       category: category || null,
       feedType,
+      status: 'published',
       location: location || null,
       createdAt: new Date().toISOString(),
       author: {
@@ -266,24 +295,155 @@ export const createPost = async (c: Context) => {
         phoneNumber: user.phoneNumber || null,
         picture: user.picture || null,
       },
-      counts: {
-        likes: 0,
-        comments: 0,
-        saves: 0,
-      },
-      userState: {
-        liked: false,
-        saved: false,
-      },
+      counts: { likes: 0, comments: 0, saves: 0 },
+      userState: { liked: false, saved: false },
     },
   }, 201)
 }
+
+//  SAVE DRAFT  (POST /api/posts/draft) 
+
+
+export const saveDraft = async (c: Context) => {
+  const user = await getAuthenticatedUser(c)
+  if (!user) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const body = await c.req.json().catch(() => null)
+  const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : ''
+  const caption = typeof body?.caption === 'string' ? body.caption.trim() : ''
+  const altText = typeof body?.altText === 'string' ? body.altText.trim() : caption
+  const category = typeof body?.category === 'string' ? body.category.trim() : ''
+  const feedType = body?.feedType === 'personal' ? 'personal' : 'public'
+  const location = typeof body?.location === 'string' ? body.location.trim() : ''
+
+  if (!imageUrl && !caption) {
+    return c.json({ message: 'Nothing to save' }, 400)
+  }
+
+  if (imageUrl && isDataUrlTooLarge(imageUrl)) {
+    return c.json({ message: 'Image must be 10MB or smaller' }, 413)
+  }
+
+  
+  const [existingRows]: any = await db.execute(
+    "SELECT id FROM posts WHERE user_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 1",
+    [user.id]
+  )
+
+  const title = caption
+    ? caption.length > 90 ? `${caption.slice(0, 87).trimEnd()}...` : caption
+    : 'Draft'
+
+  if (existingRows.length) {
+    
+    const draftId = existingRows[0].id
+    await db.execute(
+      `UPDATE posts SET
+        title = ?, caption = ?, image_url = ?,
+        alt_text = ?, category = ?, feed_type = ?, location = ?,
+        status = 'draft'
+       WHERE id = ? AND user_id = ?`,
+      [
+        title,
+        caption,
+        imageUrl || '',
+        altText || caption,
+        category || null,
+        feedType,
+        location || null,
+        draftId,
+        user.id,
+      ]
+    )
+    return c.json({ draft: { id: draftId, status: 'draft' } })
+  }
+
+  
+  const slugBase = (caption || 'draft')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+  const slug = `draft-${slugBase || 'post'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+  const [result]: any = await db.execute(
+    `INSERT INTO posts (
+      user_id, slug, title, caption, image_url,
+      location, alt_text, category, feed_type, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
+    [
+      user.id,
+      slug,
+      title,
+      caption,
+      imageUrl || '',
+      location || null,
+      altText || caption,
+      category || null,
+      feedType,
+    ]
+  )
+
+  return c.json({ draft: { id: Number(result.insertId), status: 'draft' } }, 201)
+}
+
+//  GET DRAFT  (GET /api/posts/draft) 
+
+
+export const getDraft = async (c: Context) => {
+  const user = await getAuthenticatedUser(c)
+  if (!user) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const [rows]: any = await db.execute(
+    `SELECT
+       id, slug, title, caption, image_url AS imageUrl,
+       alt_text AS altText, category,
+       COALESCE(feed_type, 'public') AS feedType,
+       status, location, created_at AS createdAt
+     FROM posts
+     WHERE user_id = ? AND status = 'draft'
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [user.id]
+  )
+
+  if (!rows.length) {
+    return c.json({ draft: null })
+  }
+
+  return c.json({ draft: rows[0] })
+}
+
+//  DELETE DRAFT  (DELETE /api/posts/draft) 
+
+export const deleteDraft = async (c: Context) => {
+  const user = await getAuthenticatedUser(c)
+  if (!user) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  await db.execute(
+    "DELETE FROM posts WHERE user_id = ? AND status = 'draft'",
+    [user.id]
+  )
+
+  return c.json({ success: true })
+}
+
+//  GET POST BY SLUG 
 
 export const getPostBySlug = async (c: Context) => {
   const slug = c.req.param('slug')
   const userId = getSessionUserId(c)
 
-  const [rows]: any = await db.execute(buildPostQuery('WHERE p.slug = ?') + ' LIMIT 1', [slug])
+  const [rows]: any = await db.execute(
+    buildPostQuery("WHERE p.slug = ? AND COALESCE(p.status, 'published') = 'published'") + ' LIMIT 1',
+    [slug]
+  )
 
   if (!rows.length) {
     return c.json({ message: 'Post not found' }, 404)
@@ -321,6 +481,7 @@ export const getPostBySlug = async (c: Context) => {
       p.alt_text AS altText,
       p.category,
       COALESCE(p.feed_type, 'public') AS feedType,
+      COALESCE(p.status, 'published') AS status,
       p.location,
       p.created_at AS createdAt,
       u.id AS authorId,
@@ -335,6 +496,7 @@ export const getPostBySlug = async (c: Context) => {
     FROM posts p
     INNER JOIN users u ON u.id = p.user_id
     WHERE p.id <> ?
+      AND COALESCE(p.status, 'published') = 'published'
     ORDER BY ABS(TIMESTAMPDIFF(SECOND, p.created_at, ?)) ASC, p.created_at DESC
     LIMIT 3
     `,
@@ -357,10 +519,7 @@ export const getPostBySlug = async (c: Context) => {
   }
 
   return c.json({
-    post: {
-      ...post,
-      userState: { liked, saved },
-    },
+    post: { ...post, userState: { liked, saved } },
     comments: comments.map((row: any) => ({
       id: row.id,
       body: row.body,
@@ -376,6 +535,8 @@ export const getPostBySlug = async (c: Context) => {
   })
 }
 
+//  DELETE POST
+
 export const deletePost = async (c: Context) => {
   const slug = c.req.param('slug')
   const user = await getAuthenticatedUser(c)
@@ -383,7 +544,6 @@ export const deletePost = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
-  
   const [rows]: any = await db.execute(
     'SELECT id FROM posts WHERE slug = ? AND user_id = ? LIMIT 1',
     [slug, user.id],
@@ -395,7 +555,6 @@ export const deletePost = async (c: Context) => {
 
   const postId = Number(rows[0].id)
 
- 
   try {
     await db.execute('DELETE FROM likes WHERE post_id = ?', [postId])
     await db.execute('DELETE FROM post_comments WHERE post_id = ?', [postId])
@@ -408,7 +567,7 @@ export const deletePost = async (c: Context) => {
   return c.json({ success: true })
 }
 
-// LIKE / UNLIKE  (POST /api/posts/:slug/like)
+// TOGGLE LIKE 
 
 export const toggleLike = async (c: Context) => {
   const slug = c.req.param('slug')
@@ -417,9 +576,8 @@ export const toggleLike = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
- 
   const [postRows]: any = await db.execute(
-    "SELECT id FROM posts WHERE slug = ? LIMIT 1",
+    "SELECT id FROM posts WHERE slug = ? AND COALESCE(status, 'published') = 'published' LIMIT 1",
     [slug],
   )
   if (!postRows.length) {
@@ -438,14 +596,10 @@ export const toggleLike = async (c: Context) => {
     await db.execute('DELETE FROM likes WHERE user_id = ? AND post_id = ?', [user.id, postId])
     liked = false
   } else {
-    await db.execute(
-      'INSERT INTO likes (user_id, post_id) VALUES (?, ?)',
-      [user.id, postId],
-    )
+    await db.execute('INSERT INTO likes (user_id, post_id) VALUES (?, ?)', [user.id, postId])
     liked = true
   }
 
- 
   const [countRows]: any = await db.execute(
     'SELECT COUNT(*) AS likeCount FROM likes WHERE post_id = ?',
     [postId],
@@ -455,8 +609,7 @@ export const toggleLike = async (c: Context) => {
   return c.json({ liked, likeCount })
 }
 
-
-// LIKED POSTS  (GET /api/posts/liked)
+// GET LIKED POSTS 
 
 export const getLikedPosts = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
@@ -467,7 +620,6 @@ export const getLikedPosts = async (c: Context) => {
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') || 20)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
 
-  
   const [rows]: any = await db.execute(
     `
     SELECT
@@ -479,6 +631,7 @@ export const getLikedPosts = async (c: Context) => {
       p.alt_text          AS altText,
       p.category,
       COALESCE(p.feed_type, 'public') AS feedType,
+      COALESCE(p.status, 'published') AS status,
       p.location,
       p.created_at        AS createdAt,
       u.id                AS authorId,
@@ -495,13 +648,13 @@ export const getLikedPosts = async (c: Context) => {
     INNER JOIN posts p ON p.id = lk.post_id
     INNER JOIN users u ON u.id = p.user_id
     WHERE lk.user_id = ?
+      AND COALESCE(p.status, 'published') = 'published'
     ORDER BY lk.created_at DESC, p.id DESC
     LIMIT ${limit} OFFSET ${offset}
     `,
     [user.id],
   )
 
-  
   const postIds = (rows as Array<{ id: number }>).map((r) => Number(r.id))
   let savedPostIds = new Set<number>()
 
@@ -516,7 +669,6 @@ export const getLikedPosts = async (c: Context) => {
   return c.json({
     posts: (rows as any[]).map((row) => ({
       ...mapPostRow(row),
-     
       userState: {
         liked: true,
         saved: savedPostIds.has(Number(row.id)),
@@ -525,8 +677,7 @@ export const getLikedPosts = async (c: Context) => {
   })
 }
 
-
-// SAVE / UNSAVE  (POST /api/posts/:slug/save)
+//  TOGGLE SAVE
 
 export const toggleSave = async (c: Context) => {
   const slug = c.req.param('slug')
@@ -535,9 +686,8 @@ export const toggleSave = async (c: Context) => {
     return c.json({ message: 'Unauthorized' }, 401)
   }
 
- 
   const [postRows]: any = await db.execute(
-    'SELECT id FROM posts WHERE slug = ? LIMIT 1',
+    "SELECT id FROM posts WHERE slug = ? AND COALESCE(status, 'published') = 'published' LIMIT 1",
     [slug],
   )
   if (!postRows.length) {
@@ -545,7 +695,6 @@ export const toggleSave = async (c: Context) => {
   }
   const postId = Number(postRows[0].id)
 
-  
   const [existingRows]: any = await db.execute(
     'SELECT id FROM saved_posts WHERE user_id = ? AND post_id = ? LIMIT 1',
     [user.id, postId],
@@ -554,22 +703,13 @@ export const toggleSave = async (c: Context) => {
   let saved: boolean
 
   if (existingRows.length) {
-   
-    await db.execute(
-      'DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?',
-      [user.id, postId],
-    )
+    await db.execute('DELETE FROM saved_posts WHERE user_id = ? AND post_id = ?', [user.id, postId])
     saved = false
   } else {
-    
-    await db.execute(
-      'INSERT INTO saved_posts (user_id, post_id) VALUES (?, ?)',
-      [user.id, postId],
-    )
+    await db.execute('INSERT INTO saved_posts (user_id, post_id) VALUES (?, ?)', [user.id, postId])
     saved = true
   }
 
-  
   const [countRows]: any = await db.execute(
     'SELECT COUNT(*) AS saveCount FROM saved_posts WHERE post_id = ?',
     [postId],
@@ -579,7 +719,7 @@ export const toggleSave = async (c: Context) => {
   return c.json({ saved, saveCount })
 }
 
-// SAVED POSTS  (GET /api/posts/saved)
+// GET SAVED POSTS 
 
 export const getSavedPosts = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
@@ -590,7 +730,6 @@ export const getSavedPosts = async (c: Context) => {
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') || 20)))
   const offset = Math.max(0, Number(c.req.query('offset') || 0))
 
- 
   const [rows]: any = await db.execute(
     `
     SELECT
@@ -602,6 +741,7 @@ export const getSavedPosts = async (c: Context) => {
       p.alt_text          AS altText,
       p.category,
       COALESCE(p.feed_type, 'public') AS feedType,
+      COALESCE(p.status, 'published') AS status,
       p.location,
       p.created_at        AS createdAt,
       u.id                AS authorId,
@@ -618,12 +758,12 @@ export const getSavedPosts = async (c: Context) => {
     INNER JOIN posts p ON p.id = sp.post_id
     INNER JOIN users u ON u.id = p.user_id
     WHERE sp.user_id = ?
+      AND COALESCE(p.status, 'published') = 'published'
     ORDER BY sp.created_at DESC, p.id DESC
     LIMIT ${limit} OFFSET ${offset}
     `,
     [user.id],
   )
-
 
   const postIds = (rows as Array<{ id: number }>).map((r) => Number(r.id))
   let likedPostIds = new Set<number>()
@@ -639,7 +779,6 @@ export const getSavedPosts = async (c: Context) => {
   return c.json({
     posts: (rows as any[]).map((row) => ({
       ...mapPostRow(row),
-     
       userState: {
         liked: likedPostIds.has(Number(row.id)),
         saved: true,

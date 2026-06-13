@@ -1,49 +1,59 @@
 ---
 const { current = "all" } = Astro.props;
 
-const filters = ["all", "nature", "travel", "city", "food", "lifestyle", "latest"];
+const filters = [
+  "all",
+  "nature",
+  "travel",
+  "city",
+  "food",
+  "lifestyle",
+  "latest",
+];
 ---
 
-<div class=" feed-filter-btn flex flex-wrap items-center gap-2">
-  {filters.map((filter) => {
-    const active = current === filter;
-    const label = filter === "all" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1);
+<div class="feed-filter-btn flex flex-wrap items-center gap-2">
+  {
+    filters.map((filter) => {
+      const active = current === filter;
+      const label =
+        filter === "all"
+          ? "All"
+          : filter.charAt(0).toUpperCase() + filter.slice(1);
 
-    return (
-      <a
-        href={filter === "all" ? "/dashboard" : `/dashboard?filter=${filter}`}
-        class:list={[
-          "filter-btn rounded-full border text-sm font-medium transition-all duration-200",
-          active
-            ? "filter-btn--active border-transparent bg-[color:var(--dashboard-accent)] text-white shadow-[0_6px_20px_rgba(124,58,237,0.30)]"
-            : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-accent)] hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]",
-        ]}
-      >
-        {label}
-      </a>
-    );
-  })}
+      return (
+        <a
+          href={filter === "all" ? "/dashboard" : `/dashboard?filter=${filter}`}
+          class:list={[
+            "filter-btn rounded-full border text-sm font-medium transition-all duration-200",
+            active
+              ? "filter-btn--active border-transparent bg-[color:var(--dashboard-accent)] text-white shadow-[0_6px_20px_rgba(124,58,237,0.30)]"
+              : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-accent)] hover:bg-[color:var(--dashboard-accent-soft)] hover:text-[color:var(--dashboard-text)]",
+          ]}
+        >
+          {label}
+        </a>
+      );
+    })
+  }
 </div>
 
 <style>
- 
   .feed-filter-btn {
-  justify-content: center;
-  gap: 14px;
-}
-
-.filter-btn {
-  min-width: 92px;
-  height: 44px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0 22px;
-
-  border-radius: 9999px;
-
-  transition: all 0.2s ease;
-}
+    justify-content: center;
+    gap: 14px;
+  }
+  .filter-btn {
+    min-width: 92px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+  }
+  .filter-btn--active {
+    color: white !important;
+  }
 </style>

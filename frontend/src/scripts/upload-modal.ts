@@ -1,9 +1,11 @@
-import { createPost } from "../services/postService"
+import { createPost, fetchDraft, saveDraft, discardDraft } from "../services/postService"
+import type { DraftData } from "../services/postService"
 
 const modal = document.getElementById("upload-modal")
 const dialog = modal?.querySelector(".upload-dialog")
 const openButtons = document.querySelectorAll("[data-upload-trigger]")
-const closeButtons = modal?.querySelectorAll("[data-upload-close], [data-upload-success-close]")
+const closeButton = modal?.querySelector("[data-upload-close]")
+const successCloseButton = modal?.querySelector("[data-upload-success-close]")
 const form = modal?.querySelector("[data-upload-form]")
 const uploadInput = modal?.querySelector("[data-upload-input]")
 const dropzone = modal?.querySelector("[data-upload-dropzone]")
@@ -12,41 +14,47 @@ const previewPlaceholder = modal?.querySelector("[data-upload-preview-placeholde
 const replaceButton = modal?.querySelector("[data-upload-replace]")
 const removeButton = modal?.querySelector("[data-upload-remove]")
 const captionInput = modal?.querySelector("[data-upload-caption]")
-const categoryInput = modal?.querySelector("[data-upload-category]")
 const feedTypeInputs = modal?.querySelectorAll("[data-upload-feed-type]")
 const submitButton = modal?.querySelector("[data-upload-submit]")
 const cancelButton = modal?.querySelector("[data-upload-cancel]")
 const abortButton = modal?.querySelector("[data-upload-abort]")
 const uploadingState = modal?.querySelector('[data-upload-state="uploading"]')
-const successState = modal?.querySelector('[data-upload-state="success"]')
 const formState = modal?.querySelector("[data-upload-form]")
 const progressBar = modal?.querySelector("[data-upload-progress]")
 const progressLabel = modal?.querySelector("[data-upload-progress-label]")
-const successLink = modal?.querySelector("[data-upload-success-link]")
 const toastRegion = modal?.querySelector("[data-upload-toast-region]")
 const captionCount = modal?.querySelector("[data-upload-caption-count]")
+const confirmOverlay = modal?.querySelector("[data-upload-confirm-overlay]")
+const confirmTitle = modal?.querySelector("[data-confirm-title]")
+const confirmMessage = modal?.querySelector("[data-confirm-message]")
+const confirmActions = modal?.querySelector("[data-confirm-actions]")
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"])
 const maxFileSize = 10 * 1024 * 1024
 
-let selectedImage = null
+let selectedImage: File | null = null
 let selectedImageUrl = ""
-let uploadAbortController = null
-let uploadProgressTimer = null
-let activeElementBeforeOpen = null
-let currentSuccessSlug = ""
+let activeDraftId: number | null = null
+let uploadAbortController: AbortController | null = null
+let uploadProgressTimer: ReturnType<typeof setInterval> | null = null
+let activeElementBeforeOpen: HTMLElement | null = null
 let dragDepth = 0
-let toastDismissTimer = null
+let toastDismissTimer: ReturnType<typeof setTimeout> | null = null
+
+
 
 const uploadFocusableSelector =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const getUploadFocusables = () => {
   if (!dialog) return []
-  return Array.from(dialog.querySelectorAll(uploadFocusableSelector)).filter((element) => element.offsetParent !== null)
+  return Array.from(dialog.querySelectorAll<HTMLElement>(uploadFocusableSelector)).filter(
+    (el) => el.offsetParent !== null
+  )
 }
 
-const setModalVisibility = (visible) => {
+
+const setModalVisibility = (visible: boolean) => {
   if (!modal) return
   modal.classList.toggle("pointer-events-none", !visible)
   modal.classList.toggle("invisible", !visible)
@@ -55,33 +63,101 @@ const setModalVisibility = (visible) => {
   modal.setAttribute("aria-hidden", visible ? "false" : "true")
 }
 
-const setView = (view) => {
+const setView = (view: "form" | "uploading") => {
   if (formState) formState.classList.toggle("hidden", view !== "form")
   if (uploadingState) uploadingState.classList.toggle("hidden", view !== "uploading")
-  if (successState) successState.classList.toggle("hidden", view !== "success")
 }
+
+
+
+type ButtonVariant = "primary" | "danger" | "default" | "ghost"
+
+type ConfirmButton = {
+  label: string
+  variant: ButtonVariant
+  onClick: () => void
+}
+
+type ConfirmRow = {
+  
+  buttons: [ConfirmButton] | [ConfirmButton, ConfirmButton]
+}
+
+type ConfirmConfig = {
+  title: string
+  message: string
+  rows: ConfirmRow[]
+}
+
+const showConfirm = (config: ConfirmConfig) => {
+  if (!confirmOverlay || !confirmTitle || !confirmMessage || !confirmActions) return
+
+  confirmTitle.textContent = config.title
+  confirmMessage.textContent = config.message
+  confirmActions.innerHTML = ""
+
+  config.rows.forEach((row) => {
+    const rowEl = document.createElement("div")
+    
+    rowEl.className = row.buttons.length === 2 ? "confirm-row confirm-row-2" : "confirm-row"
+
+    row.buttons.forEach((btn) => {
+      const el = document.createElement("button")
+      el.type = "button"
+      el.textContent = btn.label
+
+      const variantClass =
+        btn.variant === "primary"  ? "confirm-btn--primary"  :
+        btn.variant === "danger"   ? "confirm-btn--danger"   :
+        btn.variant === "ghost"    ? "confirm-btn--ghost"    :
+                                     "confirm-btn--default"
+
+      el.className = `confirm-btn ${variantClass}`
+
+      el.addEventListener("click", () => {
+        hideConfirm()
+        btn.onClick()
+      })
+      rowEl.appendChild(el)
+    })
+
+    confirmActions.appendChild(rowEl)
+  })
+
+  confirmOverlay.classList.remove("hidden")
+  const firstBtn = confirmActions.querySelector<HTMLElement>("button")
+  firstBtn?.focus()
+}
+
+const hideConfirm = () => {
+  confirmOverlay?.classList.add("hidden")
+}
+
+
 
 const clearToasts = () => {
   if (toastDismissTimer) {
     window.clearTimeout(toastDismissTimer)
     toastDismissTimer = null
   }
-  if (toastRegion) {
-    toastRegion.querySelectorAll("[data-upload-toast]").forEach((toast) => toast.remove())
-  }
+  toastRegion?.querySelectorAll("[data-upload-toast]").forEach((t) => t.remove())
 }
 
-const dismissToast = (toast) => {
-  if (!toast) return
+const dismissToast = (toast: HTMLElement) => {
   toast.dataset.state = "closing"
-  window.setTimeout(() => {
-    toast.remove()
-  }, 180)
+  window.setTimeout(() => toast.remove(), 180)
 }
 
-const showToast = ({ tone = "info", title, message }) => {
+const showToast = ({
+  tone = "info",
+  title,
+  message,
+}: {
+  tone?: "info" | "success" | "error"
+  title: string
+  message: string
+}) => {
   if (!toastRegion) return
-
   clearToasts()
 
   const toast = document.createElement("div")
@@ -114,81 +190,99 @@ const showToast = ({ tone = "info", title, message }) => {
 
   body.append(titleEl, messageEl)
 
-  const closeButton = document.createElement("button")
-  closeButton.type = "button"
-  closeButton.className = "upload-toast__close"
-  closeButton.setAttribute("aria-label", "Dismiss notification")
-  closeButton.innerHTML = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12"></path><path d="m6 6 12 12"></path></svg>'
-  closeButton.addEventListener("click", () => dismissToast(toast))
+  const closeBtn = document.createElement("button")
+  closeBtn.type = "button"
+  closeBtn.className = "upload-toast__close"
+  closeBtn.setAttribute("aria-label", "Dismiss notification")
+  closeBtn.innerHTML =
+    '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12"></path><path d="m6 6 12 12"></path></svg>'
+  closeBtn.addEventListener("click", () => dismissToast(toast))
 
-  toast.append(icon, body, closeButton)
+  toast.append(icon, body, closeBtn)
   toastRegion.prepend(toast)
-
-  toastDismissTimer = window.setTimeout(() => dismissToast(toast), 3800)
+  toastDismissTimer = window.setTimeout(() => dismissToast(toast), 6000)
 }
+
+
 
 const updateCounters = () => {
-  if (captionCount && captionInput) captionCount.textContent = `${captionInput.value.length} / 500`
+  if (captionCount && captionInput) {
+    captionCount.textContent = `${(captionInput as HTMLTextAreaElement).value.length} / 500`
+  }
 }
 
-const getFeedType = () => {
-  const checked = Array.from(feedTypeInputs || []).find((input) => input.checked)
-  return checked?.value === "personal" ? "personal" : "public"
+const getFeedType = (): "public" | "personal" => {
+  const checked = Array.from(feedTypeInputs || []).find((i) => (i as HTMLInputElement).checked)
+  return (checked as HTMLInputElement)?.value === "personal" ? "personal" : "public"
+}
+
+const setFeedType = (feedType: "public" | "personal") => {
+  feedTypeInputs?.forEach((i) => {
+    ;(i as HTMLInputElement).checked = (i as HTMLInputElement).value === feedType
+  })
+}
+
+const hasFormContent = () => {
+  const captionVal = (captionInput as HTMLTextAreaElement | undefined)?.value?.trim() || ""
+  return Boolean(selectedImage || selectedImageUrl || captionVal)
 }
 
 const syncSubmitState = () => {
   if (!submitButton || !captionInput) return
-  const canSubmit = Boolean(selectedImage && selectedImageUrl && captionInput.value.trim() && !uploadAbortController)
-  submitButton.disabled = !canSubmit || Boolean(uploadAbortController)
+  const canSubmit = Boolean(
+    selectedImageUrl && (captionInput as HTMLTextAreaElement).value.trim() && !uploadAbortController
+  )
+  ;(submitButton as HTMLButtonElement).disabled = !canSubmit
 }
 
-const setPreview = (dataUrl) => {
+const syncImageButtons = () => {
+  const hasImage = Boolean(selectedImageUrl)
+  ;(replaceButton as HTMLButtonElement | undefined)?.toggleAttribute("disabled", !hasImage)
+  ;(removeButton as HTMLButtonElement | undefined)?.toggleAttribute("disabled", !hasImage)
+}
+
+
+
+const setPreview = (dataUrl: string) => {
   selectedImageUrl = dataUrl
   if (previewImage && previewPlaceholder) {
-    previewImage.src = dataUrl
+    ;(previewImage as HTMLImageElement).src = dataUrl
     previewImage.classList.remove("hidden")
     previewPlaceholder.classList.add("hidden")
+    dropzone?.classList.add("has-image")
   }
+  syncImageButtons()
 }
 
 const clearPreview = () => {
   selectedImage = null
   selectedImageUrl = ""
-  if (uploadInput) uploadInput.value = ""
+  if (uploadInput) (uploadInput as HTMLInputElement).value = ""
   if (previewImage && previewPlaceholder) {
-    previewImage.src = ""
+    ;(previewImage as HTMLImageElement).src = ""
     previewImage.classList.add("hidden")
     previewPlaceholder.classList.remove("hidden")
+    dropzone?.classList.remove("has-image")
   }
+  syncImageButtons()
 }
 
-const validateFile = (file) => {
-  if (!file) {
-    return false
-  }
 
+
+const validateFile = (file: File | null) => {
+  if (!file) return false
   if (!allowedTypes.has(file.type)) {
-    showToast({
-      tone: "error",
-      title: "Invalid file type",
-      message: "Only JPG, JPEG, PNG, and WEBP images are allowed.",
-    })
+    showToast({ tone: "error", title: "Invalid file type", message: "Only JPG, PNG, and WEBP images are allowed." })
     return false
   }
-
   if (file.size > maxFileSize) {
-    showToast({
-      tone: "error",
-      title: "File too large",
-      message: "Image must be 10MB or smaller.",
-    })
+    showToast({ tone: "error", title: "File too large", message: "Image must be 10MB or smaller." })
     return false
   }
-
   return true
 }
 
-const readFileAsDataUrl = (file) =>
+const readFileAsDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result || ""))
@@ -196,138 +290,245 @@ const readFileAsDataUrl = (file) =>
     reader.readAsDataURL(file)
   })
 
-const handleFileSelection = async (file) => {
-  if (!validateFile(file)) {
-    syncSubmitState()
-    return
-  }
-
+const handleFileSelection = async (file: File | null) => {
+  if (!validateFile(file)) { syncSubmitState(); return }
   selectedImage = file
-  const dataUrl = await readFileAsDataUrl(file)
+  const dataUrl = await readFileAsDataUrl(file!)
   setPreview(dataUrl)
   syncSubmitState()
 }
 
-const openModal = () => {
+
+
+const loadDraft = async () => {
+  let draft: DraftData | null = null
+  try {
+    draft = await fetchDraft()
+  } catch {
+
+  }
+
+  if (!draft) return
+
+  activeDraftId = draft.id
+
+
+  if (captionInput && draft.caption) {
+    ;(captionInput as HTMLTextAreaElement).value = draft.caption
+    updateCounters()
+  }
+
+ 
+  if (draft.feedType) {
+    setFeedType(draft.feedType)
+  }
+
+ 
+  if (draft.imageUrl) {
+    selectedImageUrl = draft.imageUrl
+    
+    if (previewImage && previewPlaceholder) {
+      ;(previewImage as HTMLImageElement).src = draft.imageUrl
+      previewImage.classList.remove("hidden")
+      previewPlaceholder.classList.add("hidden")
+      dropzone?.classList.add("has-image")
+    }
+    syncImageButtons()
+  }
+
+  syncSubmitState()
+}
+
+
+const openModal = async () => {
   setModalVisibility(true)
   setView("form")
   clearToasts()
   updateCounters()
   syncSubmitState()
+  syncImageButtons()
   activeElementBeforeOpen = document.activeElement instanceof HTMLElement ? document.activeElement : null
-  window.requestAnimationFrame(() => {
-    captionInput?.focus()
-  })
   document.body.style.overflow = "hidden"
+
+  await loadDraft()
+
+  window.requestAnimationFrame(() => {
+    ;(captionInput as HTMLElement | undefined)?.focus()
+  })
+}
+
+const resetForm = () => {
+  clearPreview()
+  activeDraftId = null
+  if (captionInput) (captionInput as HTMLTextAreaElement).value = ""
+  setFeedType("public")
+  updateCounters()
+  syncSubmitState()
+  syncImageButtons()
 }
 
 const closeModal = (shouldRestore = true) => {
-  if (uploadAbortController) {
-    uploadAbortController.abort()
-    uploadAbortController = null
-  }
-
-  if (uploadProgressTimer) {
-    clearInterval(uploadProgressTimer)
-    uploadProgressTimer = null
-  }
-
+  if (uploadAbortController) { uploadAbortController.abort(); uploadAbortController = null }
+  if (uploadProgressTimer) { clearInterval(uploadProgressTimer); uploadProgressTimer = null }
+  hideConfirm()
   setModalVisibility(false)
   setView("form")
   clearToasts()
-  clearPreview()
-
-  if (captionInput) captionInput.value = ""
-  if (categoryInput) categoryInput.value = "Nature"
-  if (feedTypeInputs) {
-    feedTypeInputs.forEach((input) => {
-      input.checked = input.value === "public"
-    })
-  }
-
-  currentSuccessSlug = ""
-  updateCounters()
-  syncSubmitState()
+  resetForm()
   document.body.style.overflow = ""
-
-  if (shouldRestore) {
-    activeElementBeforeOpen?.focus()
-  }
+  if (shouldRestore) activeElementBeforeOpen?.focus()
 }
+
+
+
+const handleCloseRequest = () => {
+  if (!hasFormContent()) { closeModal(); return }
+
+  showConfirm({
+    title: "Save changes?",
+    message: "Do you want to save your changes before closing?",
+    rows: [
+  {
+    buttons: [
+      {
+        label: "Save Draft",
+        variant: "primary",
+        onClick: async () => {
+          const caption =
+            (captionInput as HTMLTextAreaElement | undefined)?.value?.trim() || ""
+
+          const feedType = getFeedType()
+
+          const result = await saveDraft({
+            imageUrl: selectedImageUrl,
+            caption,
+            altText: caption,
+            feedType,
+            category: "general",
+            location: "",
+          })
+
+          if (result) {
+            activeDraftId = result.id
+          }
+
+          closeModal()
+        },
+      },
+      {
+        label: "Discard",
+        variant: "ghost",
+        onClick: async () => {
+          await discardDraft()
+          closeModal()
+        },
+      },
+    ],
+  },
+
+  {
+    buttons: [
+      {
+        label: "Cancel",
+        variant: "default",
+        onClick: () => {},
+      },
+    ],
+  },
+],
+  })
+}
+
+
+
+const handleReplaceRequest = () => {
+  showConfirm({
+    title: "Replace image?",
+    message: "Do you want to replace the current image?",
+    rows: [
+      {
+        buttons: [
+          {
+            label: "Yes",
+            variant: "primary",
+            onClick: () => {
+              clearPreview()
+              syncSubmitState()
+              uploadInput && (uploadInput as HTMLInputElement).click()
+            },
+          },
+          {
+            label: "No",
+            variant: "default",
+            onClick: () => {},
+          },
+        ],
+      },
+    ],
+  })
+}
+
+const handleRemoveRequest = () => {
+  showConfirm({
+    title: "Remove image?",
+    message: "Do you want to remove the current image?",
+    rows: [
+      {
+        buttons: [
+          {
+            label: "Yes",
+            variant: "danger",
+            onClick: () => {
+              clearPreview()
+              clearToasts()
+              syncSubmitState()
+            },
+          },
+          {
+            label: "No",
+            variant: "default",
+            onClick: () => {},
+          },
+        ],
+      },
+    ],
+  })
+}
+
+
 
 const beginUploadAnimation = () => {
   let progress = 0
-
-  if (progressBar) progressBar.style.width = "0%"
+  if (progressBar) (progressBar as HTMLElement).style.width = "0%"
   if (progressLabel) progressLabel.textContent = "0%"
-
   uploadProgressTimer = window.setInterval(() => {
     progress = Math.min(progress + (progress < 70 ? 11 : 5), 96)
-    if (progressBar) progressBar.style.width = `${progress}%`
+    if (progressBar) (progressBar as HTMLElement).style.width = `${progress}%`
     if (progressLabel) progressLabel.textContent = `${progress}%`
   }, 140)
 }
 
 const finishUploadAnimation = () => {
-  if (uploadProgressTimer) {
-    clearInterval(uploadProgressTimer)
-    uploadProgressTimer = null
-  }
-
-  if (progressBar) progressBar.style.width = "100%"
+  if (uploadProgressTimer) { clearInterval(uploadProgressTimer); uploadProgressTimer = null }
+  if (progressBar) (progressBar as HTMLElement).style.width = "100%"
   if (progressLabel) progressLabel.textContent = "100%"
 }
 
-const showSuccess = (post) => {
-  currentSuccessSlug = post?.slug || ""
-  // if (successLink) {
-  //   successLink.href = post?.slug ? `/posts/${post.slug}` : "#"
-  // }
-  showToast({
-    tone: "success",
-    title: "Upload successful",
-    message: "Your image has been published.",
-  })
-  setView("success")
-  syncSubmitState()
-  window.requestAnimationFrame(() => {
-    successLink?.focus()
-  })
-}
 
-const submitUpload = async (event) => {
+
+const submitUpload = async (event: Event) => {
   event.preventDefault()
 
-  const caption = String(captionInput?.value || "").trim()
-  const category = String(categoryInput?.value || "").trim() || "Nature"
+  const caption = String((captionInput as HTMLTextAreaElement | undefined)?.value || "").trim()
   const feedType = getFeedType()
 
-  let hasError = false
-  let missingRequiredField = false
-
-  if (!selectedImage || !selectedImageUrl) {
-    hasError = true
-    missingRequiredField = true
-  }
-
-  if (!caption) {
-    hasError = true
-    missingRequiredField = true
-  }
-
-  if (selectedImage && !validateFile(selectedImage)) {
-    hasError = true
-  }
-
-  if (hasError && missingRequiredField) {
-    showToast({
-      tone: "error",
-      title: "Missing required fields",
-      message: "Add an image and caption before publishing.",
-    })
+  if (!selectedImageUrl || !caption) {
+    showToast({ tone: "error", title: "Missing required fields", message: "Add an image and caption before publishing." })
     syncSubmitState()
     return
   }
+
+  if (selectedImage && !validateFile(selectedImage)) { syncSubmitState(); return }
 
   uploadAbortController = new AbortController()
   setView("uploading")
@@ -335,22 +536,26 @@ const submitUpload = async (event) => {
   syncSubmitState()
 
   try {
-    const post = await createPost({
-      imageUrl: selectedImageUrl,
-      caption,
-      altText: caption,
-      category,
-      feedType,
-      location: "",
-    }, uploadAbortController.signal)
-
+    await createPost(
+      {
+        imageUrl: selectedImageUrl,
+        caption,
+        altText: caption,
+        category: "general",
+        feedType,
+        location: "",
+        
+        draftId: activeDraftId,
+      },
+      uploadAbortController.signal
+    )
     finishUploadAnimation()
-    showSuccess(post)
+    closeModal()
+    window.setTimeout(() => {
+      showToast({ tone: "success", title: "Image uploaded successfully", message: "Your image has been published." })
+    }, 80)
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      return
-    }
-
+    if (error instanceof DOMException && error.name === "AbortError") return
     finishUploadAnimation()
     setView("form")
     showToast({
@@ -367,136 +572,81 @@ const submitUpload = async (event) => {
 }
 
 const cancelUpload = () => {
-  if (uploadAbortController) {
-    uploadAbortController.abort()
-    uploadAbortController = null
-  }
-
+  if (uploadAbortController) { uploadAbortController.abort(); uploadAbortController = null }
   closeModal(true)
 }
 
-openButtons.forEach((button) => {
-  button.addEventListener("click", openModal)
-})
 
-closeButtons?.forEach((button) => {
-  button.addEventListener("click", () => {
-    // if (currentSuccessSlug) {
-    //   window.location.reload()
-    //   return
-    // }
 
-    closeModal(true)
-  })
-})
+openButtons.forEach((btn) => btn.addEventListener("click", openModal))
 
-dropzone?.addEventListener("click", () => uploadInput?.click())
-replaceButton?.addEventListener("click", () => uploadInput?.click())
-removeButton?.addEventListener("click", () => {
-  clearPreview()
-  clearToasts()
-  syncSubmitState()
-})
+closeButton?.addEventListener("click", handleCloseRequest)
+successCloseButton?.addEventListener("click", () => closeModal(true))
+
+dropzone?.addEventListener("click", () => (uploadInput as HTMLInputElement | undefined)?.click())
+replaceButton?.addEventListener("click", handleReplaceRequest)
+removeButton?.addEventListener("click", handleRemoveRequest)
 
 uploadInput?.addEventListener("change", async () => {
-  const file = uploadInput.files?.[0] || null
-  try {
-    await handleFileSelection(file)
-  } catch {
-    showToast({
-      tone: "error",
-      title: "Upload failed",
-      message: "Unable to read the selected image.",
-    })
-  }
+  const file = (uploadInput as HTMLInputElement).files?.[0] || null
+  try { await handleFileSelection(file) }
+  catch { showToast({ tone: "error", title: "Upload failed", message: "Unable to read the selected image." }) }
 })
 
-captionInput?.addEventListener("input", () => {
-  updateCounters()
-  syncSubmitState()
-})
-
-categoryInput?.addEventListener("change", syncSubmitState)
-feedTypeInputs?.forEach((input) => input.addEventListener("change", syncSubmitState))
+captionInput?.addEventListener("input", () => { updateCounters(); syncSubmitState() })
+feedTypeInputs?.forEach((i) => i.addEventListener("change", syncSubmitState))
 
 form?.addEventListener("submit", submitUpload)
 cancelButton?.addEventListener("click", cancelUpload)
 abortButton?.addEventListener("click", cancelUpload)
 
 modal?.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    closeModal(true)
-  }
+  if (event.target === modal) handleCloseRequest()
 })
+
+
 
 modal?.addEventListener("dragenter", (event) => {
-  event.preventDefault()
-  dragDepth += 1
-  dropzone?.classList.add("is-dragging")
+  event.preventDefault(); dragDepth += 1; dropzone?.classList.add("is-dragging")
 })
-
-modal?.addEventListener("dragover", (event) => {
-  event.preventDefault()
-})
-
+modal?.addEventListener("dragover", (event) => event.preventDefault())
 modal?.addEventListener("dragleave", (event) => {
   event.preventDefault()
   dragDepth = Math.max(0, dragDepth - 1)
-  if (dragDepth === 0) {
-    dropzone?.classList.remove("is-dragging")
-  }
+  if (dragDepth === 0) dropzone?.classList.remove("is-dragging")
 })
-
 modal?.addEventListener("drop", async (event) => {
-  event.preventDefault()
-  dragDepth = 0
-  dropzone?.classList.remove("is-dragging")
-
-  const file = event.dataTransfer?.files?.[0] || null
-  try {
-    await handleFileSelection(file)
-  } catch {
-    showToast({
-      tone: "error",
-      title: "Upload failed",
-      message: "Unable to read the selected image.",
-    })
-  }
+  event.preventDefault(); dragDepth = 0; dropzone?.classList.remove("is-dragging")
+  const file = (event as DragEvent).dataTransfer?.files?.[0] || null
+  try { await handleFileSelection(file) }
+  catch { showToast({ tone: "error", title: "Upload failed", message: "Unable to read the selected image." }) }
 })
+
+
 
 document.addEventListener("keydown", (event) => {
   if (!modal || modal.classList.contains("invisible")) return
 
   if (event.key === "Escape") {
     event.preventDefault()
-    if (uploadAbortController) {
-      uploadAbortController.abort()
-      uploadAbortController = null
-    }
-    closeModal(true)
+    if (confirmOverlay && !confirmOverlay.classList.contains("hidden")) { hideConfirm(); return }
+    if (uploadAbortController) { uploadAbortController.abort(); uploadAbortController = null }
+    handleCloseRequest()
     return
   }
 
   if (event.key !== "Tab") return
-
   const focusable = getUploadFocusables()
   if (!focusable.length) return
-
   const first = focusable[0]
   const last = focusable[focusable.length - 1]
-
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault()
-    last.focus()
-    return
-  }
-
-  if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault()
-    first.focus()
-  }
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); return }
+  if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
 })
+
+
 
 setModalVisibility(false)
 updateCounters()
 syncSubmitState()
+syncImageButtons()

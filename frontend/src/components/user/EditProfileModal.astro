@@ -1,0 +1,746 @@
+---
+
+---
+
+<div
+  id="editProfileConfirmModal"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="editProfileConfirmTitle"
+  tabindex="-1"
+  class="ep-modal fixed inset-0 z-[9998] flex items-center justify-center px-4 py-6"
+>
+  <div
+    id="editProfileConfirmBackdrop"
+    class="absolute inset-0 bg-slate-950/40 backdrop-blur-xl dark:bg-black/70"
+    aria-hidden="true"
+  >
+  </div>
+  <div
+    id="editProfileConfirmDialog"
+    class="ep-dialog relative w-full max-w-[420px] overflow-hidden rounded-[20px] border border-slate-200 bg-white p-7 text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.20)] dark:border-white/10 dark:bg-[#141528] dark:text-slate-50 sm:p-8"
+  >
+    <button
+      id="editProfileConfirmCloseBtn"
+      type="button"
+      aria-label="Close"
+      class="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-slate-200"
+    >
+      <svg
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <div class="mb-5 flex justify-center text-amber-500">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="40"
+        height="40"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+        ></path>
+        <path
+          d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"
+        ></path>
+      </svg>
+    </div>
+
+    <h3
+      id="editProfileConfirmTitle"
+      class="text-center text-[1.2rem] font-bold tracking-tight text-slate-900 dark:text-slate-50"
+    >
+      Edit Profile
+    </h3>
+    <p
+      class="mt-2 text-center text-sm leading-6 text-slate-500 dark:text-slate-400"
+    >
+      Do you want to edit your profile information?
+    </p>
+
+    <div class="mt-7 flex gap-3">
+      <button
+        id="editProfileConfirmNoBtn"
+        type="button"
+        class="flex-1 inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
+      >
+        No
+      </button>
+      <button
+        id="editProfileConfirmYesBtn"
+        type="button"
+        class="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-violet-600 px-5 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(139,92,246,0.35)] transition-colors duration-200 hover:bg-violet-500 active:bg-violet-700"
+      >
+        Yes
+      </button>
+    </div>
+  </div>
+</div>
+
+<div
+  id="editProfileFormModal"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="editProfileFormTitle"
+  tabindex="-1"
+  class="ep-modal fixed inset-0 z-[9999] flex items-center justify-center px-4 py-6"
+>
+  <div
+    id="editProfileFormBackdrop"
+    class="absolute inset-0 bg-slate-950/50 backdrop-blur-xl dark:bg-black/70"
+    aria-hidden="true"
+  >
+  </div>
+  <div
+    id="editProfileFormDialog"
+    class="ep-dialog relative w-full max-w-[620px] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white p-6 text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.20)] dark:border-white/10 dark:bg-[#141528] dark:text-slate-50 sm:p-8"
+  >
+    <div class="edit-profile-head flex items-center justify-between mb-6">
+      <h3
+        id="editProfileFormTitle"
+        class="text-[1.15rem] font-bold tracking-tight text-slate-900 dark:text-slate-50"
+      >
+        Edit Profile
+      </h3>
+      <button
+        id="editProfileFormCloseBtn"
+        type="button"
+        aria-label="Close"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-slate-200"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div
+      id="editProfileError"
+      class="ep-error-hidden mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-950/30 dark:border-red-800 dark:text-red-400"
+    >
+    </div>
+
+    <div class="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+      <div>
+        <label
+          for="editProfileFullName"
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Full Name</label
+        >
+        <input
+          id="editProfileFullName"
+          type="text"
+          autocomplete="name"
+          class="ep-input"
+        />
+      </div>
+
+      <div>
+        <label
+          for="editProfileUsername"
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Username</label
+        >
+        <input
+          id="editProfileUsername"
+          type="text"
+          autocomplete="username"
+          class="ep-input"
+        />
+      </div>
+
+      <div>
+        <label
+          for="editProfileEmail"
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Email Address</label
+        >
+        <input
+          id="editProfileEmail"
+          type="email"
+          autocomplete="email"
+          class="ep-input"
+        />
+      </div>
+
+      <div>
+        <label
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Profile Image</label
+        >
+        <div class="flex items-center gap-3">
+          <img
+            id="editProfileAvatarPreview"
+            src=""
+            alt="Profile preview"
+            class="h-[88px] w-[88px] rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10 shrink-0"
+          />
+          <button
+            id="editProfileChangeImageBtn"
+            type="button"
+            class="change-image-btn inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium transition"
+          >
+            <!-- <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg> -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3.5 w-3.5"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383"
+              ></path>
+              <path
+                fill-rule="evenodd"
+                d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708z"
+              ></path>
+            </svg>
+            Change Image
+          </button>
+          <input
+            id="editProfileImageInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden"
+          />
+        </div>
+        <p
+          id="editProfileImageError"
+          class="ep-error-hidden mt-1.5 text-xs text-red-500"
+        >
+        </p>
+      </div>
+
+      <div>
+        <label
+          for="editProfilePhone"
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Phone Number</label
+        >
+        <input
+          id="editProfilePhone"
+          type="tel"
+          autocomplete="tel"
+          class="ep-input"
+        />
+      </div>
+
+      <div class="hidden sm:block"></div>
+
+      <div class="sm:col-span-2">
+        <label
+          for="editProfileBio"
+          class="ep-label block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5"
+          >Bio</label
+        >
+        <textarea id="editProfileBio" rows="3" class="ep-input ep-textarea"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="can-sav-btn mt-7 flex justify-end gap-3">
+      <button
+        id="editProfileCancelBtn"
+        type="button"
+        class="inline-flex h-11 min-w-[88px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
+      >
+        Cancel
+      </button>
+      <button
+        id="editProfileSaveBtn"
+        type="button"
+        class="inline-flex h-11 min-w-[120px] items-center justify-center rounded-xl bg-violet-600 px-5 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(139,92,246,0.35)] transition-colors duration-200 hover:bg-violet-500 active:bg-violet-700"
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ep-modal {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 200ms ease-out,
+      visibility 200ms ease-out;
+  }
+  .ep-modal.ep-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .edit-profile-head {
+    padding: 10px;
+    /* margin-left: 1px; */
+  }
+  .change-image-btn {
+    padding: 12px;
+    background-color: #9d82fd;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .change-image-btn:hover {
+    background-color: #8667fc;
+    color: #fff;
+  }
+  .can-sav-btn {
+    padding: 16px;
+  }
+
+  .ep-dialog {
+    transform: translateY(12px) scale(0.97);
+    opacity: 0;
+    transition:
+      transform 200ms ease-out,
+      opacity 200ms ease-out;
+    padding: 20px;
+  }
+  .ep-modal.ep-open .ep-dialog {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .ep-error-hidden {
+    display: none;
+  }
+  .ep-error-visible {
+    display: block;
+  }
+
+  .ep-input {
+    display: block;
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    font-weight: 500;
+    color: #0f172a;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    outline: none;
+    transition:
+      border-color 150ms,
+      box-shadow 150ms;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .ep-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+  .ep-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  }
+
+  .ep-textarea {
+    height: auto;
+    padding: 10px 14px;
+    resize: none;
+    line-height: 1.6;
+  }
+
+  :global(.dark) .ep-input {
+    color: #f1f5fd;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  :global(.dark) .ep-input::placeholder {
+    color: #64748b;
+  }
+  :global(.dark) .ep-input:focus {
+    border-color: #9d82fd;
+    box-shadow: 0 0 0 3px rgba(157, 130, 253, 0.15);
+  }
+
+  .ep-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #64748b;
+  }
+  :global(.dark) .ep-label {
+    color: #8892a4;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    if (window.__editProfileInitialized) return;
+    window.__editProfileInitialized = true;
+
+    const getApiBase = () => {
+      if (typeof window !== "undefined") {
+        return `${location.protocol}//${location.hostname}:5001/api`;
+      }
+      return "http://localhost:5001/api";
+    };
+
+    const showToast = (text, type = "success") => {
+      let container = document.getElementById("edit-profile-toast-container");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "edit-profile-toast-container";
+        Object.assign(container.style, {
+          position: "fixed",
+          top: "1.25rem",
+          right: "1.25rem",
+          zIndex: "99999",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+          alignItems: "flex-end",
+          pointerEvents: "none",
+        });
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement("div");
+      Object.assign(toast.style, {
+        pointerEvents: "auto",
+        minWidth: "260px",
+        maxWidth: "380px",
+        background:
+          type === "success" ? "rgba(16,185,129,0.96)" : "rgba(239,68,68,0.96)",
+        color: "#fff",
+        padding: "0.75rem 1rem",
+        borderRadius: "12px",
+        boxShadow: "0 8px 30px rgba(2,6,23,0.35)",
+        display: "flex",
+        alignItems: "center",
+        gap: "0.75rem",
+        fontSize: "0.875rem",
+        fontWeight: "500",
+      });
+
+      const icon = document.createElement("div");
+      icon.style.flexShrink = "0";
+      icon.innerHTML =
+        type === "success"
+          ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+      const textEl = document.createElement("div");
+      textEl.style.flex = "1";
+      textEl.textContent = text;
+
+      const closeBtn = document.createElement("button");
+      closeBtn.setAttribute("aria-label", "Close");
+      Object.assign(closeBtn.style, {
+        background: "transparent",
+        border: "none",
+        color: "inherit",
+        cursor: "pointer",
+        padding: "0",
+        lineHeight: "1",
+        flexShrink: "0",
+      });
+      closeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+
+      toast.appendChild(icon);
+      toast.appendChild(textEl);
+      toast.appendChild(closeBtn);
+      container.appendChild(toast);
+
+      const remove = () => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      };
+      closeBtn.addEventListener("click", remove);
+      setTimeout(remove, 4500);
+    };
+
+    const openModal = (modalEl) => {
+      modalEl.classList.add("ep-open");
+      modalEl.setAttribute("aria-hidden", "false");
+    };
+
+    const closeModal = (modalEl) => {
+      modalEl.classList.remove("ep-open");
+      modalEl.setAttribute("aria-hidden", "true");
+    };
+
+    const confirmModal = document.getElementById("editProfileConfirmModal");
+    const confirmYesBtn = document.getElementById("editProfileConfirmYesBtn");
+    const confirmNoBtn = document.getElementById("editProfileConfirmNoBtn");
+    const confirmCloseBtn = document.getElementById(
+      "editProfileConfirmCloseBtn",
+    );
+    const confirmBackdrop = document.getElementById(
+      "editProfileConfirmBackdrop",
+    );
+
+    const formModal = document.getElementById("editProfileFormModal");
+    const formCloseBtn = document.getElementById("editProfileFormCloseBtn");
+    const formBackdrop = document.getElementById("editProfileFormBackdrop");
+    const cancelBtn = document.getElementById("editProfileCancelBtn");
+    const saveBtn = document.getElementById("editProfileSaveBtn");
+    const errorEl = document.getElementById("editProfileError");
+
+    const fullNameInput = document.getElementById("editProfileFullName");
+    const usernameInput = document.getElementById("editProfileUsername");
+    const emailInput = document.getElementById("editProfileEmail");
+    const phoneInput = document.getElementById("editProfilePhone");
+    const bioInput = document.getElementById("editProfileBio");
+    const avatarPreview = document.getElementById("editProfileAvatarPreview");
+    const changeImageBtn = document.getElementById("editProfileChangeImageBtn");
+    const imageInput = document.getElementById("editProfileImageInput");
+    const imageError = document.getElementById("editProfileImageError");
+
+    let pendingImageBase64 = null;
+
+    const populateForm = () => {
+      const nameEl = document.querySelector("[data-dashboard-profile-name]");
+      const usernameEl = document.querySelector(
+        "[data-dashboard-profile-username]",
+      );
+      const emailEl = document.querySelector("[data-dashboard-profile-email]");
+      const phoneEl = document.querySelector("[data-dashboard-profile-phone]");
+      const bioEl = document.querySelector("[data-dashboard-profile-bio]");
+      const avatarImgEl = document.querySelector(
+        "[data-dashboard-profile-avatar] img",
+      );
+
+      if (fullNameInput)
+        fullNameInput.value = nameEl?.textContent?.trim() || "";
+      if (usernameInput)
+        usernameInput.value = (usernameEl?.textContent?.trim() || "").replace(
+          /^@/,
+          "",
+        );
+      if (emailInput) emailInput.value = emailEl?.textContent?.trim() || "";
+      if (phoneInput)
+        phoneInput.value =
+          (phoneEl?.textContent?.trim() || "") === "Not set"
+            ? ""
+            : phoneEl?.textContent?.trim() || "";
+      if (bioInput)
+        bioInput.value =
+          (bioEl?.textContent?.trim() || "") === "Not set"
+            ? ""
+            : bioEl?.textContent?.trim() || "";
+      if (avatarPreview && avatarImgEl) avatarPreview.src = avatarImgEl.src;
+
+      pendingImageBase64 = null;
+      if (imageInput) imageInput.value = "";
+      if (imageError) {
+        imageError.textContent = "";
+        imageError.classList.add("ep-error-hidden");
+        imageError.classList.remove("ep-error-visible");
+      }
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.classList.add("ep-error-hidden");
+        errorEl.classList.remove("ep-error-visible");
+      }
+    };
+
+    if (changeImageBtn && imageInput) {
+      changeImageBtn.addEventListener("click", () => imageInput.click());
+
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files?.[0];
+        if (!file) return;
+
+        const allowed = ["image/jpeg", "image/png", "image/webp"];
+        if (!allowed.includes(file.type)) {
+          if (imageError) {
+            imageError.textContent =
+              "Only JPG, PNG and WEBP images are allowed.";
+            imageError.classList.remove("ep-error-hidden");
+            imageError.classList.add("ep-error-visible");
+          }
+          imageInput.value = "";
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          if (imageError) {
+            imageError.textContent = "Image must be smaller than 5MB.";
+            imageError.classList.remove("ep-error-hidden");
+            imageError.classList.add("ep-error-visible");
+          }
+          imageInput.value = "";
+          return;
+        }
+        if (imageError) {
+          imageError.textContent = "";
+          imageError.classList.add("ep-error-hidden");
+          imageError.classList.remove("ep-error-visible");
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          pendingImageBase64 = e.target?.result || null;
+          if (avatarPreview) avatarPreview.src = pendingImageBase64;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const saveChanges = async () => {
+      if (!saveBtn) return;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.classList.add("ep-error-hidden");
+        errorEl.classList.remove("ep-error-visible");
+      }
+
+      const body = {
+        fullName: fullNameInput?.value?.trim() || "",
+        username: usernameInput?.value?.trim() || "",
+        email: emailInput?.value?.trim() || "",
+        phoneNumber: phoneInput?.value?.trim() || null,
+        bio: bioInput?.value?.trim() || null,
+      };
+      if (pendingImageBase64 !== null) body.picture = pendingImageBase64;
+
+      try {
+        const res = await fetch(`${getApiBase()}/user`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok)
+          throw new Error(data?.message || "Failed to update profile.");
+
+        const user = data.user || body;
+        const fullName = user.fullName || user.name || body.fullName;
+        const username = user.username || body.username;
+        const email = user.email || body.email;
+        const phone = user.phoneNumber ?? body.phoneNumber;
+        const bio = user.bio ?? body.bio;
+        const picture = user.picture ?? (pendingImageBase64 || null);
+
+        document
+          .querySelectorAll("[data-dashboard-profile-full-name]")
+          .forEach((el) => {
+            el.textContent = fullName;
+          });
+        document
+          .querySelectorAll("[data-dashboard-profile-name]")
+          .forEach((el) => {
+            el.textContent = fullName;
+          });
+        document
+          .querySelectorAll("[data-dashboard-profile-username]")
+          .forEach((el) => {
+            el.textContent = `@${username}`;
+          });
+        document
+          .querySelectorAll("[data-dashboard-profile-email]")
+          .forEach((el) => {
+            el.textContent = email;
+          });
+        document
+          .querySelectorAll("[data-dashboard-profile-phone]")
+          .forEach((el) => {
+            el.textContent = phone || "Not set";
+          });
+        document
+          .querySelectorAll("[data-dashboard-profile-bio]")
+          .forEach((el) => {
+            el.textContent = bio || "Not set";
+          });
+
+        if (picture) {
+          document
+            .querySelectorAll("[data-dashboard-profile-avatar] img")
+            .forEach((img) => {
+              img.src = picture;
+            });
+          document
+            .querySelectorAll(
+              "[data-user-profile-trigger-avatar] img, [data-user-profile-avatar] img",
+            )
+            .forEach((img) => {
+              img.src = picture;
+            });
+        }
+
+        closeModal(formModal);
+        showToast("Profile updated successfully!", "success");
+      } catch (err) {
+        if (errorEl) {
+          errorEl.textContent =
+            err?.message || "Something went wrong. Please try again.";
+          errorEl.classList.remove("ep-error-hidden");
+          errorEl.classList.add("ep-error-visible");
+        }
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Save Changes";
+        }
+      }
+    };
+
+    document.addEventListener("click", (e) => {
+      if (e.target?.closest("[data-edit-profile-trigger]")) {
+        openModal(confirmModal);
+      }
+    });
+
+    [confirmNoBtn, confirmCloseBtn].forEach((btn) =>
+      btn?.addEventListener("click", () => closeModal(confirmModal)),
+    );
+    confirmBackdrop?.addEventListener("click", () => closeModal(confirmModal));
+
+    confirmYesBtn?.addEventListener("click", () => {
+      closeModal(confirmModal);
+      setTimeout(() => {
+        populateForm();
+        openModal(formModal);
+      }, 210);
+    });
+
+    [formCloseBtn, cancelBtn].forEach((btn) =>
+      btn?.addEventListener("click", () => closeModal(formModal)),
+    );
+    formBackdrop?.addEventListener("click", () => closeModal(formModal));
+
+    saveBtn?.addEventListener("click", saveChanges);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (formModal && formModal.classList.contains("ep-open")) {
+        closeModal(formModal);
+        return;
+      }
+      if (confirmModal && confirmModal.classList.contains("ep-open")) {
+        closeModal(confirmModal);
+      }
+    });
+  })();
+</script>

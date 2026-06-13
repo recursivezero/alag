@@ -71,6 +71,7 @@ export type CreatePostInput = {
   category?: string
   feedType: 'public' | 'personal'
   location?: string
+  draftId?: number | null
 }
 
 export const createPost = async (payload: CreatePostInput, signal?: AbortSignal) => {
@@ -135,7 +136,75 @@ export const deletePost = async (slug: string) => {
   return true
 }
 
-// LIKED POSTS  (private – current user only)
+//  DRAFT 
+
+export type DraftData = {
+  id: number
+  caption: string
+  imageUrl: string
+  altText: string
+  feedType: 'public' | 'personal'
+  category: string
+  location: string
+  status: 'draft'
+  createdAt: string
+}
+
+export const fetchDraft = async (): Promise<DraftData | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/posts/draft`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (!response.ok) return null
+
+    const data = (await response.json()) as { draft: DraftData | null }
+    return data.draft
+  } catch {
+    return null
+  }
+}
+
+export type SaveDraftInput = {
+  imageUrl: string
+  caption: string
+  altText: string
+  feedType: 'public' | 'personal'
+  category?: string
+  location?: string
+}
+
+export const saveDraft = async (payload: SaveDraftInput): Promise<{ id: number } | null> => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/posts/draft`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) return null
+
+    const data = (await response.json()) as { draft: { id: number } }
+    return data.draft
+  } catch {
+    return null
+  }
+}
+
+export const discardDraft = async (): Promise<void> => {
+  try {
+    await fetch(`${getApiBaseUrl()}/posts/draft`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+  } catch {
+    
+  }
+}
+
+//  LIKED POSTS 
 
 export const fetchLikedPosts = async (options?: SessionOptions) => {
   try {
@@ -157,7 +226,6 @@ export const fetchLikedPosts = async (options?: SessionOptions) => {
 }
 
 
-// TOGGLE LIKE  (POST /api/posts/:slug/like)
 
 export const togglePostLike = async (
   slug: string,
@@ -178,8 +246,7 @@ export const togglePostLike = async (
   return response.json() as Promise<{ liked: boolean; likeCount: number }>
 }
 
-
-// SAVED POSTS  (private – current user only)
+// SAVED POSTS 
 
 export const fetchSavedPosts = async (options?: SessionOptions) => {
   try {
@@ -200,7 +267,7 @@ export const fetchSavedPosts = async (options?: SessionOptions) => {
   }
 }
 
-// TOGGLE SAVE  (POST /api/posts/:slug/save)
+
 
 export const togglePostSave = async (
   slug: string,
