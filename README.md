@@ -1,6 +1,6 @@
-# Recursive Login Project
+# ALAG - Authentication Layer and Groups
 
-Recursive Login is a full-stack authentication platform built with Astro, Node.js, Hono, and MySQL. It supports email OTP verification, JWT-based authentication, Google Sign-In, password reset functionality, user dashboards, post management, and admin features.
+ALAG is a full-stack authentication and social platform built with Astro, Node.js, Hono, and MySQL. It includes email OTP verification, JWT-based authentication, Google Sign-In, password reset functionality, user dashboards, public feed management, and administrative features.
 
 ## Features
 
@@ -28,7 +28,7 @@ Recursive Login is a full-stack authentication platform built with Astro, Node.j
 * Node.js
 * Hono
 * MySQL
-* JWT
+* JSON Web Token (JWT)
 * Nodemailer
 
 ## Project Structure
@@ -68,7 +68,7 @@ alag/
 
 ## Installation
 
-Install dependencies for both frontend and backend:
+Install dependencies for both backend and frontend:
 
 ```bash
 cd backend
@@ -80,21 +80,15 @@ npm install
 
 ## Environment Variables
 
-Copy:
+Create a `.env` file inside the `backend` directory by copying:
 
 ```bash
 backend/.env.example
 ```
 
-to:
+Configure all required environment variables before starting the application.
 
-```bash
-backend/.env
-```
-
-and provide the required values.
-
-If required, configure the frontend environment:
+For the frontend, configure:
 
 ```env
 PUBLIC_API_BASE_URL=http://localhost:5001/api
@@ -108,7 +102,7 @@ Create the database:
 CREATE DATABASE recursive;
 ```
 
-Import the database dump:
+Import the database schema:
 
 ```bash
 mysql -u root -p recursive < database/recursive.sql
@@ -116,7 +110,7 @@ mysql -u root -p recursive < database/recursive.sql
 
 ## Database Migration
 
-After importing the database dump, execute:
+Run the migration after importing the schema:
 
 ```bash
 mysql -u root -p recursive < database/migrations/001_add_post_draft_support.sql
@@ -124,35 +118,9 @@ mysql -u root -p recursive < database/migrations/001_add_post_draft_support.sql
 
 ## Running the Application
 
-Open two separate terminals to run the backend and frontend simultaneously.
+Open two terminals and run both services.
 
-### Terminal 1 — Start Backend
-
-```bash
-cd backend
-npm run dev
-```
-
-Backend URL:
-
-```text
-http://localhost:5001
-```
-
-### Terminal 2 — Start Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Frontend URL:
-
-```text
-http://localhost:4321
-```
-
-### Start Backend
+### Terminal 1 — Backend
 
 ```bash
 cd backend
@@ -165,7 +133,7 @@ Backend URL:
 http://localhost:5001
 ```
 
-### Start Frontend
+### Terminal 2 — Frontend
 
 ```bash
 cd frontend
@@ -204,20 +172,7 @@ npm run preview
 * Verify email and Google OAuth credentials before testing authentication flows.
 * Keep backend and frontend dependencies separate.
 
-## Repository Ignore Rules
-
-```text
-node_modules/
-.astro/
-dist/
-.env
-.env.*
-!.env.example
-*.log
-.DS_Store
-```
-
 ## Application URLs
 
-* Backend: http://localhost:5001
-* Frontend: http://localhost:4321
+* Backend: `http://localhost:5001`
+* Frontend: `http://localhost:4321`
