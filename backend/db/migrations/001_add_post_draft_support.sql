@@ -1,4 +1,4 @@
-USE recursive;
+USE alag;
 
 ALTER TABLE posts
 ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'published'

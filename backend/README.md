@@ -29,28 +29,7 @@ Create a `.env` file in the backend folder by copying the contents of `.env.exam
 cp .env.example .env
 ```
 
-Update the values as required.
-
-Example:
-
-```env
-PORT=5001
-
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=recursive
-
-JWT_SECRET=your_secret
-
-EMAIL_USER=your_email
-EMAIL_PASSWORD=your_email_app_password
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=465
-EMAIL_SECURE=true
-
-GOOGLE_CLIENT_ID=your_google_client_id
-```
+and update the values as required.
 
 ---
 
@@ -65,13 +44,13 @@ CREATE DATABASE recursive;
 Import the database dump:
 
 ```bash
-mysql -u root -p recursive < ../database/recursive.sql
+mysql -u <user-name> -p<password> < ./db/alag.sql
 ```
 
 Apply the migration:
 
 ```bash
-mysql -u root -p recursive < ../database/migrations/001_add_post_draft_support.sql
+mysql -u <user-name> -p<password> < ./db/migrations/001_add_post_draft_support.sql
 ```
 
 ---
