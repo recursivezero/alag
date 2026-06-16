@@ -214,7 +214,7 @@ import uploadModalScriptUrl from "../../scripts/upload-modal.ts?url";
           class="text-[13px] font-semibold text-[color:var(--dashboard-text)]"
           >Feed Type</span
         > -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-0">
           <label class="feed-type-card cursor-pointer">
             <input
               data-upload-feed-type
@@ -225,15 +225,14 @@ import uploadModalScriptUrl from "../../scripts/upload-modal.ts?url";
               class="peer sr-only"
             />
             <div
-              class="feed-type-inner flex h-[55px] px-3 items-center gap-3 rounded-[12px] border-2 border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] px-4 transition peer-checked:border-[color:var(--dashboard-accent)] peer-checked:bg-[color:var(--dashboard-accent-soft)]"
-            >
+              class="feed-type-inner flex h-[55px] px-3 items-center gap-3 rounded-[12px] bg-[color:var(--upload-field-bg)] px-4 transition "            >
               <span
                 class="upload-radio-indicator grid h-[17px] w-[17px] shrink-0 place-items-center rounded-full border-2 border-[color:rgba(15,23,42,0.2)] bg-white transition dark:border-[color:var(--dashboard-border)] dark:bg-[color:var(--dashboard-surface)]"
               >
                 <span
                   class="upload-radio-dot h-[8px] w-[8px] rounded-full bg-[color:var(--dashboard-accent)] opacity-0 transition"
                 ></span>
-              </span>
+              </span> 
               <div>
                 <span
                   class="block text-[13px] font-semibold text-[color:var(--dashboard-text)]"
@@ -256,8 +255,8 @@ import uploadModalScriptUrl from "../../scripts/upload-modal.ts?url";
               class="peer sr-only"
             />
             <div
-              class="feed-type-inner flex h-[55px] px-3 items-center gap-3 rounded-[12px] border-2 border-[color:var(--dashboard-border)] bg-[color:var(--upload-field-bg)] px-4 transition peer-checked:border-[color:var(--dashboard-accent)] peer-checked:bg-[color:var(--dashboard-accent-soft)]"
-            >
+              class="feed-type-inner flex h-[55px] px-3 items-center gap-3 rounded-[12px] bg-[color:var(--upload-field-bg)] px-4 transition "            >
+            
               <span
                 class="upload-radio-indicator grid h-[17px] w-[17px] shrink-0 place-items-center rounded-full border-2 border-[color:rgba(15,23,42,0.2)] bg-white transition dark:border-[color:var(--dashboard-border)] dark:bg-[color:var(--dashboard-surface)]"
               >
@@ -456,7 +455,12 @@ import uploadModalScriptUrl from "../../scripts/upload-modal.ts?url";
   }
   .feed-type-inner span:last-child {
     line-height: 1.3;
+
   }
+  .personal-feed-text{
+    margin-right: 18px;
+  }
+
 
   label:has(input[type="radio"]:checked) .upload-radio-indicator {
     border-color: var(--dashboard-accent);

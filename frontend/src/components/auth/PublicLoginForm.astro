@@ -339,6 +339,10 @@ import Input from "../ui/Input.astro";
       text: "signin_with",
       fallbackLabel: "Continue with Google",
       onCredential: async (credential: string) => {
+        const rememberEl = document.getElementById(
+          "rememberMe",
+        ) as HTMLInputElement | null;
+        const remember = !!(rememberEl && rememberEl.checked);
         try {
           const res = await fetch(`${apiBase}/google-login`, {
             method: "POST",
