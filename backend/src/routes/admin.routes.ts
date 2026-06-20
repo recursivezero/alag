@@ -9,7 +9,7 @@ import {
 	adminLogin,
 	adminMe,
 	adminLogout,
-} from '../controllers/admin.controller'
+} from '../controllers/admin.controller.js'
 
 const adminRoutes = new Hono()
 

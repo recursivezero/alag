@@ -1,15 +1,15 @@
 import { Context } from 'hono'
-import { db } from '../config/db'
-import { comparePassword, hashPassword } from '../utils/hash'
-import { createAdminToken, verifyAdminToken } from '../utils/jwt'
-import { generateOTP } from '../utils/generateOTP'
-import { sendOTPEmail } from '../utils/mailer'
+import { db } from '../config/db.js'
+import { comparePassword, hashPassword } from '../utils/hash.js'
+import { createAdminToken, verifyAdminToken } from '../utils/jwt.js'
+import { generateOTP } from '../utils/generateOTP.js'
+import { sendOTPEmail } from '../utils/mailer.js'
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
   clearSessionCookieOptions,
   sessionCookieOptions,
-} from '../utils/session'
+} from '../utils/session.js'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 
 const parsePositiveInt = (

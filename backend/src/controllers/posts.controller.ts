@@ -1,9 +1,9 @@
 import crypto from 'node:crypto'
 import { Context } from 'hono'
 import { getCookie } from 'hono/cookie'
-import { db } from '../config/db'
-import { verifyToken } from '../utils/jwt'
-import { USER_SESSION_COOKIE } from '../utils/session'
+import { db } from '../config/db.js'
+import { verifyToken } from '../utils/jwt.js'
+import { USER_SESSION_COOKIE } from '../utils/session.js'
 
 const mapPostRow = (row: any) => ({
   id: row.id,

@@ -12,7 +12,7 @@ import {
   saveDraft,
   getDraft,
   deleteDraft,
-} from '../controllers/posts.controller'
+} from '../controllers/posts.controller.js'
 
 const postsRoutes = new Hono()
 

@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
-import type { Options as SMTPOptions } from 'nodemailer/lib/smtp-transport'
+
+type SMTPOptions = Parameters<typeof nodemailer.createTransport>[0]
 
 const emailUser = process.env.EMAIL_USER || ''
 const emailPassword = process.env.EMAIL_PASSWORD || ''
