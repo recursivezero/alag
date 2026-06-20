@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
-import { register, checkEmail, sendOtp, verifyOtp, login, googleLogin, getUser, updateUserProfile, createUser, listUsers, forgotPassword, resetPassword, updatePassword, enableUser, disableUser, logout, listUserSessions } from '../controllers/auth.controller'
-
+import { register, checkEmail, sendOtp, verifyOtp, login, googleLogin, getUser, updateUserProfile, createUser, listUsers, forgotPassword, resetPassword, updatePassword, enableUser, disableUser, logout, listUserSessions } from '../controllers/auth.controller.js'
 const auth = new Hono()
 
 auth.post('/register', register)

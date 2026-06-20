@@ -1,10 +1,13 @@
 import { Hono } from 'hono'
 import 'dotenv/config'
-import authRoutes from './routes/auth.routes'
-import adminRoutes from './routes/admin.routes'
-import postsRoutes from './routes/posts.routes'
+import authRoutes from './routes/auth.routes.js'
+import adminRoutes from './routes/admin.routes.js'
+import postsRoutes from './routes/posts.routes.js'
+import authV1Routes from './routes/v1.auth.routes.js'
 import { createServer, IncomingMessage, ServerResponse } from 'http'
 import { URL } from 'url'
+import { swaggerUI } from '@hono/swagger-ui'
+import { openApiDocument } from './docs/swagger.js'
 
 const frontendOrigin = (
   process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'http://localhost:4321'
@@ -31,6 +34,14 @@ app.use('*', async (c, next) => {
 app.route('/api', authRoutes)
 app.route('/api/admin', adminRoutes)
 app.route('/api/posts', postsRoutes)
+
+
+app.route('/api/v1/auth', authV1Routes)
+app.route('/api/v1/admin', adminRoutes)
+app.route('/api/v1/posts', postsRoutes)
+
+app.get('/api-docs/openapi.json', (c) => c.json(openApiDocument))
+app.get('/api-docs', swaggerUI({ url: '/api-docs/openapi.json' }))
 
 app.get('/', (c) => {
   return c.text('Server Running')

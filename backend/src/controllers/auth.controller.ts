@@ -1,19 +1,19 @@
 import { Context } from 'hono'
 import crypto from 'node:crypto'
 import { OAuth2Client } from 'google-auth-library'
-import { db } from '../config/db'
-import { generateOTP } from '../utils/generateOTP'
-import { hashPassword, comparePassword } from '../utils/hash'
-import { createToken, verifyToken } from '../utils/jwt'
+import { db } from '../config/db.js'
+import { generateOTP } from '../utils/generateOTP.js'
+import { hashPassword, comparePassword } from '../utils/hash.js'
+import { createToken, verifyToken } from '../utils/jwt.js'
 import {
   USER_SESSION_COOKIE,
   USER_SESSION_MAX_AGE,
   USER_SESSION_REMEMBER_MAX_AGE,
   sessionCookieOptions,
-} from '../utils/session'
-import { clearSessionCookieOptions } from '../utils/session'
+} from '../utils/session.js'
+import { clearSessionCookieOptions } from '../utils/session.js'
 import { deleteCookie } from 'hono/cookie'
-import { sendOTPEmail, sendPasswordResetEmail } from '../utils/mailer'
+import { sendOTPEmail, sendPasswordResetEmail } from '../utils/mailer.js'
 import { getCookie, setCookie } from 'hono/cookie'
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID || ''

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
-import { hashPassword } from "../utils/hash";
+import { hashPassword } from "../utils/hash.js";
 
 dotenv.config();
 
