@@ -121,7 +121,7 @@ import Input from "../ui/Input.astro";
 <div class="btn-google" id="googleLoginBtn"></div>
 
 <script>
-  import { getApiBaseUrl } from "../../services/api";
+  import { getAuthApiBaseUrl } from "../../services/api";
   import { mountGoogleIdentityButton } from "../../services/google-auth";
   import {
     forgetAccount,
@@ -135,7 +135,7 @@ import Input from "../ui/Input.astro";
   } from "../../services/session";
 
   const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
-  const apiBase = getApiBaseUrl();
+  const apiBase = getAuthApiBaseUrl();
   const alertEl = document.getElementById("alert");
   const rememberedAccountCard = document.getElementById(
     "rememberedAccountCard",

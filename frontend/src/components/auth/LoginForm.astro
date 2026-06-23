@@ -346,13 +346,19 @@ import Input from "../ui/Input.astro";
       text: "signin_with",
       fallbackLabel: "Continue with Google",
       onCredential: async (credential: string) => {
-        try {
-          const res = await fetch(`${apiBase}/google-login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ credential, remember }),
-          });
+  try {
+    const rememberEl = document.getElementById(
+      "rememberMe",
+    ) as HTMLInputElement | null;
+
+    const remember = !!(rememberEl && rememberEl.checked);
+
+    const res = await fetch(`${apiBase}/google-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ credential, remember }),
+    });
           const data = await res.json();
           if (!res.ok) {
             showAlert(data.message || "Google login failed.");

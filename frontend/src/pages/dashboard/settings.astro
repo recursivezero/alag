@@ -2,7 +2,7 @@
 import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
 import UploadModal from "../../components/user/UploadModal.astro";
 import { fetchCurrentUserOrGuest } from "../../services/userService";
-import { getApiBaseUrl } from "../../services/api";
+import { getAuthApiBaseUrl } from "../../services/api";
 
 type ActiveSession = {
   id: number;
@@ -15,7 +15,7 @@ type ActiveSession = {
 
 const cookieHeader = Astro.request.headers.get("cookie") || "";
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
-const apiBaseUrl = getApiBaseUrl();
+const apiBaseUrl = getAuthApiBaseUrl();
 
 const fetchCurrentUserSessions = async () => {
   if (!currentUser.id) return [] as ActiveSession[];

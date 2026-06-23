@@ -144,7 +144,9 @@ import Input from "../ui/Input.astro";
 
 <script>
   import { mountGoogleIdentityButton } from "../../services/google-auth";
+  import { getAuthApiBaseUrl } from "../../services/api";
 
+  const apiBase = getAuthApiBaseUrl();
   const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
   const alertEl = document.getElementById("alert");
   const emailStatusEl = document.getElementById("emailStatus");
@@ -196,7 +198,7 @@ import Input from "../ui/Input.astro";
 
     try {
       const res = await fetch(
-        `http://localhost:5001/api/check-email?email=${encodeURIComponent(email)}`,
+        `${apiBase}/check-email?email=${encodeURIComponent(email)}`,
       );
       const data = await res.json();
 
@@ -307,7 +309,7 @@ import Input from "../ui/Input.astro";
       btn.textContent = "Creating account…";
 
       try {
-        const res = await fetch("http://localhost:5001/api/register", {
+        const res = await fetch(`${apiBase}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password }),
@@ -347,7 +349,7 @@ import Input from "../ui/Input.astro";
       fallbackLabel: "Sign up with Google",
       onCredential: async (credential: string) => {
         try {
-          const res = await fetch("http://localhost:5001/api/google-login", {
+          const res = await fetch(`${apiBase}/google-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ credential }),

@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from './api'
+import { getApiBaseUrl, getAuthApiBaseUrl } from './api'
 
 const clientAuthStorageKeys = ['token', 'alag-user-profile']
 
@@ -12,40 +12,40 @@ const clearClientAuthState = () => {
   }
 }
 
-const clearSessionToken = async (path: string) => {
+const clearSessionToken = async (url: string) => {
   if (typeof window === 'undefined') return
 
   clearClientAuthState()
 
   try {
-    await fetch(`${getApiBaseUrl()}${path}`, {
+    await fetch(url, {
       method: 'POST',
       credentials: 'include',
       keepalive: true,
     })
   } catch {
-    // The caller still handles the UI redirect.
+  
   }
 }
 
 export const clearUserSessionToken = () => {
-  return clearSessionToken('/logout')
+  return clearSessionToken(`${getAuthApiBaseUrl()}/logout`)
 }
 
 export const clearAdminSessionToken = () => {
-  return clearSessionToken('/admin/logout')
+  return clearSessionToken(`${getApiBaseUrl()}/admin/logout`)
 }
 
 export const validateUserSession = async () => {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/user`, {
+    const res = await fetch(`${getAuthApiBaseUrl()}/user`, {
       method: 'GET',
       credentials: 'include',
     })
 
     if (res.ok) return true
   } catch {
-    // Fall through to the session clear below.
+  
   }
 
   void clearUserSessionToken()
@@ -61,7 +61,7 @@ export const validateAdminSession = async () => {
 
     if (res.ok) return true
   } catch {
-    // Fall through to the session clear below.
+    
   }
 
   void clearAdminSessionToken()

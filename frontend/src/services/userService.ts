@@ -1,4 +1,4 @@
-import api, { getApiBaseUrl } from './api'
+import { getAuthApiBaseUrl } from './api'
 import type { UserProfile } from '../types/user'
 
 type SessionHeaders = {
@@ -15,7 +15,7 @@ const buildHeaders = (headers?: SessionHeaders): HeadersInit => {
 
 export const fetchCurrentUser = async (headers?: SessionHeaders) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/user`, {
+    const response = await fetch(`${getAuthApiBaseUrl()}/user`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(headers),
@@ -51,6 +51,10 @@ export const fetchCurrentUserOrGuest = async (headers?: SessionHeaders) => {
 }
 
 export const fetchCurrentUserWithApi = async () => {
-  const response = await api.get('/user')
-  return response.data.user as UserProfile
+  const response = await fetch(`${getAuthApiBaseUrl()}/user`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+  const data = (await response.json()) as { user: UserProfile }
+  return data.user
 }

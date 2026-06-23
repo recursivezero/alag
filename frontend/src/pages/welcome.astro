@@ -98,6 +98,7 @@ import MainLayout from "../layouts/MainLayout.astro";
     validateUserSession,
     watchUserSession,
   } from "../services/session";
+  import { getAuthApiBaseUrl } from "../services/api";
 
   const loginPath = "/login";
 
@@ -126,7 +127,7 @@ import MainLayout from "../layouts/MainLayout.astro";
 
   async function fetchUserData() {
     try {
-      const res = await fetch("http://localhost:5001/api/user", {
+      const res = await fetch(`${getAuthApiBaseUrl()}/user`, {
         method: "GET",
         credentials: "include",
       });

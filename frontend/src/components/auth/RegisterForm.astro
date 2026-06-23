@@ -129,7 +129,9 @@ import Input from "../ui/Input.astro";
 <script>
   import { mountGoogleIdentityButton } from "../../services/google-auth";
   import { validateUserSession } from "../../services/session";
+  import { getAuthApiBaseUrl } from "../../services/api";
 
+  const apiBase = getAuthApiBaseUrl();
   const googleClientId = import.meta.env.PUBLIC_GOOGLE_CLIENT_ID;
   const alertEl = document.getElementById("alert");
 
@@ -205,7 +207,7 @@ import Input from "../ui/Input.astro";
       btn.textContent = "Creating account…";
 
       try {
-        const res = await fetch("http://localhost:5001/api/register", {
+        const res = await fetch(`${apiBase}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -246,7 +248,7 @@ import Input from "../ui/Input.astro";
       fallbackLabel: "Sign up with Google",
       onCredential: async (credential: string) => {
         try {
-          const res = await fetch("http://localhost:5001/api/google-login", {
+          const res = await fetch(`${apiBase}/google-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",

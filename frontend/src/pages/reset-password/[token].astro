@@ -437,9 +437,8 @@ export const prerender = false;
   </div>
 
   <script>
-    const apiBase = (
-      import.meta.env.PUBLIC_API_BASE_URL?.trim() || "http://localhost:5001/api"
-    ).replace(/\/$/, "");
+    import { getAuthApiBaseUrl } from "../../services/api";
+    const apiBase = getAuthApiBaseUrl();
     const token =
       new URL(window.location.href).searchParams.get("token") ||
       window.location.pathname.split("/").pop();

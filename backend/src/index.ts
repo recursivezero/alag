@@ -1,19 +1,18 @@
-import { Hono } from 'hono'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import 'dotenv/config'
-import authRoutes from './routes/auth.routes.js'
-import adminRoutes from './routes/admin.routes.js'
-import postsRoutes from './routes/posts.routes.js'
+import adminRoutes from './routes/v1.admin.routes.js'
+import postsRoutes from './routes/v1.posts.routes.js'
 import authV1Routes from './routes/v1.auth.routes.js'
 import { createServer, IncomingMessage, ServerResponse } from 'http'
 import { URL } from 'url'
 import { swaggerUI } from '@hono/swagger-ui'
-import { openApiDocument } from './docs/swagger.js'
+import { registerOpenApiDocs } from './docs/openapi-config.js'
 
 const frontendOrigin = (
   process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'http://localhost:4321'
 ).replace(/\/$/, '')
 
-const app = new Hono()
+const app = new OpenAPIHono()
 
 app.use('*', async (c, next) => {
   const requestOrigin = c.req.header('Origin') || ''
@@ -31,16 +30,14 @@ app.use('*', async (c, next) => {
   await next()
 })
 
-app.route('/api', authRoutes)
 app.route('/api/admin', adminRoutes)
 app.route('/api/posts', postsRoutes)
-
 
 app.route('/api/v1/auth', authV1Routes)
 app.route('/api/v1/admin', adminRoutes)
 app.route('/api/v1/posts', postsRoutes)
 
-app.get('/api-docs/openapi.json', (c) => c.json(openApiDocument))
+registerOpenApiDocs(app)
 app.get('/api-docs', swaggerUI({ url: '/api-docs/openapi.json' }))
 
 app.get('/', (c) => {
@@ -81,4 +78,6 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 5001
 
 server.listen(PORT, () => {
   console.log(`✓ Server running on http://localhost:${PORT}`)
+  console.log(`✓ OpenAPI spec:  http://localhost:${PORT}/api-docs/openapi.json`)
+  console.log(`✓ Swagger UI:    http://localhost:${PORT}/api-docs`)
 })

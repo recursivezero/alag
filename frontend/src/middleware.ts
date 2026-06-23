@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware'
-import { getApiBaseUrl } from './services/api'
+import { getApiBaseUrl, getAuthApiBaseUrl } from './services/api'
 
 const isAdminEntryPath = (pathname: string) => pathname === '/admin'
 
@@ -26,9 +26,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url
   const cookieHeader = context.request.headers.get('cookie') || ''
 
-  const validateSession = async (path: string) => {
+  const validateSession = async (url: string) => {
     try {
-      const response = await fetch(`${getApiBaseUrl()}${path}`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: cookieHeader ? { cookie: cookieHeader } : undefined,
       })
@@ -46,7 +46,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (isPublicAuthPath(pathname)) {
-    const session = await validateSession('/user')
+    const session = await validateSession(`${getAuthApiBaseUrl()}/user`)
     if (session.ok) {
       return context.redirect('/dashboard')
     }
@@ -57,14 +57,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (isProtectedUserPath(pathname)) {
-    const session = await validateSession('/user')
+    const session = await validateSession(`${getAuthApiBaseUrl()}/user`)
     if (!session.ok && !session.error) {
       return context.redirect('/login')
     }
   }
 
   if (isAdminEntryPath(pathname)) {
-    const session = await validateSession('/admin/me')
+    const session = await validateSession(`${getApiBaseUrl()}/admin/me`)
     if (session.ok) {
       return context.redirect('/admin/dashboard')
     }
@@ -73,7 +73,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (isProtectedAdminPath(pathname)) {
-    const session = await validateSession('/admin/me')
+    const session = await validateSession(`${getApiBaseUrl()}/admin/me`)
     if (!session.ok && !session.error) {
       return context.redirect('/admin')
     }

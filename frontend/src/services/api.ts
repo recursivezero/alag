@@ -16,6 +16,8 @@ export const getApiBaseUrl = () => {
   return 'http://localhost:5001/api'
 }
 
+export const getAuthApiBaseUrl = () => `${getApiBaseUrl()}/v1/auth`
+
 export default axios.create({
   baseURL: getApiBaseUrl(),
   withCredentials: true,

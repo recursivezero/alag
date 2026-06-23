@@ -400,9 +400,9 @@
 
     const getApiBase = () => {
       if (typeof window !== "undefined") {
-        return `${location.protocol}//${location.hostname}:5001/api`;
+        return `${location.protocol}//${location.hostname}:5001/api/v1/auth`;
       }
-      return "http://localhost:5001/api";
+      return "http://localhost:5001/api/v1/auth";
     };
 
     const showToast = (text, type = "success") => {

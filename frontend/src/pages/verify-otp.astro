@@ -54,6 +54,9 @@ import MainLayout from "../layouts/MainLayout.astro";
 </MainLayout>
 
 <script>
+  import { getAuthApiBaseUrl } from "../services/api";
+  const apiBase = getAuthApiBaseUrl();
+
   const params = new URLSearchParams(window.location.search);
   const email = params.get("email") || "";
   const emailDisplay = document.getElementById("emailDisplay");
@@ -134,7 +137,7 @@ import MainLayout from "../layouts/MainLayout.astro";
       verifyBtn.textContent = "Verifying…";
 
       try {
-        const res = await fetch("http://localhost:5001/api/verify-otp", {
+        const res = await fetch(`${apiBase}/verify-otp`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -164,7 +167,7 @@ import MainLayout from "../layouts/MainLayout.astro";
   const resendBtn = document.getElementById("resendBtn") as HTMLButtonElement;
   if (resendBtn) {
     resendBtn.addEventListener("click", async () => {
-      await fetch("http://localhost:5001/api/send-otp", {
+      await fetch(`${apiBase}/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
