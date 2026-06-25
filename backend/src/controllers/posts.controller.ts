@@ -210,7 +210,7 @@ export const createPost = async (c: Context) => {
   const category = typeof body?.category === 'string' ? body.category.trim() : ''
   const feedType = body?.feedType === 'personal' ? 'personal' : 'public'
   const location = typeof body?.location === 'string' ? body.location.trim() : ''
-  // If publishing from a draft, the draft post id may be supplied
+ 
   const draftId = typeof body?.draftId === 'number' ? body.draftId : null
 
   if (!imageUrl || !caption || !altText) {
@@ -560,7 +560,7 @@ export const deletePost = async (c: Context) => {
     await db.execute('DELETE FROM post_comments WHERE post_id = ?', [postId])
     await db.execute('DELETE FROM saved_posts WHERE post_id = ?', [postId])
     await db.execute('DELETE FROM posts WHERE id = ?', [postId])
-  } catch (err) {
+  } catch {
     return c.json({ message: 'Unable to delete post' }, 500)
   }
 
