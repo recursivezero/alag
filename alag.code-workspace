@@ -19,7 +19,15 @@
       "titleBar.inactiveBackground": "#59543d99",
       "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#59543d"
+    "peacock.color": "#59543d",
+    "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "astro", // Enable .astro
+    "typescript", // Enable .ts
+    "typescriptreact" // Enable .tsx
+  ],
+  "folder-color.pathColors": []
   },
   "folders": [
     {
