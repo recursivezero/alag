@@ -25,14 +25,28 @@
     "eslint.validate": [
     "javascript",
     "javascriptreact",
-    "astro", // Enable .astro
-    "typescript", // Enable .ts
-    "typescriptreact" // Enable .tsx
+    "astro",
+    "typescript", 
+    "typescriptreact"
   ],
   "folder-color.pathColors": [],
   "files.exclude": {
-    "**/node_modules": true
-  }
+    "**/node_modules": true,
+    "**/.astro": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+    "*.jsx": "${capture}.js",
+    "*.ts": "${capture}.js",
+    "*.tsx": "${capture}.ts",
+    ".env":".env*",
+    ".gitignore": ".npm*, eslint*,.editorconfig,.babel*,.prettier*, .git*, .markdown*, .nojekyll",
+    "package.json": "package-lock.json, yarn.lock",
+    "tsconfig.json": "tsconfig.*.json",
+    "README.md": "*.md, LICENSE"
+  },
   },
   "folders": [
     {
