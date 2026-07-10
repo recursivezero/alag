@@ -15,8 +15,11 @@ import { clearSessionCookieOptions } from '../utils/session.js'
 import { deleteCookie } from 'hono/cookie'
 import { sendOTPEmail, sendPasswordResetEmail } from '../utils/mailer.js'
 import { getCookie, setCookie } from 'hono/cookie'
+import dotenv from 'dotenv';
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID || ''
+dotenv.config();
+
+const googleClientId = process.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null
 const frontendUrl = (process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'http://localhost:4321').replace(/\/$/, '')
 
