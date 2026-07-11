@@ -3,50 +3,85 @@ import MainLayout from "../layouts/MainLayout.astro";
 ---
 
 <MainLayout page="register">
-  <div class="card">
-    <h2 class="card-title">Verify OTP</h2>
+  <div class="card verify-card">
+    <h2 class="card-title">Verify Your Account</h2>
     <p class="card-sub">
-      Enter the 6-digit code sent to<br />
-      <span
-        id="emailDisplay"
-        class="otp-target"
-        style="color: #7c5cfc; font-weight: 600;">your email</span
-      >
+      Enter the OTPs sent to your email<span id="mobileSubText"></span>
     </p>
 
-    <div id="alert" class="alert"></div>
+    <div id="globalAlert" class="alert"></div>
 
-    <div class="otp-grid">
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
-      <input class="otp-box" maxlength="1" inputmode="numeric" />
+    
+    <div class="otp-section" id="emailSection">
+      <div class="otp-section-header">
+        <div class="otp-label-row">
+          <span class="otp-type-label">Email OTP</span>
+          <span class="otp-sent-to" id="emailSentTo"></span>
+        </div>
+        <div class="otp-status" id="emailStatus">
+          <span class="status-dot pending"></span>
+          <span class="status-text">Pending</span>
+        </div>
+      </div>
+
+      <div class="otp-grid" id="emailOtpGrid">
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="email" />
+      </div>
+
+      <div class="resend-row">
+        <button class="resend-btn" id="resendEmailBtn" disabled>
+          Resend Email OTP (<span id="emailTimer">01:00</span>)
+        </button>
+      </div>
     </div>
 
-    <button class="btn-primary" id="verifyBtn" type="button"
-      >Verify Account</button
-    >
+   
+    <div class="otp-section" id="mobileSection" style="display:none;">
+      <div class="otp-section-divider" aria-hidden="true"></div>
 
-    <div class="resend-row" style="margin-top:1rem;">
-      <button id="resendBtn" disabled
-        >Resend OTP (<span id="timer">01:00</span>)</button
-      >
+      <div class="otp-section-header">
+        <div class="otp-label-row">
+          <span class="otp-type-label">Mobile OTP</span>
+          <span class="otp-sent-to" id="mobileSentTo"></span>
+        </div>
+        <div class="otp-status" id="mobileStatus">
+          <span class="status-dot pending"></span>
+          <span class="status-text">Pending</span>
+        </div>
+      </div>
+
+      <div class="otp-grid" id="mobileOtpGrid">
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+        <input class="otp-box" maxlength="1" inputmode="numeric" data-group="mobile" />
+      </div>
+
+      <div class="resend-row">
+        <button class="resend-btn" id="resendMobileBtn" disabled>
+          Resend Mobile OTP (<span id="mobileTimer">01:00</span>)
+        </button>
+      </div>
     </div>
+
+    
+    <button class="btn-primary" id="verifyBtn" type="button">
+      Verify Account
+    </button>
 
     <div class="card-footer">
       <a href="/register" class="back-link">
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"></path></svg
-        >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"></path>
+        </svg>
         Back to register
       </a>
     </div>
@@ -55,131 +90,424 @@ import MainLayout from "../layouts/MainLayout.astro";
 
 <script>
   import { getAuthApiBaseUrl } from "../services/api";
+
   const apiBase = getAuthApiBaseUrl();
 
+ 
   const params = new URLSearchParams(window.location.search);
-  const email = params.get("email") || "";
-  const emailDisplay = document.getElementById("emailDisplay");
-  if (emailDisplay) emailDisplay.textContent = email || "your email";
+  const email    = params.get("email")    || "";
+  const mobile   = params.get("mobile")   || "";
+  const hasMobile = params.get("hasMobile") === "true";
 
-  const alertEl = document.getElementById("alert") as HTMLDivElement;
-  function showAlert(msg: string, type: string = "error") {
-    if (alertEl) {
-      alertEl.textContent = msg;
-      alertEl.className = `alert ${type} show`;
-      setTimeout(() => alertEl.classList.remove("show"), 4000);
+
+  let emailVerified  = false;
+  let mobileVerified = false;
+
+  const globalAlert    = document.getElementById("globalAlert") as HTMLDivElement;
+  const mobileSubText  = document.getElementById("mobileSubText");
+  const emailSentTo    = document.getElementById("emailSentTo");
+  const mobileSentTo   = document.getElementById("mobileSentTo");
+  const mobileSection  = document.getElementById("mobileSection") as HTMLDivElement;
+  const verifyBtn      = document.getElementById("verifyBtn") as HTMLButtonElement;
+  const resendEmailBtn = document.getElementById("resendEmailBtn") as HTMLButtonElement;
+  const resendMobileBtn = document.getElementById("resendMobileBtn") as HTMLButtonElement;
+
+  if (emailSentTo) emailSentTo.textContent = email ? `Sent to ${email}` : "";
+  if (hasMobile && mobile) {
+    if (mobileSubText) mobileSubText.textContent = " and mobile";
+    if (mobileSentTo) mobileSentTo.textContent = `Sent to ${mobile}`;
+    if (mobileSection) mobileSection.style.display = "block";
+  }
+
+  function showToast(msg: string, type: "success" | "error" | "info" = "error") {
+    if (!globalAlert) return;
+    globalAlert.textContent = msg;
+    globalAlert.className = `alert ${type} show`;
+    setTimeout(() => globalAlert.classList.remove("show"), 4500);
+  }
+
+
+  function setVerified(type: "email" | "mobile") {
+    const statusEl = document.getElementById(
+      type === "email" ? "emailStatus" : "mobileStatus"
+    );
+    if (!statusEl) return;
+    statusEl.innerHTML =
+      '<span class="status-dot verified"></span><span class="status-text verified-text">Verified</span>';
+
+    const gridId = type === "email" ? "emailOtpGrid" : "mobileOtpGrid";
+    const grid = document.getElementById(gridId);
+    if (grid) {
+      grid.querySelectorAll<HTMLInputElement>(".otp-box").forEach((b) => {
+        b.disabled = true;
+        b.classList.add("verified-box");
+      });
+    }
+
+   
+    const resendId = type === "email" ? "resendEmailBtn" : "resendMobileBtn";
+    const resendBtnEl = document.getElementById(resendId) as HTMLButtonElement | null;
+    if (resendBtnEl) {
+      resendBtnEl.disabled = true;
+      resendBtnEl.style.opacity = "0.4";
     }
   }
 
-  let timerInterval: ReturnType<typeof setInterval> | null = null;
-  function startTimer() {
-    let secs = 60;
-    const timerEl = document.getElementById("timer");
-    const resendBtn = document.getElementById("resendBtn") as HTMLButtonElement;
-    if (!resendBtn) return;
-    resendBtn.disabled = true;
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
+  
+  function startTimer(
+    timerId: string,
+    btnId: string,
+    label: string,
+    seconds = 60
+  ) {
+    let secs = seconds;
+    const timerEl = document.getElementById(timerId);
+    const btn     = document.getElementById(btnId) as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.disabled = true;
+
+    const interval = setInterval(() => {
       secs--;
       const m = String(Math.floor(secs / 60)).padStart(2, "0");
       const s = String(secs % 60).padStart(2, "0");
       if (timerEl) timerEl.textContent = `${m}:${s}`;
       if (secs <= 0) {
-        if (timerInterval) clearInterval(timerInterval);
-        resendBtn.disabled = false;
-        resendBtn.textContent = "Resend OTP";
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.textContent = label;
       }
     }, 1000);
   }
-  startTimer();
 
-  const boxes = Array.from(
-    document.querySelectorAll(".otp-box"),
-  ) as HTMLInputElement[];
-  boxes.forEach((box, i) => {
-    box.addEventListener("input", () => {
-      box.classList.toggle("filled", box.value !== "");
-      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
-    });
-    box.addEventListener("keydown", (e: Event) => {
-      const event = e as KeyboardEvent;
-      if (event.key === "Backspace" && !box.value && i > 0)
-        boxes[i - 1].focus();
-    });
-    box.addEventListener("paste", (e: Event) => {
-      const event = e as ClipboardEvent;
-      const paste =
-        event.clipboardData?.getData("text").replace(/\D/g, "").slice(0, 6) ||
-        "";
-      paste.split("").forEach((ch: string, j: number) => {
-        if (boxes[j]) {
-          boxes[j].value = ch;
-          boxes[j].classList.add("filled");
-        }
+  startTimer("emailTimer", "resendEmailBtn", "Resend Email OTP");
+  if (hasMobile) startTimer("mobileTimer", "resendMobileBtn", "Resend Mobile OTP");
+
+  
+  function wireOtpBoxes(boxes: HTMLInputElement[]) {
+    boxes.forEach((box, i) => {
+      box.addEventListener("input", () => {
+        box.classList.toggle("filled", box.value !== "");
+        if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
       });
-      const next = boxes[Math.min(paste.length, boxes.length - 1)];
-      if (next) next.focus();
-      event.preventDefault();
+      box.addEventListener("keydown", (e: Event) => {
+        const ev = e as KeyboardEvent;
+        if (ev.key === "Backspace" && !box.value && i > 0) boxes[i - 1].focus();
+      });
+      box.addEventListener("paste", (e: Event) => {
+        const ev = e as ClipboardEvent;
+        const paste =
+          ev.clipboardData?.getData("text").replace(/\D/g, "").slice(0, 6) || "";
+        paste.split("").forEach((ch, j) => {
+          if (boxes[j]) { boxes[j].value = ch; boxes[j].classList.add("filled"); }
+        });
+        const next = boxes[Math.min(paste.length, boxes.length - 1)];
+        if (next) next.focus();
+        ev.preventDefault();
+      });
     });
-  });
-  if (boxes.length > 0) boxes[0].focus();
+    if (boxes.length > 0) boxes[0].focus();
+  }
 
-  const verifyBtn = document.getElementById("verifyBtn") as HTMLButtonElement;
+  const emailBoxes = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-group="email"]')
+  );
+  const mobileBoxes = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-group="mobile"]')
+  );
+
+  wireOtpBoxes(emailBoxes);
+  if (hasMobile) wireOtpBoxes(mobileBoxes);
+
+  function getOtp(boxes: HTMLInputElement[]) {
+    return boxes.map((b) => b.value).join("");
+  }
+
+  function clearBoxes(boxes: HTMLInputElement[]) {
+    boxes.forEach((b) => { b.value = ""; b.classList.remove("filled"); });
+    if (boxes.length > 0) boxes[0].focus();
+  }
+
+ 
   if (verifyBtn) {
     verifyBtn.addEventListener("click", async () => {
-      const otp = boxes.map((b: HTMLInputElement) => b.value).join("");
-      if (otp.length < 6) {
-        showAlert("Please enter the complete 6-digit code.");
+     
+      if (!hasMobile) {
+        await verifyEmailOtp();
         return;
       }
 
-      verifyBtn.disabled = true;
-      verifyBtn.textContent = "Verifying…";
+     
+      const emailOtp  = getOtp(emailBoxes);
+      const mobileOtp = getOtp(mobileBoxes);
 
-      try {
-        const res = await fetch(`${apiBase}/verify-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, otp }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          showAlert(data.message || "Invalid OTP");
-          verifyBtn.disabled = false;
-          verifyBtn.textContent = "Verify Account";
-          return;
-        }
+      if (!emailVerified && emailOtp.length === 6) {
+        await verifyEmailOtp();
+        if (!emailVerified) return; 
+      }
 
-        showAlert("Email verified! Redirecting to dashboard…", "success");
-        setTimeout(
-          () => (window.location.href = data.redirectTo || "/dashboard"),
-          1500,
-        );
-      } catch {
-        showAlert("Could not connect to server.");
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = "Verify Account";
+      if (!mobileVerified && mobileOtp.length === 6) {
+        await verifyMobileOtp();
+        return;
+      }
+
+      if (!emailVerified) {
+        showToast("Please enter your complete 6-digit Email OTP.");
+        return;
+      }
+      if (!mobileVerified) {
+        showToast("Please enter your complete 6-digit Mobile OTP.");
+        return;
       }
     });
   }
 
-  const resendBtn = document.getElementById("resendBtn") as HTMLButtonElement;
-  if (resendBtn) {
-    resendBtn.addEventListener("click", async () => {
-      await fetch(`${apiBase}/send-otp`, {
+  async function verifyEmailOtp() {
+    const otp = getOtp(emailBoxes);
+    if (otp.length < 6) {
+      showToast("Please enter the complete 6-digit Email OTP.");
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Verifying…";
+
+    try {
+      const res = await fetch(`${apiBase}/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, otp }),
       });
-      startTimer();
-      showAlert("OTP resent to your email.", "success");
-      boxes.forEach((b: HTMLInputElement) => {
-        b.value = "";
-        b.classList.remove("filled");
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.message || "Invalid OTP");
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify Account";
+        return;
+      }
+
+      emailVerified = true;
+      setVerified("email");
+      showToast("✔ Email verified successfully.", "success");
+
+      if (data.complete) {
+        
+        if (data.token) localStorage.setItem("token", data.token);
+        showToast("✔ Registration completed successfully.", "success");
+        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 1500);
+        return;
+      }
+
+      
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verify Account";
+      if (mobileBoxes.length > 0 && !mobileBoxes[0].disabled) mobileBoxes[0].focus();
+    } catch {
+      showToast("Could not connect to server.");
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verify Account";
+    }
+  }
+
+  async function verifyMobileOtp() {
+    const otp = getOtp(mobileBoxes);
+    if (otp.length < 6) {
+      showToast("Please enter the complete 6-digit Mobile OTP.");
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Verifying…";
+
+    try {
+      const res = await fetch(`${apiBase}/verify-mobile-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, otp }),
       });
-      if (boxes.length > 0) boxes[0].focus();
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.message || "Invalid Mobile OTP.");
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Verify Account";
+        return;
+      }
+
+      mobileVerified = true;
+      setVerified("mobile");
+      showToast("✔ Mobile number verified successfully.", "success");
+
+      if (data.complete) {
+        if (data.token) localStorage.setItem("token", data.token);
+        setTimeout(() => {
+          showToast("✔ Registration completed successfully.", "success");
+        }, 300);
+        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 2000);
+        return;
+      }
+
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verify Account";
+    } catch {
+      showToast("Could not connect to server.");
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verify Account";
+    }
+  }
+
+  
+  if (resendEmailBtn) {
+    resendEmailBtn.addEventListener("click", async () => {
+      try {
+        await fetch(`${apiBase}/send-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email }),
+        });
+        startTimer("emailTimer", "resendEmailBtn", "Resend Email OTP");
+        showToast("OTP resent to your email.", "success");
+        clearBoxes(emailBoxes);
+      } catch {
+        showToast("Could not resend Email OTP.");
+      }
+    });
+  }
+
+  if (resendMobileBtn) {
+    resendMobileBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch(`${apiBase}/resend-mobile-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.message || "Failed to send Mobile OTP.");
+          return;
+        }
+        startTimer("mobileTimer", "resendMobileBtn", "Resend Mobile OTP");
+        showToast("✔ Mobile OTP sent successfully.", "success");
+        clearBoxes(mobileBoxes);
+      } catch {
+        showToast("❌ Failed to send Mobile OTP.");
+      }
     });
   }
 </script>
+
+<style is:global>
+  .verify-card {
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .otp-section {
+    margin-bottom: 1rem;
+  }
+
+  .otp-section-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(124, 92, 252, 0.35),
+      transparent
+    );
+    margin: 1.1rem 0 1.25rem;
+  }
+
+  .otp-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.65rem;
+  }
+
+  .otp-label-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .otp-type-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  .otp-sent-to {
+    font-size: 0.72rem;
+    color: var(--text-secondary, #888);
+  }
+
+ 
+  .otp-status {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.pending {
+    background: #f59e0b;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+  }
+
+  .status-dot.verified {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+  }
+
+  .status-text { color: var(--text-secondary, #888); }
+  .verified-text { color: #22c55e !important; }
+
+
+  .otp-box.verified-box {
+    background: rgba(34, 197, 94, 0.08) !important;
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    color: #22c55e !important;
+    cursor: not-allowed;
+  }
+
+  .resend-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.55rem;
+  }
+
+  .resend-btn {
+    background: none;
+    border: none;
+    color: var(--purple, #7c5cfc);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.2rem 0;
+    opacity: 1;
+    transition: opacity 0.2s;
+  }
+
+  .resend-btn:disabled {
+    color: var(--text-secondary, #888);
+    cursor: default;
+  }
+
+  .resend-btn:not(:disabled):hover {
+    text-decoration: underline;
+  }
+</style>

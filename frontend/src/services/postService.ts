@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from './api'
+import { getPostsApiBaseUrl } from './api'
 import type { CommentItem } from '../types/comment'
 import type { PostDetail, PostItem } from '../types/post'
 
@@ -28,7 +28,7 @@ export const fetchFeedPosts = async (options?: SessionOptions) => {
       ? `?filter=${encodeURIComponent(options.filter)}`
       : ''
 
-    const response = await fetch(`${getApiBaseUrl()}/posts${query}`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}${query}`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -47,7 +47,7 @@ export const fetchFeedPosts = async (options?: SessionOptions) => {
 
 export const fetchMyPosts = async (options?: SessionOptions) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/me`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/me`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -75,7 +75,7 @@ export type CreatePostInput = {
 }
 
 export const createPost = async (payload: CreatePostInput, signal?: AbortSignal) => {
-  const response = await fetch(`${getApiBaseUrl()}/posts`, {
+  const response = await fetch(`${getPostsApiBaseUrl()}`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -96,7 +96,7 @@ export const createPost = async (payload: CreatePostInput, signal?: AbortSignal)
 
 export const fetchPostBySlug = async (slug: string, options?: SessionOptions) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/${encodeURIComponent(slug)}`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/${encodeURIComponent(slug)}`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -123,7 +123,7 @@ export const fetchPostBySlugOrNull = async (slug: string, options?: SessionOptio
 }
 
 export const deletePost = async (slug: string) => {
-  const response = await fetch(`${getApiBaseUrl()}/posts/${encodeURIComponent(slug)}`, {
+  const response = await fetch(`${getPostsApiBaseUrl()}/${encodeURIComponent(slug)}`, {
     method: 'DELETE',
     credentials: 'include',
   })
@@ -152,7 +152,7 @@ export type DraftData = {
 
 export const fetchDraft = async (): Promise<DraftData | null> => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/draft`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/draft`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -177,7 +177,7 @@ export type SaveDraftInput = {
 
 export const saveDraft = async (payload: SaveDraftInput): Promise<{ id: number } | null> => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/draft`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/draft`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -195,7 +195,7 @@ export const saveDraft = async (payload: SaveDraftInput): Promise<{ id: number }
 
 export const discardDraft = async (): Promise<void> => {
   try {
-    await fetch(`${getApiBaseUrl()}/posts/draft`, {
+    await fetch(`${getPostsApiBaseUrl()}/draft`, {
       method: 'DELETE',
       credentials: 'include',
     })
@@ -208,7 +208,7 @@ export const discardDraft = async (): Promise<void> => {
 
 export const fetchLikedPosts = async (options?: SessionOptions) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/liked`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/liked`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -231,7 +231,7 @@ export const togglePostLike = async (
   slug: string,
 ): Promise<{ liked: boolean; likeCount: number }> => {
   const response = await fetch(
-    `${getApiBaseUrl()}/posts/${encodeURIComponent(slug)}/like`,
+    `${getPostsApiBaseUrl()}/${encodeURIComponent(slug)}/like`,
     {
       method: 'POST',
       credentials: 'include',
@@ -250,7 +250,7 @@ export const togglePostLike = async (
 
 export const fetchSavedPosts = async (options?: SessionOptions) => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/posts/saved`, {
+    const response = await fetch(`${getPostsApiBaseUrl()}/saved`, {
       method: 'GET',
       credentials: 'include',
       headers: buildHeaders(options),
@@ -273,7 +273,7 @@ export const togglePostSave = async (
   slug: string,
 ): Promise<{ saved: boolean; saveCount: number }> => {
   const response = await fetch(
-    `${getApiBaseUrl()}/posts/${encodeURIComponent(slug)}/save`,
+    `${getPostsApiBaseUrl()}/${encodeURIComponent(slug)}/save`,
     {
       method: 'POST',
       credentials: 'include',

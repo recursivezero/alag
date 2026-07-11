@@ -18,5 +18,15 @@ export const openApiDocumentConfig = {
 }
 
 export const registerOpenApiDocs = (app: OpenAPIHono) => {
+  app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    description:
+      'Send as `Authorization: Bearer <token>`. The same token is also accepted via an ' +
+      'httpOnly session cookie set automatically on login/register — the bearer scheme is ' +
+      'documented here so protected endpoints can be exercised directly from Swagger UI.',
+  })
+
   app.doc('/api-docs/openapi.json', openApiDocumentConfig)
 }

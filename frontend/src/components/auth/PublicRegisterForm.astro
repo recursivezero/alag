@@ -46,7 +46,7 @@ import Input from "../ui/Input.astro";
 
 <Input
   id="phoneNumber"
-  label="Phone Number (Optional)"
+  label="Mobile Number"
   type="tel"
   placeholder="+91 98765 43210"
   autocomplete="tel"
@@ -67,12 +67,30 @@ import Input from "../ui/Input.astro";
   </svg>
 </Input>
 
+
+<input
+  aria-hidden="true"
+  tabindex="-1"
+  type="text"
+  name="fake_email_prevent_autofill"
+  autocomplete="username"
+  style="display:none;position:absolute;width:0;height:0;opacity:0;"
+/>
+<input
+  aria-hidden="true"
+  tabindex="-1"
+  type="password"
+  name="fake_password_prevent_autofill"
+  autocomplete="new-password"
+  style="display:none;position:absolute;width:0;height:0;opacity:0;"
+/>
+
 <Input
   id="password"
   label="Password"
   type="password"
   placeholder="Create a password"
-  autocomplete="off"
+  autocomplete="new-password"
 >
   <svg
     slot="icon"
@@ -114,7 +132,7 @@ import Input from "../ui/Input.astro";
   label="Confirm Password"
   type="password"
   placeholder="Confirm your password"
-  autocomplete="off"
+  autocomplete="new-password"
 >
   <svg
     slot="icon"
@@ -264,6 +282,7 @@ import Input from "../ui/Input.astro";
     registerBtn.addEventListener("click", async () => {
       const nameEl = document.getElementById("name");
       const emailEl = document.getElementById("email");
+      const phoneEl = document.getElementById("phoneNumber");
       const passwordEl = document.getElementById("password");
       const confirmEl = document.getElementById("confirm");
 
@@ -279,6 +298,7 @@ import Input from "../ui/Input.astro";
 
       const name = nameEl.value.trim();
       const email = emailEl.value.trim();
+      const mobile = phoneEl instanceof HTMLInputElement ? phoneEl.value.trim() : "";
       const password = passwordEl.value;
       const confirm = confirmEl.value;
 
@@ -309,10 +329,13 @@ import Input from "../ui/Input.astro";
       btn.textContent = "Creating account…";
 
       try {
+        const payload: Record<string, string> = { name, email, password };
+        if (mobile) payload.mobile = mobile;
+
         const res = await fetch(`${apiBase}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -323,12 +346,18 @@ import Input from "../ui/Input.astro";
         }
 
         showAlert(
-          "Account created! Redirecting to OTP verification…",
+          data.hasMobile
+            ? "OTPs sent! Redirecting to verification…"
+            : "Account created! Redirecting to OTP verification…",
           "success",
         );
+
+        const params = new URLSearchParams({ email });
+        if (mobile) params.set("mobile", mobile);
+        if (data.hasMobile) params.set("hasMobile", "true");
+
         setTimeout(
-          () =>
-            (window.location.href = `/verify-otp?email=${encodeURIComponent(email)}`),
+          () => (window.location.href = `/verify-otp?${params.toString()}`),
           1200,
         );
       } catch (err) {

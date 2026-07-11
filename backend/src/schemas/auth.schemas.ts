@@ -1,26 +1,27 @@
 import { z } from '@hono/zod-openapi'
 
-
-
 const emailField = z.string().email().openapi({ example: 'jane@example.com' })
 const passwordField = z
   .string()
   .min(1)
   .openapi({ example: 'P@ssw0rd123', description: 'Plaintext password (hashed server-side)' })
 
-
-
 export const RegisterRequestSchema = z
   .object({
     name: z.string().min(1).openapi({ example: 'Jane Doe' }),
     email: emailField,
     password: passwordField,
+    mobile: z
+      .string()
+      .optional()
+      .openapi({ example: '+919876543210', description: 'Mobile number for SMS OTP verification' }),
   })
   .openapi('RegisterRequest')
 
 export const RegisterResponseSchema = z
   .object({
-    message: z.string().openapi({ example: 'OTP sent to your email' }),
+    message: z.string().openapi({ example: 'OTPs sent to your email and mobile' }),
+    hasMobile: z.boolean().optional().openapi({ example: true }),
   })
   .openapi('RegisterResponse')
 
@@ -87,8 +88,6 @@ export const LoginResponseSchema = z
   })
   .openapi('LoginResponse')
 
-
-
 export const GoogleLoginRequestSchema = z
   .object({
     credential: z.string().openapi({ description: 'Google ID token (JWT) from Google Identity Services' }),
@@ -98,8 +97,6 @@ export const GoogleLoginRequestSchema = z
       .openapi({ example: false }),
   })
   .openapi('GoogleLoginRequest')
-
-
 
 export const UserProfileSchema = z
   .object({
@@ -127,9 +124,9 @@ export const UpdateUserProfileRequestSchema = z
     name: z.string().min(1).optional(),
     fullName: z.string().min(1).optional(),
     username: z.string().min(1).optional(),
-    phoneNumber: z.string().optional(),
-    bio: z.string().optional(),
-    picture: z.string().optional(),
+    phoneNumber: z.string().nullable().optional(),
+    bio: z.string().nullable().optional(),
+    picture: z.string().nullable().optional(),
   })
   .openapi('UpdateUserProfileRequest')
 
@@ -210,3 +207,33 @@ export const UpdatePasswordRequestSchema = z
       .openapi({ description: 'Must contain uppercase, lowercase, and a number' }),
   })
   .openapi('UpdatePasswordRequest')
+
+// Mobile OTP Schemas 
+
+export const SendMobileOtpRequestSchema = z
+  .object({
+    email: emailField,
+    mobile: z.string().min(10).openapi({ example: '+919876543210' }),
+  })
+  .openapi('SendMobileOtpRequest')
+
+export const VerifyMobileOtpRequestSchema = z
+  .object({
+    email: emailField,
+    otp: z.string().length(6).openapi({ example: '654321' }),
+  })
+  .openapi('VerifyMobileOtpRequest')
+
+export const ResendMobileOtpRequestSchema = z
+  .object({
+    email: emailField,
+  })
+  .openapi('ResendMobileOtpRequest')
+
+export const OtpStatusResponseSchema = z
+  .object({
+    message: z.string(),
+    emailVerified: z.boolean().optional(),
+    mobileVerified: z.boolean().optional(),
+  })
+  .openapi('OtpStatusResponse')

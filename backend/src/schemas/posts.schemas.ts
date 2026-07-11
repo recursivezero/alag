@@ -75,7 +75,15 @@ export const CreatePostRequestSchema = z
     category: z.string().optional().openapi({ example: 'nature' }),
     feedType: z.enum(['public', 'personal']).optional().openapi({ example: 'public' }),
     location: z.string().optional().openapi({ example: 'Hyderabad, India' }),
-    draftId: z.number().optional().openapi({ description: 'Publish from an existing draft' }),
+    draftId: z
+      .union([
+        z.number().int().positive(),
+        z.string().regex(/^\d+$/).transform(Number),
+        z.literal('').transform(() => null),
+        z.null(),
+      ])
+      .optional()
+      .openapi({ description: 'Publish from an existing draft. Send null/empty/omit when publishing a brand-new post.', example: null }),
   })
   .openapi('CreatePostRequest')
 

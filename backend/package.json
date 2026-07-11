@@ -12,6 +12,7 @@
     "seed": "tsx seed.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.14",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "1.4.0",
     "bcryptjs": "^2.4.3",

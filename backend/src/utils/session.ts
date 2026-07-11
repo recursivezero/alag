@@ -26,9 +26,9 @@ export const USER_SESSION_REMEMBER_MAX_AGE = 60 * 60 * 24 * 7
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 12
 
 const cookieSecure = (() => {
-  // Explicit env override takes precedence
+ 
   if (typeof COOKIE_SECURE_ENV !== 'undefined') return parseBool(COOKIE_SECURE_ENV, false)
-  // In production require secure; in dev allow false for localhost/http
+  
   return isProduction
 })()
 

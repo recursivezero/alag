@@ -3,7 +3,7 @@ export const POST = async ({ request }: { request: Request }) => {
   const apiBase = configured ? configured.replace(/\/$/, "") : "http://localhost:5001/api";
   const body = await request.text();
 
-  const response = await fetch(`${apiBase}/admin/login`, {
+  const response = await fetch(`${apiBase}/v1/admin/login`, {
     method: "POST",
     headers: {
       "Content-Type": request.headers.get("content-type") || "application/json",

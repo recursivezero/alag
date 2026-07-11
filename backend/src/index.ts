@@ -1,12 +1,12 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import 'dotenv/config'
+import { serve } from '@hono/node-server'
 import adminRoutes from './routes/v1.admin.routes.js'
 import postsRoutes from './routes/v1.posts.routes.js'
 import authV1Routes from './routes/v1.auth.routes.js'
-import { createServer, IncomingMessage, ServerResponse } from 'http'
-import { URL } from 'url'
 import { swaggerUI } from '@hono/swagger-ui'
 import { registerOpenApiDocs } from './docs/openapi-config.js'
+import { db } from './config/db.js'
 
 const frontendOrigin = (
   process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'http://localhost:4321'
@@ -30,9 +30,6 @@ app.use('*', async (c, next) => {
   await next()
 })
 
-app.route('/api/admin', adminRoutes)
-app.route('/api/posts', postsRoutes)
-
 app.route('/api/v1/auth', authV1Routes)
 app.route('/api/v1/admin', adminRoutes)
 app.route('/api/v1/posts', postsRoutes)
@@ -44,40 +41,48 @@ app.get('/', (c) => {
   return c.text('Server Running')
 })
 
-const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-  try {
-    const url = new URL(req.url || '', `http://${req.headers.host}`)
-    const method = req.method || 'GET'
-    
-    let body = ''
-    for await (const chunk of req) {
-      body += chunk
-    }
-    
-    const request = new Request(url.toString(), {
-      method,
-      headers: req.headers as any,
-      body: body || undefined
-    })
-    
-    const response = await app.fetch(request)
-    
-    res.writeHead(response.status, Object.fromEntries(response.headers))
-    const buffer = Buffer.from(await response.arrayBuffer())
-    res.end(buffer)
-  } catch (e) {
-    console.error('Server error:', e)
-    if (!res.headersSent) {
-      res.writeHead(500, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ error: 'Internal Server Error' }))
-    }
-  }
+app.notFound((c) => c.json({ message: 'Not found' }, 404))
+
+app.onError((err, c) => {
+  console.error('Unhandled request error:', err)
+  return c.json({ message: 'Internal Server Error' }, 500)
 })
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5001
 
-server.listen(PORT, () => {
-  console.log(`✓ Server running on http://localhost:${PORT}`)
-  console.log(`✓ OpenAPI spec:  http://localhost:${PORT}/api-docs/openapi.json`)
-  console.log(`✓ Swagger UI:    http://localhost:${PORT}/api-docs`)
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: PORT,
+  },
+  (info) => {
+    console.log(`✓ Server running on http://localhost:${info.port}`)
+    console.log(`✓ OpenAPI spec:  http://localhost:${info.port}/api-docs/openapi.json`)
+    console.log(`✓ Swagger UI:    http://localhost:${info.port}/api-docs`)
+  },
+)
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason)
 })
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error)
+})
+
+const shutdown = async (signal: string) => {
+  console.log(`\n${signal} received, shutting down gracefully...`)
+  server.close(async (closeErr) => {
+    if (closeErr) console.error('Error closing HTTP server:', closeErr)
+    try {
+      await db.end()
+    } catch (error) {
+      console.error('Error closing DB pool:', error)
+    } finally {
+      process.exit(0)
+    }
+  })
+  setTimeout(() => process.exit(1), 10_000).unref()
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'))
+process.on('SIGINT', () => void shutdown('SIGINT'))

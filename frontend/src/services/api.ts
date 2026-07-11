@@ -17,6 +17,8 @@ export const getApiBaseUrl = () => {
 }
 
 export const getAuthApiBaseUrl = () => `${getApiBaseUrl()}/v1/auth`
+export const getPostsApiBaseUrl = () => `${getApiBaseUrl()}/v1/posts`
+export const getAdminApiBaseUrl = () => `${getApiBaseUrl()}/v1/admin`
 
 export default axios.create({
   baseURL: getApiBaseUrl(),

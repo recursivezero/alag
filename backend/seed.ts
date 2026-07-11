@@ -7,8 +7,8 @@ dotenv.config()
 
 const DEFAULT_ADMIN = {
   fullName: 'Admin User',
-  email: 'admin@gmail.com',
-  password: 'Admin@1234',
+  email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@gmail.com',
+  password: process.env.DEFAULT_ADMIN_PASSWORD || 'Admin@1234',
   role: 'admin',
 }
 

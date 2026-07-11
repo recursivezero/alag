@@ -17,6 +17,9 @@ import {
   disableUser,
   logout,
   listUserSessions,
+  sendMobileOtpHandler,
+  verifyMobileOtp,
+  resendMobileOtp,
 } from '../controllers/auth.controller.js'
 import { authRateLimiter } from '../middleware/rateLimiter.js'
 import { asHandler } from '../middleware/asHandler.js'
@@ -42,6 +45,10 @@ import {
   UpdateUserProfileRequestSchema,
   VerifyOtpRequestSchema,
   VerifyOtpResponseSchema,
+  SendMobileOtpRequestSchema,
+  VerifyMobileOtpRequestSchema,
+  ResendMobileOtpRequestSchema,
+  OtpStatusResponseSchema,
 } from '../schemas/auth.schemas.js'
 
 const authV1 = new OpenAPIHono({ defaultHook: jsonMessageHook })
@@ -116,7 +123,8 @@ authV1.openapi(
     path: '/verify-otp',
     tags: ['Auth'],
     summary: 'Verify a registration OTP and create the account',
-    description: 'On success, finalizes the pending registration into a verified user and issues a session.',
+    description: 'On success, finalizes the pending registration into a verified user and issues a session. Rate limited to 100 requests/minute/IP.',
+    middleware: [authRateLimiter] as const,
     request: {
       body: { content: { 'application/json': { schema: VerifyOtpRequestSchema } } },
     },
@@ -125,6 +133,7 @@ authV1.openapi(
       400: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Invalid or expired OTP' },
       404: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Registration details not found' },
       409: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Email already registered' },
+      429: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Too many requests' },
     },
   }),
   asHandler(verifyOtp),
@@ -369,6 +378,74 @@ authV1.openapi(
     },
   }),
   asHandler(updatePassword),
+)
+
+// Mobile OTP
+
+authV1.openapi(
+  createRoute({
+    method: 'post',
+    path: '/send-mobile-otp',
+    tags: ['Auth'],
+    summary: 'Send a Mobile OTP for registration verification',
+    description: 'Generates a 7-minute mobile OTP for the pending registration linked to the given email and dispatches it via SMS.',
+    middleware: [authRateLimiter] as const,
+    request: {
+      body: { content: { 'application/json': { schema: SendMobileOtpRequestSchema } } },
+    },
+    responses: {
+      200: { content: { 'application/json': { schema: OtpStatusResponseSchema } }, description: 'Mobile OTP sent successfully' },
+      400: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Missing or invalid fields' },
+      404: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'No pending registration with mobile found' },
+      429: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Too many requests' },
+      500: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Failed to send Mobile OTP' },
+    },
+  }),
+  asHandler(sendMobileOtpHandler),
+)
+
+authV1.openapi(
+  createRoute({
+    method: 'post',
+    path: '/verify-mobile-otp',
+    tags: ['Auth'],
+    summary: 'Verify a Mobile OTP and finalise registration if both OTPs are verified',
+    description: 'Validates the mobile OTP. If the email OTP has already been verified, the account is created immediately. Rate limited to 100 requests/minute/IP.',
+    middleware: [authRateLimiter] as const,
+    request: {
+      body: { content: { 'application/json': { schema: VerifyMobileOtpRequestSchema } } },
+    },
+    responses: {
+      200: { content: { 'application/json': { schema: OtpStatusResponseSchema } }, description: 'Mobile OTP verified' },
+      400: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Invalid or expired OTP' },
+      404: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Registration details not found' },
+      409: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Email already registered' },
+      429: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Too many requests' },
+    },
+  }),
+  asHandler(verifyMobileOtp),
+)
+
+authV1.openapi(
+  createRoute({
+    method: 'post',
+    path: '/resend-mobile-otp',
+    tags: ['Auth'],
+    summary: 'Resend a Mobile OTP',
+    description: 'Generates and sends a fresh 7-minute mobile OTP for the pending registration linked to the given email.',
+    middleware: [authRateLimiter] as const,
+    request: {
+      body: { content: { 'application/json': { schema: ResendMobileOtpRequestSchema } } },
+    },
+    responses: {
+      200: { content: { 'application/json': { schema: OtpStatusResponseSchema } }, description: 'Mobile OTP resent successfully' },
+      400: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Email is required' },
+      404: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'No pending registration with mobile found' },
+      429: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Too many requests' },
+      500: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Failed to send Mobile OTP' },
+    },
+  }),
+  asHandler(resendMobileOtp),
 )
 
 export default authV1

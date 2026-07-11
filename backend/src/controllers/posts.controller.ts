@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { Context } from 'hono'
 import { getCookie } from 'hono/cookie'
-import { db } from '../config/db.js'
+import { db, withTransaction } from '../config/db.js'
 import { verifyToken } from '../utils/jwt.js'
 import { USER_SESSION_COOKIE } from '../utils/session.js'
 
@@ -556,10 +556,12 @@ export const deletePost = async (c: Context) => {
   const postId = Number(rows[0].id)
 
   try {
-    await db.execute('DELETE FROM likes WHERE post_id = ?', [postId])
-    await db.execute('DELETE FROM post_comments WHERE post_id = ?', [postId])
-    await db.execute('DELETE FROM saved_posts WHERE post_id = ?', [postId])
-    await db.execute('DELETE FROM posts WHERE id = ?', [postId])
+    await withTransaction(async (conn) => {
+      await conn.execute('DELETE FROM likes WHERE post_id = ?', [postId])
+      await conn.execute('DELETE FROM post_comments WHERE post_id = ?', [postId])
+      await conn.execute('DELETE FROM saved_posts WHERE post_id = ?', [postId])
+      await conn.execute('DELETE FROM posts WHERE id = ?', [postId])
+    })
   } catch {
     return c.json({ message: 'Unable to delete post' }, 500)
   }

@@ -1,5 +1,5 @@
 import { Context } from 'hono'
-import { db } from '../config/db.js'
+import { db, withTransaction } from '../config/db.js'
 import { comparePassword, hashPassword } from '../utils/hash.js'
 import { createAdminToken, verifyAdminToken } from '../utils/jwt.js'
 import { generateOTP } from '../utils/generateOTP.js'
@@ -551,16 +551,42 @@ export const adminDeleteUser = async (c: Context) => {
     return c.json({ message: 'Invalid user id' }, 400)
   }
 
-  const [result]: any = await db.execute('DELETE FROM users WHERE id = ?', [id])
+  const deleted = await withTransaction(async (conn) => {
+    const [userPosts]: any = await conn.execute('SELECT id FROM posts WHERE user_id = ?', [id])
+    const postIds: number[] = userPosts.map((row: any) => Number(row.id))
 
-  if (!result?.affectedRows) {
+    if (postIds.length) {
+      const placeholders = postIds.map(() => '?').join(',')
+      await conn.execute(`DELETE FROM likes WHERE post_id IN (${placeholders})`, postIds)
+      await conn.execute(`DELETE FROM post_comments WHERE post_id IN (${placeholders})`, postIds)
+      await conn.execute(`DELETE FROM saved_posts WHERE post_id IN (${placeholders})`, postIds)
+    }
+
+    // This user's own likes/comments/saves on OTHER people's posts, and any
+    // active sessions, must also be cleaned up — there are no FK constraints
+    // in this schema to do it automatically.
+    await conn.execute('DELETE FROM likes WHERE user_id = ?', [id])
+    await conn.execute('DELETE FROM post_comments WHERE user_id = ?', [id])
+    await conn.execute('DELETE FROM saved_posts WHERE user_id = ?', [id])
+    await conn.execute('DELETE FROM user_sessions WHERE user_id = ?', [id])
+    await conn.execute('DELETE FROM posts WHERE user_id = ?', [id])
+
+    const [result]: any = await conn.execute('DELETE FROM users WHERE id = ?', [id])
+    if (!result?.affectedRows) {
+      return false
+    }
+
+    await conn.execute(
+      'INSERT INTO user_activity_logs (user_id, event_type) VALUES (?, ?)',
+      [id, 'deleted']
+    )
+
+    return true
+  })
+
+  if (!deleted) {
     return c.json({ message: 'User not found' }, 404)
   }
-
-  await db.execute(
-    'INSERT INTO user_activity_logs (user_id, event_type) VALUES (?, ?)',
-    [id, 'deleted']
-  )
 
   const deletedUsers = await incrementDeletedUsersTotal()
   return c.json({

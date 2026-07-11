@@ -1,4 +1,4 @@
-import { getApiBaseUrl, getAuthApiBaseUrl } from './api'
+import { getAdminApiBaseUrl, getAuthApiBaseUrl } from './api'
 
 const clientAuthStorageKeys = ['token', 'alag-user-profile']
 
@@ -33,7 +33,7 @@ export const clearUserSessionToken = () => {
 }
 
 export const clearAdminSessionToken = () => {
-  return clearSessionToken(`${getApiBaseUrl()}/admin/logout`)
+  return clearSessionToken(`${getAdminApiBaseUrl()}/logout`)
 }
 
 export const validateUserSession = async () => {
@@ -54,7 +54,7 @@ export const validateUserSession = async () => {
 
 export const validateAdminSession = async () => {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/admin/me`, {
+    const res = await fetch(`${getAdminApiBaseUrl()}/me`, {
       method: 'GET',
       credentials: 'include',
     })

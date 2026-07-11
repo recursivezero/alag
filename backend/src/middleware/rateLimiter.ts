@@ -1,18 +1,9 @@
 import { rateLimiter } from 'hono-rate-limiter'
+import { getRequestIp } from '../utils/requestIp.js'
 
 export const authRateLimiter = rateLimiter({
-  windowMs: 60 * 1000, 
+  windowMs: 60 * 1000,
   limit: 100,
   standardHeaders: 'draft-7',
-  keyGenerator: (c) => {
-    const forwardedFor = c.req.header('x-forwarded-for')
-    if (forwardedFor) {
-      return forwardedFor.split(',')[0].trim()
-    }
-    const realIp = c.req.header('x-real-ip')
-    if (realIp) {
-      return realIp
-    }
-    return 'unknown-client'
-  },
+  keyGenerator: (c) => getRequestIp(c) || 'unknown-client',
 })

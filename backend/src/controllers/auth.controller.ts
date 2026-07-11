@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import crypto from 'node:crypto'
 import { OAuth2Client } from 'google-auth-library'
-import { db } from '../config/db.js'
+import { db, withTransaction } from '../config/db.js'
 import { generateOTP } from '../utils/generateOTP.js'
 import { hashPassword, comparePassword } from '../utils/hash.js'
 import { createToken, verifyToken } from '../utils/jwt.js'
@@ -14,7 +14,9 @@ import {
 import { clearSessionCookieOptions } from '../utils/session.js'
 import { deleteCookie } from 'hono/cookie'
 import { sendOTPEmail, sendPasswordResetEmail } from '../utils/mailer.js'
+import { sendMobileOtp, isValidMobileNumber, normalizeMobile } from '../utils/sms.js'
 import { getCookie, setCookie } from 'hono/cookie'
+import { getRequestIp } from '../utils/requestIp.js'
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID || ''
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null
@@ -28,11 +30,9 @@ const hashSessionToken = (token: string) =>
 
 const createSessionToken = () => crypto.randomBytes(32).toString('base64url')
 
-const getClientIp = (c: Context) =>
-  c.req.header('cf-connecting-ip') ||
-  c.req.header('x-real-ip') ||
-  c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
-  null
+// Delegates to the shared, trust-aware IP resolver (see utils/requestIp.ts)
+// instead of unconditionally trusting client-spoofable forwarding headers.
+const getClientIp = (c: Context) => getRequestIp(c)
 
 const getSessionExpiry = (remember: boolean) =>
   new Date(Date.now() + (remember ? USER_SESSION_REMEMBER_MAX_AGE : USER_SESSION_MAX_AGE) * 1000)
@@ -322,10 +322,16 @@ const issueUserSession = async (c: Context, userId: number, remember = false) =>
 export const register = async (c: Context) => {
   const body = await c.req.json()
   const { name, email, password } = body
+  const mobile = normalizeMobile(body.mobile || '')
   const normalizedEmail = normalizeEmail(email)
 
   if (!name || !normalizedEmail || !password) {
     return c.json({ message: 'All fields are required' }, 400)
+  }
+
+  
+  if (mobile && !isValidMobileNumber(mobile)) {
+    return c.json({ message: 'Invalid mobile number format' }, 400)
   }
 
   if (await getRegistrationConflict(normalizedEmail)) {
@@ -333,32 +339,58 @@ export const register = async (c: Context) => {
   }
 
   const hashed = await hashPassword(password)
-  const otp = generateOTP()
+  const emailOtp = generateOTP()
+  const mobileOtp = mobile ? generateOTP() : null
 
+ 
   await db.execute(
     `
-    INSERT INTO pending_registrations (email, name, password)
-    VALUES (?, ?, ?)
+    INSERT INTO pending_registrations (email, name, password, mobile, email_verified, mobile_verified)
+    VALUES (?, ?, ?, ?, FALSE, FALSE)
     ON DUPLICATE KEY UPDATE
       name = VALUES(name),
-      password = VALUES(password)
+      password = VALUES(password),
+      mobile = VALUES(mobile),
+      email_verified = FALSE,
+      mobile_verified = FALSE
     `,
-    [normalizedEmail, name, hashed]
+    [normalizedEmail, name, hashed, mobile || null]
   )
 
+ 
   await db.execute(
-    'INSERT INTO otp_codes (email, otp, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))',
-    [normalizedEmail, otp]
+    `INSERT INTO otp_codes (email, identifier, type, otp, expires_at)
+     VALUES (?, ?, 'email', ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))`,
+    [normalizedEmail, normalizedEmail, emailOtp]
   )
 
-  const sent = await sendOTPEmail(normalizedEmail, otp)
-  if (!sent) {
-    await db.execute('DELETE FROM otp_codes WHERE email = ?', [normalizedEmail])
+
+  const emailSent = await sendOTPEmail(normalizedEmail, emailOtp)
+  if (!emailSent) {
+    await db.execute('DELETE FROM otp_codes WHERE email = ? AND type = ?', [normalizedEmail, 'email'])
     await db.execute('DELETE FROM pending_registrations WHERE email = ?', [normalizedEmail])
     return c.json({ message: 'Failed to send OTP email' }, 500)
   }
 
-  return c.json({ message: 'OTP sent to your email' })
+
+  if (mobile && mobileOtp) {
+    await db.execute(
+      `INSERT INTO otp_codes (email, identifier, type, otp, expires_at)
+       VALUES (?, ?, 'mobile', ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))`,
+      [normalizedEmail, mobile, mobileOtp]
+    )
+
+    const smsSent = await sendMobileOtp(mobile, mobileOtp)
+    if (!smsSent) {
+  
+      console.warn('[register] Failed to send mobile OTP for', normalizedEmail)
+    }
+  }
+
+  return c.json({
+    message: mobile ? 'OTPs sent to your email and mobile' : 'OTP sent to your email',
+    hasMobile: Boolean(mobile),
+  })
 }
 
 export const checkEmail = async (c: Context) => {
@@ -391,14 +423,16 @@ export const sendOtp = async (c: Context) => {
 
   const otp = generateOTP()
 
+ 
   await db.execute(
-    'INSERT INTO otp_codes (email, otp, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))',
-    [email, otp]
+    `INSERT INTO otp_codes (email, identifier, type, otp, expires_at)
+     VALUES (?, ?, 'email', ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))`,
+    [email, email, otp]
   )
 
   const sent = await sendOTPEmail(email, otp)
   if (!sent) {
-    await db.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+    await db.execute(`DELETE FROM otp_codes WHERE email = ? AND type = 'email' AND otp = ?`, [email, otp])
     return c.json({ message: 'Failed to send OTP email' }, 500)
   }
 
@@ -409,8 +443,14 @@ export const verifyOtp = async (c: Context) => {
   const body = await c.req.json()
   const { email, otp } = body
 
+
   const [rows]: any = await db.execute(
-    'SELECT * FROM otp_codes WHERE email = ? AND otp = ? AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1',
+    `SELECT * FROM otp_codes
+     WHERE email = ?
+       AND otp = ?
+       AND expires_at > NOW()
+       AND (type = 'email' OR type IS NULL)
+     ORDER BY created_at DESC LIMIT 1`,
     [email, otp]
   )
 
@@ -419,7 +459,92 @@ export const verifyOtp = async (c: Context) => {
   }
 
   const [pendingRows]: any = await db.execute(
-    'SELECT name, password FROM pending_registrations WHERE email = ?',
+    'SELECT name, password, mobile, email_verified, mobile_verified FROM pending_registrations WHERE email = ?',
+    [email]
+  )
+
+  if (!pendingRows.length) {
+    return c.json({ message: 'Registration details not found' }, 404)
+  }
+
+  const pendingUser = pendingRows[0]
+  const hasMobile = Boolean(pendingUser.mobile)
+
+
+  await db.execute(
+    `UPDATE otp_codes SET verified = TRUE
+     WHERE email = ? AND otp = ? AND (type = 'email' OR type IS NULL)`,
+    [email, otp]
+  )
+
+
+  await db.execute(
+    'UPDATE pending_registrations SET email_verified = TRUE WHERE email = ?',
+    [email]
+  )
+
+
+  if (!hasMobile) {
+    const newUserId = await withTransaction(async (conn) => {
+      const [existingUsers]: any = await conn.execute('SELECT id FROM users WHERE email = ?', [email])
+      if (existingUsers.length) {
+        await conn.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
+        await conn.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+        return null
+      }
+
+      const [result]: any = await conn.execute(
+        'INSERT INTO users (full_name, name, email, password, role, auth_provider, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [pendingUser.name, pendingUser.name, email, pendingUser.password, 'user', 'email', true]
+      )
+
+      await conn.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
+      await conn.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+
+      return result.insertId as number
+    })
+
+    if (newUserId === null) {
+      return c.json({ message: 'Email already registered' }, 409)
+    }
+
+    const token = await issueUserSession(c, newUserId)
+    return c.json({ message: 'Verified', token, emailVerified: true, mobileVerified: false, complete: true })
+  }
+
+ 
+  const [refreshedPending]: any = await db.execute(
+    'SELECT mobile_verified FROM pending_registrations WHERE email = ?',
+    [email]
+  )
+  const mobileVerified = Boolean(refreshedPending[0]?.mobile_verified)
+
+  if (mobileVerified) {
+   
+    return await finalizeRegistration(c, email, pendingUser)
+  }
+
+ 
+  return c.json({
+    message: 'Email verified successfully. Please verify your mobile OTP.',
+    emailVerified: true,
+    mobileVerified: false,
+    complete: false,
+  })
+}
+
+
+
+export const verifyMobileOtp = async (c: Context) => {
+  const body = await c.req.json()
+  const { email, otp } = body
+
+  if (!email || !otp) {
+    return c.json({ message: 'Email and OTP are required' }, 400)
+  }
+
+  const [pendingRows]: any = await db.execute(
+    'SELECT mobile, email_verified, mobile_verified FROM pending_registrations WHERE email = ?',
     [email]
   )
 
@@ -429,29 +554,141 @@ export const verifyOtp = async (c: Context) => {
 
   const pendingUser = pendingRows[0]
 
-  const [existingUsers]: any = await db.execute(
-    'SELECT id FROM users WHERE email = ?',
+  
+  const [rows]: any = await db.execute(
+    `SELECT * FROM otp_codes
+     WHERE email = ?
+       AND otp = ?
+       AND type = 'mobile'
+       AND expires_at > NOW()
+     ORDER BY created_at DESC LIMIT 1`,
+    [email, otp]
+  )
+
+  if (!rows.length) {
+   
+    const [expiredRows]: any = await db.execute(
+      `SELECT id FROM otp_codes WHERE email = ? AND type = 'mobile' AND otp = ? AND expires_at <= NOW()`,
+      [email, otp]
+    )
+    if (expiredRows.length) {
+      return c.json({ message: 'Mobile OTP has expired. Please request a new one.' }, 400)
+    }
+    return c.json({ message: 'Invalid Mobile OTP.' }, 400)
+  }
+
+ 
+  await db.execute(
+    `UPDATE otp_codes SET verified = TRUE WHERE email = ? AND type = 'mobile' AND otp = ?`,
+    [email, otp]
+  )
+
+  
+  await db.execute(
+    'UPDATE pending_registrations SET mobile_verified = TRUE WHERE email = ?',
     [email]
   )
 
-  if (existingUsers.length) {
-    await db.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
-    await db.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+  const emailVerified = Boolean(pendingUser.email_verified)
+
+  if (emailVerified) {
+   
+    const [fullPending]: any = await db.execute(
+      'SELECT name, password, mobile FROM pending_registrations WHERE email = ?',
+      [email]
+    )
+    return await finalizeRegistration(c, email, fullPending[0])
+  }
+
+  return c.json({
+    message: 'Mobile number verified successfully. Please verify your email OTP.',
+    emailVerified: false,
+    mobileVerified: true,
+    complete: false,
+  })
+}
+
+export const sendMobileOtpHandler = async (c: Context) => {
+  const body = await c.req.json()
+  const { email } = body
+
+  if (!email) return c.json({ message: 'Email is required' }, 400)
+
+  const [pendingRows]: any = await db.execute(
+    'SELECT mobile FROM pending_registrations WHERE email = ?',
+    [email]
+  )
+
+  if (!pendingRows.length || !pendingRows[0].mobile) {
+    return c.json({ message: 'No pending registration with mobile found for this email' }, 404)
+  }
+
+  const mobile = pendingRows[0].mobile
+  const otp = generateOTP()
+
+  await db.execute(
+    `INSERT INTO otp_codes (email, identifier, type, otp, expires_at)
+     VALUES (?, ?, 'mobile', ?, DATE_ADD(NOW(), INTERVAL 7 MINUTE))`,
+    [email, mobile, otp]
+  )
+
+  const sent = await sendMobileOtp(mobile, otp)
+  if (!sent) {
+    await db.execute(
+      `DELETE FROM otp_codes WHERE email = ? AND type = 'mobile' AND otp = ?`,
+      [email, otp]
+    )
+    return c.json({ message: 'Failed to send Mobile OTP.' }, 500)
+  }
+
+  return c.json({ message: 'Mobile OTP sent successfully.' })
+}
+
+export const resendMobileOtp = async (c: Context) => {
+  return sendMobileOtpHandler(c)
+}
+
+
+async function finalizeRegistration(c: Context, email: string, pendingUser: any) {
+  const newUserId = await withTransaction(async (conn) => {
+    const [existingUsers]: any = await conn.execute('SELECT id FROM users WHERE email = ?', [email])
+    if (existingUsers.length) {
+      await conn.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
+      await conn.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+      return null
+    }
+
+    const [result]: any = await conn.execute(
+      `INSERT INTO users
+         (full_name, name, email, password, phone_number, role, auth_provider, is_verified, mobile_verified)
+       VALUES (?, ?, ?, ?, ?, 'user', 'email', TRUE, TRUE)`,
+      [
+        pendingUser.name,
+        pendingUser.name,
+        email,
+        pendingUser.password,
+        pendingUser.mobile || null,
+      ]
+    )
+
+    await conn.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
+    await conn.execute('DELETE FROM otp_codes WHERE email = ?', [email])
+
+    return result.insertId as number
+  })
+
+  if (newUserId === null) {
     return c.json({ message: 'Email already registered' }, 409)
   }
 
-  const [result]: any = await db.execute(
-    'INSERT INTO users (full_name, name, email, password, role, auth_provider, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [pendingUser.name, pendingUser.name, email, pendingUser.password, 'user', 'email', true]
-  )
-
-  await db.execute('DELETE FROM pending_registrations WHERE email = ?', [email])
-  await db.execute(
-    'DELETE FROM otp_codes WHERE email = ?', [email]
-  )
-
-  const token = await issueUserSession(c, result.insertId)
-  return c.json({ message: 'Verified', token })
+  const token = await issueUserSession(c, newUserId)
+  return c.json({
+    message: 'Registration completed successfully.',
+    token,
+    emailVerified: true,
+    mobileVerified: true,
+    complete: true,
+  })
 }
 
 export const login = async (c: Context) => {

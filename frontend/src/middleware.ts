@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware'
-import { getApiBaseUrl, getAuthApiBaseUrl } from './services/api'
+import { getAdminApiBaseUrl, getAuthApiBaseUrl } from './services/api'
 
 const isAdminEntryPath = (pathname: string) => pathname === '/admin'
 
@@ -64,7 +64,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (isAdminEntryPath(pathname)) {
-    const session = await validateSession(`${getApiBaseUrl()}/admin/me`)
+    const session = await validateSession(`${getAdminApiBaseUrl()}/me`)
     if (session.ok) {
       return context.redirect('/admin/dashboard')
     }
@@ -73,7 +73,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (isProtectedAdminPath(pathname)) {
-    const session = await validateSession(`${getApiBaseUrl()}/admin/me`)
+    const session = await validateSession(`${getAdminApiBaseUrl()}/me`)
     if (!session.ok && !session.error) {
       return context.redirect('/admin')
     }
