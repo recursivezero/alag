@@ -15,9 +15,7 @@ export const db = mysql.createPool({
   enableKeepAlive: true,
 });
 
-export const withTransaction = async <T>(
-  fn: (conn: PoolConnection) => Promise<T>,
-): Promise<T> => {
+export const withTransaction = async <T>(fn: (conn: PoolConnection) => Promise<T>): Promise<T> => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -404,6 +402,7 @@ async function seedDatabase(): Promise<void> {
           slug: "sunset-in-goa",
           title: "Sunset in Goa",
           caption: "Golden hour at the shoreline with soft waves and a neon horizon.",
+          alt_text: "A breathtaking sunset over the beach in Goa, India, with golden hues reflecting on the water.",
           imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
           location: "Goa, India",
         },
@@ -412,6 +411,7 @@ async function seedDatabase(): Promise<void> {
           slug: "mountains-of-manali",
           title: "Mountains of Manali",
           caption: "Clear alpine air, dramatic peaks, and a quiet trail above the valley.",
+          alt_text: "Snow-capped mountains in Manali, Himachal Pradesh, India, with a winding trail leading through the valley.",
           imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80",
           location: "Manali, Himachal Pradesh",
         },
@@ -420,6 +420,7 @@ async function seedDatabase(): Promise<void> {
           slug: "city-lights-after-rain",
           title: "City Lights After Rain",
           caption: "Reflections, traffic glow, and a moody skyline after an evening shower.",
+          alt_text: "City lights reflecting on wet streets in Mumbai, Maharashtra, India, after an evening shower.",
           imageUrl: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80",
           location: "Mumbai, Maharashtra",
         },
@@ -428,10 +429,10 @@ async function seedDatabase(): Promise<void> {
       for (const post of seedPosts) {
         await db.execute(
           `
-          INSERT INTO posts (user_id, slug, title, caption, image_url, location)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO posts (user_id, slug, title, caption, alt_text, image_url, location)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
           `,
-          [post.userId, post.slug, post.title, post.caption, post.imageUrl, post.location],
+          [post.userId, post.slug, post.title, post.caption, post.alt_text, post.imageUrl, post.location],
         );
       }
 
@@ -440,7 +441,10 @@ async function seedDatabase(): Promise<void> {
       const secondPost = seededPosts.find((post: { slug: string }) => post.slug === "mountains-of-manali") || seededPosts[1];
 
       if (firstPost) {
-        await db.execute("INSERT INTO likes (post_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id = id", [firstPost.id, primaryUserId]);
+        await db.execute("INSERT INTO likes (post_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id = id", [
+          firstPost.id,
+          primaryUserId,
+        ]);
         await db.execute("INSERT INTO saved_posts (post_id, user_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id = id", [
           firstPost.id,
           primaryUserId,
