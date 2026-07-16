@@ -90,7 +90,7 @@ const getAuthenticatedUser = async (c: Context) => {
   return rows[0]
 }
 
-// Only selects published posts for feeds
+
 const buildPostQuery = (whereClause = '') => `
   SELECT
     p.id,
@@ -195,7 +195,21 @@ export const listMyPosts = async (c: Context) => {
   })
 }
 
-//  CREATE POST (publish immediately, status = 'published')
+const generateAltText = (title: string, caption: string): string => {
+  const base = (title || caption || '')
+    .trim()
+    .replace(/[.!?]+$/g, '')
+
+  if (!base) {
+    return 'Uploaded image'
+  }
+
+  const altText = `A photo showing ${base}`
+
+  return altText.length > 255
+    ? altText.slice(0, 255)
+    : altText
+}
 
 export const createPost = async (c: Context) => {
   const user = await getAuthenticatedUser(c)
@@ -206,15 +220,14 @@ export const createPost = async (c: Context) => {
   const body = await c.req.json().catch(() => null)
   const imageUrl = typeof body?.imageUrl === 'string' ? body.imageUrl.trim() : ''
   const caption = typeof body?.caption === 'string' ? body.caption.trim() : ''
-  const altText = typeof body?.altText === 'string' ? body.altText.trim() : ''
   const category = typeof body?.category === 'string' ? body.category.trim() : ''
   const feedType = body?.feedType === 'personal' ? 'personal' : 'public'
   const location = typeof body?.location === 'string' ? body.location.trim() : ''
  
   const draftId = typeof body?.draftId === 'number' ? body.draftId : null
 
-  if (!imageUrl || !caption || !altText) {
-    return c.json({ message: 'Image, caption, and alt text are required' }, 400)
+  if (!imageUrl || !caption) {
+    return c.json({ message: 'Image and caption are required' }, 400)
   }
 
   if (isDataUrlTooLarge(imageUrl)) {
@@ -224,7 +237,7 @@ export const createPost = async (c: Context) => {
   
   if (draftId) {
     const [draftRows]: any = await db.execute(
-      "SELECT id FROM posts WHERE id = ? AND user_id = ? AND status = 'draft' LIMIT 1",
+      "SELECT id, alt_text FROM posts WHERE id = ? AND user_id = ? AND status = 'draft' LIMIT 1",
       [draftId, user.id]
     )
 
@@ -237,13 +250,18 @@ export const createPost = async (c: Context) => {
       const slug = `${slugBase || 'post'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
       const title = caption.length > 90 ? `${caption.slice(0, 87).trimEnd()}...` : caption
 
+    
+      const existingAltText =
+        typeof draftRows[0]?.alt_text === 'string' ? draftRows[0].alt_text.trim() : ''
+      const finalAltText = existingAltText || generateAltText(title, caption)
+
       await db.execute(
         `UPDATE posts SET
           slug = ?, title = ?, caption = ?, image_url = ?,
           alt_text = ?, category = ?, feed_type = ?, location = ?,
           status = 'published'
          WHERE id = ? AND user_id = ?`,
-        [slug, title, caption, imageUrl, altText, category || null, feedType, location || null, draftId, user.id]
+        [slug, title, caption, imageUrl, finalAltText, category || null, feedType, location || null, draftId, user.id]
       )
 
       const [updatedRows]: any = await db.execute(
@@ -263,6 +281,7 @@ export const createPost = async (c: Context) => {
 
   const slug = `${slugBase || 'post'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   const title = caption.length > 90 ? `${caption.slice(0, 87).trimEnd()}...` : caption
+  const generatedAltText = generateAltText(title, caption)
 
   const [result]: any = await db.execute(
     `
@@ -271,7 +290,7 @@ export const createPost = async (c: Context) => {
       location, alt_text, category, feed_type, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')
     `,
-    [user.id, slug, title, caption, imageUrl, location || null, altText, category || null, feedType]
+    [user.id, slug, title, caption, imageUrl, location || null, generatedAltText, category || null, feedType]
   )
 
   return c.json({
@@ -281,7 +300,7 @@ export const createPost = async (c: Context) => {
       title,
       caption,
       imageUrl,
-      altText,
+      altText: generatedAltText,
       category: category || null,
       feedType,
       status: 'published',

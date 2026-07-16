@@ -194,6 +194,8 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
 </AdminLayout>
 
 <script>
+  import { getAdminApiBaseUrl } from "../../../services/api";
+
   type AdminUser = {
     id: number;
     fullName: string;
@@ -202,11 +204,8 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
     isDisabled: boolean;
   };
 
-  const apiBase = (() => {
-    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
-    if (configured) return configured.replace(/\/$/, "");
-    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
-  })();
+
+  const apiBase = getAdminApiBaseUrl();
 
   const pageSize = 5;
 
@@ -553,7 +552,7 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
     submitBtn.textContent = "Adding...";
 
     try {
-      const res = await fetch(`${apiBase}/admin/users`, {
+      const res = await fetch(`${apiBase}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -607,7 +606,7 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
 
   const updateUserStatus = async (id: number, action: "enable" | "disable") => {
     try {
-      const res = await fetch(`${apiBase}/admin/users/${id}/${action}`, {
+      const res = await fetch(`${apiBase}/users/${id}/${action}`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -649,7 +648,7 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
     if (!state.pendingDelete) return;
     const user = state.pendingDelete;
     try {
-      const res = await fetch(`${apiBase}/admin/users/${user.id}`, {
+      const res = await fetch(`${apiBase}/users/${user.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -711,7 +710,7 @@ import UsersTable from "../../../components/admin/UsersTable.astro";
     state.loading = true;
     renderUsers();
     try {
-      const res = await fetch(`${apiBase}/admin/users`, {
+      const res = await fetch(`${apiBase}/users`, {
         credentials: "include",
       });
       if (res.status === 401) {

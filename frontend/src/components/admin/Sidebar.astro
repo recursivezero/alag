@@ -297,8 +297,10 @@ const tooltipClass = (key) =>
     const mobileOverlay = document.getElementById("mobileOverlay");
     const apiBase = (() => {
       const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
-      if (configured) return configured.replace(/\/$/, "");
-      return `${window.location.protocol}//${window.location.hostname}:5001/api`;
+      const base = configured
+        ? configured.replace(/\/$/, "")
+        : `${window.location.protocol}//${window.location.hostname}:5001/api`;
+      return `${base}/v1/admin`;
     })();
 
     const toggleSidebarBtn = document.getElementById("toggleSidebar");
@@ -474,7 +476,7 @@ const tooltipClass = (key) =>
     const logoutConfirmBtn = document.getElementById("logoutConfirmBtn");
 
     const doLogout = async () => {
-      await fetch(`${apiBase}/admin/logout`, {
+      await fetch(`${apiBase}/logout`, {
         method: "POST",
         credentials: "include",
         keepalive: true,
@@ -1183,7 +1185,7 @@ const tooltipClass = (key) =>
     transform: translateX(26px);
   }
 
-  /* Make the switch visually distinct in light mode */
+ 
   html[data-admin-theme="light"] .theme-switch {
     background: linear-gradient(180deg, #f3f4f6, #eef2f7);
     border: 1px solid rgba(15, 23, 42, 0.06);
@@ -1191,17 +1193,17 @@ const tooltipClass = (key) =>
   }
 
   html[data-admin-theme="light"] .theme-knob {
-    background: #0f172a; /* dark knob for light mode */
+    background: #0f172a; 
     box-shadow: 0 6px 18px rgba(2, 6, 23, 0.08);
   }
 
-  /* Slightly different knob styling for dark mode */
+  
   html[data-admin-theme="dark"] .theme-knob {
     background: #ffffff;
     box-shadow: 0 6px 18px rgba(2, 6, 23, 0.28);
   }
 
-  /* Sun / Moon icon visibility and sun color */
+ 
   .sun-icon-svg {
     width: 18px;
     height: 18px;
@@ -1227,7 +1229,7 @@ const tooltipClass = (key) =>
     display: inline-block;
   }
 
-  /* Show sun in light theme, moon in dark theme */
+
   html[data-admin-theme="light"] .sun-icon-svg {
     display: inline-block;
   }

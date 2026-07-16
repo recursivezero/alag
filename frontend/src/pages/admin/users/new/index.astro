@@ -332,11 +332,10 @@ import AdminShell from "../../../../components/admin/AdminShell.astro";
 </AdminLayout>
 
 <script>
-  const apiBase = (() => {
-    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
-    if (configured) return configured.replace(/\/$/, "");
-    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
-  })();
+  import { getAdminApiBaseUrl, getAuthApiBaseUrl } from "../../../../services/api";
+
+  const authApiBase = getAuthApiBaseUrl();
+  const adminApiBase = getAdminApiBaseUrl();
 
   const form = document.getElementById("addUserForm") as HTMLFormElement | null;
   const emailInput = document.getElementById(
@@ -416,7 +415,7 @@ import AdminShell from "../../../../components/admin/AdminShell.astro";
 
     try {
       const response = await fetch(
-        `${apiBase}/check-email?email=${encodeURIComponent(email)}`,
+        `${authApiBase}/check-email?email=${encodeURIComponent(email)}`,
         {
           method: "GET",
           credentials: "include",
@@ -506,7 +505,7 @@ import AdminShell from "../../../../components/admin/AdminShell.astro";
     setMessage("Submitting user creation request...");
 
     try {
-      const response = await fetch(`${apiBase}/admin/users`, {
+      const response = await fetch(`${adminApiBase}/users`, {
         method: "POST",
         credentials: "include",
         headers: {

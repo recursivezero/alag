@@ -68,7 +68,7 @@ import UsersTable from "../../components/admin/UsersTable.astro";
           border-[#16233d]
           bg-[linear-gradient(180deg,#07101d,#040915)] p-4"
     >
-      <!-- Recent Users header row -->
+      
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2
           class="text-[1.15rem] font-bold tracking-[-0.03em] text-slate-50/95"
@@ -130,6 +130,8 @@ import UsersTable from "../../components/admin/UsersTable.astro";
 </AdminLayout>
 
 <script>
+  import { getAdminApiBaseUrl } from "../../services/api";
+
   type AdminUser = {
     id: number;
     fullName: string;
@@ -139,11 +141,7 @@ import UsersTable from "../../components/admin/UsersTable.astro";
     isDisabled: boolean;
   };
 
-  const apiBase = (() => {
-    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
-    if (configured) return configured.replace(/\/$/, "");
-    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
-  })();
+  const apiBase = getAdminApiBaseUrl();
 
   const pageSize = 5;
 
@@ -460,7 +458,7 @@ import UsersTable from "../../components/admin/UsersTable.astro";
         pageSize: String(pageSize),
       });
       const res = await fetch(
-        `${apiBase}/admin/dashboard?${params.toString()}`,
+        `${apiBase}/dashboard?${params.toString()}`,
         {
           credentials: "include",
         },

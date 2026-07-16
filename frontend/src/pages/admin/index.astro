@@ -310,6 +310,8 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 </AdminLayout>
 
 <script>
+  import { getAdminApiBaseUrl } from "../../services/api";
+
   const EYE_OPEN =
     '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
   const EYE_CLOSED =
@@ -345,11 +347,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.025)",
   };
 
-  const apiBase = (() => {
-    const configured = import.meta.env.PUBLIC_API_BASE_URL?.trim();
-    if (configured) return configured.replace(/\/$/, "");
-    return `${window.location.protocol}//${window.location.hostname}:5001/api`;
-  })();
+  const apiBase = getAdminApiBaseUrl();
 
   function applyWrapStyle(wrapId: string, styles: Record<string, string>) {
     const el = document.getElementById(wrapId) as HTMLElement | null;
@@ -406,7 +404,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       if (btnArrow) btnArrow.style.display = "none";
 
       try {
-        const res = await fetch(`${apiBase}/admin/login`, {
+        const res = await fetch(`${apiBase}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

@@ -292,7 +292,7 @@ await db.execute(`
     caption TEXT NOT NULL,
     image_url LONGTEXT NOT NULL,
     location VARCHAR(180) NULL,
-    alt_text VARCHAR(255) NULL,
+    alt_text VARCHAR(255) NOT NULL,
     category VARCHAR(80) NULL,
     feed_type VARCHAR(20) NOT NULL DEFAULT 'public',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -312,6 +312,8 @@ const existingPostColumns = new Set(postColumns.map((row: { COLUMN_NAME: string 
 if (!existingPostColumns.has("alt_text")) {
   await db.execute("ALTER TABLE posts ADD COLUMN alt_text VARCHAR(255) NULL AFTER location");
 }
+await db.execute("UPDATE posts SET alt_text = title WHERE alt_text IS NULL OR TRIM(alt_text) = ''");
+await db.execute("ALTER TABLE posts MODIFY COLUMN alt_text VARCHAR(255) NOT NULL");
 
 if (!existingPostColumns.has("category")) {
   await db.execute("ALTER TABLE posts ADD COLUMN category VARCHAR(80) NULL AFTER alt_text");
@@ -402,37 +404,37 @@ async function seedDatabase(): Promise<void> {
           slug: "sunset-in-goa",
           title: "Sunset in Goa",
           caption: "Golden hour at the shoreline with soft waves and a neon horizon.",
-          alt_text: "A breathtaking sunset over the beach in Goa, India, with golden hues reflecting on the water.",
           imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
           location: "Goa, India",
+          altText: "Golden sunset over the sea at a Goa beach with silhouetted palm trees.",
         },
         {
           userId: secondaryUserId,
           slug: "mountains-of-manali",
           title: "Mountains of Manali",
           caption: "Clear alpine air, dramatic peaks, and a quiet trail above the valley.",
-          alt_text: "Snow-capped mountains in Manali, Himachal Pradesh, India, with a winding trail leading through the valley.",
           imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80",
           location: "Manali, Himachal Pradesh",
+          altText: "Snow-capped mountain peaks in Manali under a clear blue sky.",
         },
         {
           userId: tertiaryUserId,
           slug: "city-lights-after-rain",
           title: "City Lights After Rain",
           caption: "Reflections, traffic glow, and a moody skyline after an evening shower.",
-          alt_text: "City lights reflecting on wet streets in Mumbai, Maharashtra, India, after an evening shower.",
           imageUrl: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80",
           location: "Mumbai, Maharashtra",
+          altText: "Wet city street at night reflecting neon lights and traffic after rain.",
         },
       ];
 
       for (const post of seedPosts) {
         await db.execute(
           `
-          INSERT INTO posts (user_id, slug, title, caption, alt_text, image_url, location)
+          INSERT INTO posts (user_id, slug, title, caption, image_url, location, alt_text)
           VALUES (?, ?, ?, ?, ?, ?, ?)
           `,
-          [post.userId, post.slug, post.title, post.caption, post.alt_text, post.imageUrl, post.location],
+          [post.userId, post.slug, post.title, post.caption, post.imageUrl, post.location, post.altText],
         );
       }
 
