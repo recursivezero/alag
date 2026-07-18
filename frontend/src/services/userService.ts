@@ -1,5 +1,5 @@
 import { getAuthApiBaseUrl } from './api'
-import type { UserProfile } from '../types/user'
+import type { UserProfile, SearchUserResult } from '../types/user'
 
 type SessionHeaders = {
   cookieHeader?: string
@@ -57,4 +57,28 @@ export const fetchCurrentUserWithApi = async () => {
   })
   const data = (await response.json()) as { user: UserProfile }
   return data.user
+}
+
+export const searchUsers = async (query: string): Promise<SearchUserResult[]> => {
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  try {
+    const response = await fetch(
+      `${getAuthApiBaseUrl()}/search-users?q=${encodeURIComponent(trimmed)}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Unable to search users')
+    }
+
+    const data = (await response.json()) as { users: SearchUserResult[] }
+    return data.users || []
+  } catch {
+    return []
+  }
 }

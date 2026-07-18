@@ -9,3 +9,12 @@ export type UserProfile = {
   picture?: string | null
   role?: string
 }
+
+export type SearchUserResult = {
+  id: number
+  name: string
+  fullName?: string | null
+  username?: string | null
+  bio?: string | null
+  picture?: string | null
+}

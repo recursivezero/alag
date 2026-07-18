@@ -30,8 +30,6 @@ const hashSessionToken = (token: string) =>
 
 const createSessionToken = () => crypto.randomBytes(32).toString('base64url')
 
-// Delegates to the shared, trust-aware IP resolver (see utils/requestIp.ts)
-// instead of unconditionally trusting client-spoofable forwarding headers.
 const getClientIp = (c: Context) => getRequestIp(c)
 
 const getSessionExpiry = (remember: boolean) =>
@@ -519,18 +517,8 @@ export const verifyOtp = async (c: Context) => {
   )
   const mobileVerified = Boolean(refreshedPending[0]?.mobile_verified)
 
-  if (mobileVerified) {
-   
-    return await finalizeRegistration(c, email, pendingUser)
-  }
-
- 
-  return c.json({
-    message: 'Email verified successfully. Please verify your mobile OTP.',
-    emailVerified: true,
-    mobileVerified: false,
-    complete: false,
-  })
+  
+  return await finalizeRegistration(c, email, pendingUser, true, mobileVerified)
 }
 
 
@@ -591,21 +579,12 @@ export const verifyMobileOtp = async (c: Context) => {
 
   const emailVerified = Boolean(pendingUser.email_verified)
 
-  if (emailVerified) {
-   
-    const [fullPending]: any = await db.execute(
-      'SELECT name, password, mobile FROM pending_registrations WHERE email = ?',
-      [email]
-    )
-    return await finalizeRegistration(c, email, fullPending[0])
-  }
-
-  return c.json({
-    message: 'Mobile number verified successfully. Please verify your email OTP.',
-    emailVerified: false,
-    mobileVerified: true,
-    complete: false,
-  })
+  
+  const [fullPending]: any = await db.execute(
+    'SELECT name, password, mobile FROM pending_registrations WHERE email = ?',
+    [email]
+  )
+  return await finalizeRegistration(c, email, fullPending[0], emailVerified, true)
 }
 
 export const sendMobileOtpHandler = async (c: Context) => {
@@ -649,7 +628,13 @@ export const resendMobileOtp = async (c: Context) => {
 }
 
 
-async function finalizeRegistration(c: Context, email: string, pendingUser: any) {
+async function finalizeRegistration(
+  c: Context,
+  email: string,
+  pendingUser: any,
+  emailVerified: boolean,
+  mobileVerified: boolean
+) {
   const newUserId = await withTransaction(async (conn) => {
     const [existingUsers]: any = await conn.execute('SELECT id FROM users WHERE email = ?', [email])
     if (existingUsers.length) {
@@ -661,13 +646,14 @@ async function finalizeRegistration(c: Context, email: string, pendingUser: any)
     const [result]: any = await conn.execute(
       `INSERT INTO users
          (full_name, name, email, password, phone_number, role, auth_provider, is_verified, mobile_verified)
-       VALUES (?, ?, ?, ?, ?, 'user', 'email', TRUE, TRUE)`,
+       VALUES (?, ?, ?, ?, ?, 'user', 'email', TRUE, ?)`,
       [
         pendingUser.name,
         pendingUser.name,
         email,
         pendingUser.password,
         pendingUser.mobile || null,
+        mobileVerified,
       ]
     )
 
@@ -685,8 +671,8 @@ async function finalizeRegistration(c: Context, email: string, pendingUser: any)
   return c.json({
     message: 'Registration completed successfully.',
     token,
-    emailVerified: true,
-    mobileVerified: true,
+    emailVerified,
+    mobileVerified,
     complete: true,
   })
 }
@@ -890,6 +876,55 @@ export const getUser = async (c: Context) => {
   }
 
   return c.json({ user: authResult.user })
+}
+
+export const searchUsers = async (c: Context) => {
+  const authResult = await getActiveUserFromAuthHeader(c)
+  if (authResult.error) {
+    return authResult.error
+  }
+
+  const query = (c.req.query('q') || '').trim()
+  if (!query) {
+    return c.json({ users: [] })
+  }
+
+  const searchTerm = `%${query.toLowerCase()}%`
+  const exactTerm = query.toLowerCase()
+
+  const [rows]: any = await db.execute(
+    `SELECT
+       id,
+       COALESCE(full_name, name) AS name,
+       COALESCE(full_name, name) AS fullName,
+       username,
+       bio,
+       picture
+     FROM users
+     WHERE is_disabled = FALSE
+       AND id != ?
+       AND (
+         LOWER(username) LIKE ?
+         OR LOWER(name) LIKE ?
+         OR LOWER(full_name) LIKE ?
+       )
+     ORDER BY
+       CASE WHEN LOWER(username) = ? THEN 0 ELSE 1 END,
+       COALESCE(full_name, name) ASC
+     LIMIT 8`,
+    [authResult.user.id, searchTerm, searchTerm, searchTerm, exactTerm]
+  )
+
+  const users = rows.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    fullName: row.fullName,
+    username: row.username || null,
+    bio: row.bio || null,
+    picture: row.picture || null,
+  }))
+
+  return c.json({ users })
 }
 
 export const updateUserProfile = async (c: Context) => {

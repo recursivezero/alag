@@ -1,7 +1,7 @@
 import { getStoredUser } from "../stores/userStore"
 import { deletePost as apiDeletePost, togglePostLike, togglePostSave } from "../services/postService"
 
-// Idempotent init
+
 if (!(window as any).__postCardInitialized) {
   ;(window as any).__postCardInitialized = true
 
@@ -170,9 +170,7 @@ if (!(window as any).__postCardInitialized) {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // LIKE BUTTON HELPERS
-  // ─────────────────────────────────────────────────────────────────
+
 
   const LIKED_BTN_CLASSES   = ['bg-rose-500/10', 'text-rose-300']
   const UNLIKED_BTN_CLASSES = [
@@ -187,19 +185,13 @@ if (!(window as any).__postCardInitialized) {
     return String(n)
   }
 
-  /**
-   * Parse a formatted counter string ("12", "1.2k") back to a plain number.
-   */
+  
   const parseCounter = (raw: string): number => {
     const t = raw.trim()
     if (t.endsWith('k')) return Math.round(parseFloat(t) * 1000)
     return parseInt(t, 10) || 0
   }
 
-  /**
-   * Write a counter value back into a button's text node (last text node).
-   * Falls back to a [data-*-count] span if no text node exists.
-   */
   const writeCounterText = (btn: HTMLElement, value: number, dataAttr: string) => {
     const textNodes = Array.from(btn.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE)
     if (textNodes.length) {
@@ -232,11 +224,7 @@ if (!(window as any).__postCardInitialized) {
     writeCounterText(btn, likeCount, 'data-like-count')
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // SAVE BUTTON HELPERS
-  // The save button uses violet instead of rose, and shows "Save" text
-  // (no numeric counter — matches PostCard.astro).
-  // ─────────────────────────────────────────────────────────────────
+  
 
   const SAVED_BTN_CLASSES   = ['bg-violet-500/10', 'text-violet-300']
   const UNSAVED_BTN_CLASSES = [
@@ -246,10 +234,7 @@ if (!(window as any).__postCardInitialized) {
     'hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]',
   ]
 
-  /**
-   * Update the save button's visual state without a page reload.
-   * The save button shows no counter — only fill state and colour change.
-   */
+  
   const applySaveState = (btn: HTMLElement, saved: boolean) => {
     btn.setAttribute('aria-pressed', saved ? 'true' : 'false')
 
@@ -261,14 +246,11 @@ if (!(window as any).__postCardInitialized) {
       UNSAVED_BTN_CLASSES.forEach((cls) => btn.classList.add(cls))
     }
 
-    // Toggle bookmark SVG fill
     const svg = btn.querySelector('svg')
     if (svg) svg.setAttribute('fill', saved ? 'currentColor' : 'none')
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // BIND CARD
-  // ─────────────────────────────────────────────────────────────────
+ 
 
   const bindCard = (card: HTMLElement) => {
     const slug = card.getAttribute('data-post-slug')
@@ -280,17 +262,13 @@ if (!(window as any).__postCardInitialized) {
     const menuCancel = card.querySelector('[data-post-menu-cancel]') as HTMLElement | null
     const modal      = document.getElementById(`delete-modal-${slug}`) as HTMLElement | null
 
-    // ── All aria-pressed buttons in this card ────────────────────
-    // PostCard.astro layout (confirmed):
-    //   Left action group:  [like btn aria-pressed] [comment btn — no aria-pressed]
-    //   Right action group: [save btn aria-pressed] [share btn — no aria-pressed]
+   
     const allToggleBtns = Array.from(
       card.querySelectorAll<HTMLButtonElement>('button[aria-pressed]'),
     )
-    const likeBtn = allToggleBtns[0] ?? null   // first  aria-pressed → like (heart)
-    const saveBtn = allToggleBtns[1] ?? null   // second aria-pressed → save (bookmark)
-
-    // ── Like button ──────────────────────────────────────────────
+    const likeBtn = allToggleBtns[0] ?? null   
+    const saveBtn = allToggleBtns[1] ?? null   
+   
 
     if (likeBtn) {
       let likeInProgress = false
@@ -319,8 +297,6 @@ if (!(window as any).__postCardInitialized) {
       })
     }
 
-    // ── Save button ──────────────────────────────────────────────
-    // The save button shows no counter — only icon fill + colour toggle.
 
     if (saveBtn) {
       let saveInProgress = false
@@ -330,17 +306,17 @@ if (!(window as any).__postCardInitialized) {
 
         const wasSaved = saveBtn.getAttribute('aria-pressed') === 'true'
 
-        // Optimistic update — immediate visual feedback
+    
         applySaveState(saveBtn, !wasSaved)
         saveInProgress  = true
         saveBtn.disabled = true
 
         try {
           const result = await togglePostSave(slug)
-          // Apply authoritative state from the server
+          
           applySaveState(saveBtn, result.saved)
         } catch (err: any) {
-          // Roll back on failure
+        
           applySaveState(saveBtn, wasSaved)
           showToast(err?.message || 'Unable to toggle save', 'error')
         } finally {
@@ -350,7 +326,78 @@ if (!(window as any).__postCardInitialized) {
       })
     }
 
-    // ── Menu / delete (unchanged) ────────────────────────────────
+
+    const shareBtn   = card.querySelector('[data-share-trigger]') as HTMLElement | null
+    const shareModal = document.getElementById(`share-modal-${slug}`) as HTMLElement | null
+
+    if (shareBtn && shareModal) {
+      const shareLinkInput   = shareModal.querySelector('[data-share-link-input]') as HTMLInputElement | null
+      const shareCopyBtn     = shareModal.querySelector('[data-share-copy]') as HTMLButtonElement | null
+      const shareCloseBtn    = shareModal.querySelector('[data-share-close]') as HTMLElement | null
+      const shareCopyConfirm = shareModal.querySelector('[data-share-copy-confirm]') as HTMLElement | null
+
+      let shareConfirmTimer: ReturnType<typeof setTimeout> | null = null
+
+      const closeShareModal = () => {
+        closeModal(shareModal)
+        if (shareConfirmTimer) {
+          clearTimeout(shareConfirmTimer)
+          shareConfirmTimer = null
+        }
+        if (shareCopyConfirm) shareCopyConfirm.hidden = true
+      }
+
+      shareBtn.addEventListener('click', () => {
+        openModal(shareModal)
+        shareLinkInput?.focus()
+        shareLinkInput?.select()
+      })
+
+      shareCloseBtn?.addEventListener('click', () => {
+        closeShareModal()
+      })
+
+   
+      shareModal.addEventListener('click', (event) => {
+        if (event.target === shareModal) {
+          closeShareModal()
+        }
+      })
+
+      document.addEventListener('keydown', (event) => {
+        if (
+          event.key === 'Escape' &&
+          !shareModal.classList.contains('pointer-events-none')
+        ) {
+          closeShareModal()
+        }
+      })
+
+      shareCopyBtn?.addEventListener('click', async () => {
+        const link = shareLinkInput?.value || ''
+        if (!link) return
+
+        try {
+          await navigator.clipboard.writeText(link)
+        } catch {
+          
+          shareLinkInput?.select()
+          document.execCommand('copy')
+        }
+
+        showToast('Link copied to clipboard.', 'success')
+
+        if (shareCopyConfirm) {
+          shareCopyConfirm.hidden = false
+          if (shareConfirmTimer) clearTimeout(shareConfirmTimer)
+          shareConfirmTimer = setTimeout(() => {
+            if (shareCopyConfirm) shareCopyConfirm.hidden = true
+          }, 3000)
+        }
+      })
+    }
+
+
 
     if (!menuBtn || !menu) return
 

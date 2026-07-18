@@ -119,6 +119,30 @@ export const GetUserResponseSchema = z
   })
   .openapi('GetUserResponse')
 
+export const SearchUsersQuerySchema = z.object({
+  q: z.string().optional().openapi({
+    example: 'devender',
+    description: 'Search term matched against username, name, and full name',
+  }),
+})
+
+export const SearchUserResultSchema = z
+  .object({
+    id: z.number().openapi({ example: 1 }),
+    name: z.string().openapi({ example: 'Devender' }),
+    fullName: z.string().nullable().openapi({ example: 'Devender' }),
+    username: z.string().nullable().openapi({ example: 'devender' }),
+    bio: z.string().nullable().openapi({ example: null }),
+    picture: z.string().nullable().openapi({ example: null }),
+  })
+  .openapi('SearchUserResult')
+
+export const SearchUsersResponseSchema = z
+  .object({
+    users: z.array(SearchUserResultSchema),
+  })
+  .openapi('SearchUsersResponse')
+
 export const UpdateUserProfileRequestSchema = z
   .object({
     name: z.string().min(1).optional(),

@@ -9,12 +9,11 @@ import { fetchSavedPosts } from "../../services/postService";
 const cookieHeader = Astro.request.headers.get("cookie") || "";
 const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
 
-// Saved Posts is private – guests are redirected to login.
+
 if (!currentUser.id) {
   return Astro.redirect("/auth/login");
 }
 
-// Fetch only this user's saved posts (authenticated, server-side, cookie-forwarded)
 const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
 ---
 
@@ -22,10 +21,10 @@ const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
 
   <div class="page-grid mx-auto w-full max-w-[1400px]" style="padding: 28px 28px 40px 28px;">
 
-    <!-- ══════════════ MAIN FEED COLUMN ══════════════ -->
+  
     <section class="feed-col min-w-0">
 
-      <!-- Page heading -->
+
       <div class="mb-6">
         <h1
           class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
@@ -39,7 +38,7 @@ const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
         </p>
       </div>
 
-      <!-- Posts feed or empty state -->
+    
       {posts.length > 0 ? (
         <Feed posts={posts} />
       ) : (
@@ -75,7 +74,7 @@ const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
           </p>
           <a
             href="/dashboard"
-            class="mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
+            class="browse-dash-btn mt-6 inline-flex items-center gap-2 rounded-[14px] bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-violet-700"
           >
             Browse Dashboard
           </a>
@@ -89,11 +88,15 @@ const posts = await fetchSavedPosts({ cookieHeader, userId: currentUser.id });
 </UserDashboardLayout>
 
 <style>
-  /* Same grid token used by dashboard/index.astro and liked.astro */
+  
   .page-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+  .browse-dash-btn{
+    padding:10px;
+    color:white;
   }
 
   @media (min-width: 1280px) {

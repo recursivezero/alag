@@ -1,6 +1,7 @@
 ---
 import ProfileDropdown from "./ProfileDropdown.astro";
 import type { UserProfile } from "../../types/user";
+import topbarSearchScriptUrl from "../../scripts/topbar-search.ts?url";
 
 const { user } = Astro.props as { user: UserProfile };
 ---
@@ -9,15 +10,14 @@ const { user } = Astro.props as { user: UserProfile };
   <div
     class="topbar-inner mx-auto flex h-[64px] w-full items-center gap-3 px-6 lg:px-8"
   >
-    <!-- LEFT SPACER — pushes search bar toward center -->
-    <!-- ── SEARCH BAR — fixed max width, centered ── -->
-    <label class="relative w-full h-[40px] max-w-[650px] flex-shrink-0">
-      <span class="sr-only">Search images, users or descriptions</span>
+    
+    <label class="relative w-full h-[40px] max-w-[650px] flex-shrink-0" id="topbarSearchWrap">
+      <span class="sr-only">Search users, usernames, titles, descriptions</span>
 
       <div
         class="search-box relative flex h-[42px] items-center rounded-[13px]"
       >
-        <!-- Search icon -->
+      
         <svg
           class="pointer-events-none absolute left-[13px] top-1/2 h-[14px] w-[14px]
                  -translate-y-1/2 flex-shrink-0 text-[color:var(--search-placeholder)]"
@@ -30,16 +30,18 @@ const { user } = Astro.props as { user: UserProfile };
           <path d="m20 20-3.5-3.5"></path>
         </svg>
 
-        <!-- Input -->
+        
         <input
           type="search"
-          placeholder="Search images, users or descriptions..."
+          id="topbarSearchInput"
+          autocomplete="off"
+          placeholder="Search users, usernames, titles, descriptions..."
           class="search-input h-full w-full bg-transparent text-[13px] font-medium
                  text-[color:var(--dashboard-text)] outline-none
                  placeholder:text-[color:var(--search-placeholder)]"
         />
 
-        <!-- ⌘K badge -->
+       
         <div
           class="absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-[3px]
                     rounded-[7px] border border-[color:var(--dashboard-border)]
@@ -48,13 +50,20 @@ const { user } = Astro.props as { user: UserProfile };
         >
         </div>
       </div>
+
+
+      <div
+        id="topbarSearchResults"
+        class="search-results-panel absolute left-0 right-0 top-[calc(100%+8px)] z-50 hidden"
+      >
+      </div>
     </label>
 
-    <!-- RIGHT SPACER — balances left spacer so search stays centered -->
+    
     <div class="flex-1 flex justify-end">
-      <!-- ── RIGHT ACTIONS ── -->
+      
       <div class="flex items-center gap-3">
-        <!-- THEME TOGGLE -->
+       
         <button
           type="button"
           data-topbar-theme-btn
@@ -86,7 +95,7 @@ const { user } = Astro.props as { user: UserProfile };
           </svg>
         </button>
 
-        <!-- UPLOAD -->
+      
         <button
           type="button"
           data-upload-trigger
@@ -109,9 +118,9 @@ const { user } = Astro.props as { user: UserProfile };
           <span>Upload</span>
         </button>
 
-        <!-- NOTIFICATIONS -->
-        <button
-          type="button"
+      
+        <a
+          href="/dashboard/settings?tab=notifications"
           aria-label="Notifications"
           class="topbar-icon-btn relative grid h-10 w-10 place-items-center rounded-[12px]"
         >
@@ -134,9 +143,9 @@ const { user } = Astro.props as { user: UserProfile };
           >
             1
           </span>
-        </button>
+        </a>
 
-        <!-- PROFILE -->
+        
         <div
           class="profile-chip rounded-[14px] border border-[color:var(--dashboard-border)]
                     bg-[color:var(--dashboard-surface)] p-1 shadow-[var(--dashboard-shadow)]"
@@ -170,12 +179,11 @@ const { user } = Astro.props as { user: UserProfile };
   })();
 </script>
 
+<script type="module" src={topbarSearchScriptUrl}></script>
+
 <style>
   .topbar {
-    background: var(--topbar-bg);
-    border-bottom: 1px solid var(--topbar-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: transparent;
   }
 
   @media (min-width: 1024px) {
@@ -202,7 +210,7 @@ const { user } = Astro.props as { user: UserProfile };
       var(--dashboard-shadow);
   }
 
-  /* Padding beats Tailwind preflight reset */
+ 
   .search-input {
     padding-left: 40px !important;
     padding-right: 70px !important;
@@ -213,6 +221,75 @@ const { user } = Astro.props as { user: UserProfile };
   }
   .search-input[type="search"]::-ms-clear {
     display: none;
+  }
+
+  .search-results-panel {
+    background: var(--dashboard-surface-strong, var(--dashboard-surface));
+    border: 1px solid var(--dashboard-border);
+    border-radius: 14px;
+    box-shadow: var(--dashboard-shadow-strong, var(--dashboard-shadow));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .search-results-panel.hidden {
+    display: none;
+  }
+
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: default;
+    transition: background 150ms ease;
+  }
+
+  .search-result-item:hover {
+    background: var(--dashboard-accent-soft);
+  }
+
+  .search-result-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--dashboard-accent-soft);
+    color: var(--dashboard-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .search-result-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dashboard-text);
+    line-height: 1.3;
+  }
+
+  .search-result-meta {
+    font-size: 11.5px;
+    color: var(--dashboard-muted);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-results-empty {
+    padding: 14px 10px;
+    font-size: 12.5px;
+    color: var(--dashboard-muted);
+    text-align: center;
   }
 
   .topbar-icon-btn {

@@ -11,11 +11,21 @@ import MainLayout from "../layouts/MainLayout.astro";
 
     <div id="globalAlert" class="alert"></div>
 
-    
+    <div class="otp-info-banner" id="otpInfoBanner" style="display:none;">
+      You can verify using either Email OTP or Mobile OTP. Any one verification is enough to continue.
+    </div>
+
+    <div class="otp-success-card" id="otpSuccessCard" style="display:none;">
+      <div class="otp-success-icon">✓</div>
+      <h3>Account Verified Successfully!</h3>
+      <p>You have been registered successfully. Welcome!</p>
+    </div>
+
+    <div id="otpFormWrap">
     <div class="otp-section" id="emailSection">
       <div class="otp-section-header">
         <div class="otp-label-row">
-          <span class="otp-type-label">Email OTP</span>
+          <span class="otp-type-label" id="emailTypeLabel">Email OTP</span>
           <span class="otp-sent-to" id="emailSentTo"></span>
         </div>
         <div class="otp-status" id="emailStatus">
@@ -46,7 +56,7 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       <div class="otp-section-header">
         <div class="otp-label-row">
-          <span class="otp-type-label">Mobile OTP</span>
+          <span class="otp-type-label" id="mobileTypeLabel">Mobile OTP</span>
           <span class="otp-sent-to" id="mobileSentTo"></span>
         </div>
         <div class="otp-status" id="mobileStatus">
@@ -75,8 +85,9 @@ import MainLayout from "../layouts/MainLayout.astro";
     <button class="btn-primary" id="verifyBtn" type="button">
       Verify Account
     </button>
+    </div>
 
-    <div class="card-footer">
+    <div class="card-footer" id="cardFooter">
       <a href="/register" class="back-link">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -111,12 +122,29 @@ import MainLayout from "../layouts/MainLayout.astro";
   const verifyBtn      = document.getElementById("verifyBtn") as HTMLButtonElement;
   const resendEmailBtn = document.getElementById("resendEmailBtn") as HTMLButtonElement;
   const resendMobileBtn = document.getElementById("resendMobileBtn") as HTMLButtonElement;
+  const otpInfoBanner  = document.getElementById("otpInfoBanner") as HTMLDivElement;
+  const otpSuccessCard = document.getElementById("otpSuccessCard") as HTMLDivElement;
+  const otpFormWrap    = document.getElementById("otpFormWrap") as HTMLDivElement;
+  const cardFooter     = document.getElementById("cardFooter") as HTMLDivElement;
 
   if (emailSentTo) emailSentTo.textContent = email ? `Sent to ${email}` : "";
   if (hasMobile && mobile) {
     if (mobileSubText) mobileSubText.textContent = " and mobile";
     if (mobileSentTo) mobileSentTo.textContent = `Sent to ${mobile}`;
     if (mobileSection) mobileSection.style.display = "block";
+    if (otpInfoBanner) otpInfoBanner.style.display = "block";
+
+    const emailLabel = document.getElementById("emailTypeLabel");
+    const mobileLabel = document.getElementById("mobileTypeLabel");
+    if (emailLabel) emailLabel.textContent = "Email OTP (Optional)";
+    if (mobileLabel) mobileLabel.textContent = "Mobile OTP (Optional)";
+  }
+
+  function showSuccessCard() {
+    if (otpFormWrap) otpFormWrap.style.display = "none";
+    if (cardFooter) cardFooter.style.display = "none";
+    if (otpInfoBanner) otpInfoBanner.style.display = "none";
+    if (otpSuccessCard) otpSuccessCard.style.display = "block";
   }
 
   function showToast(msg: string, type: "success" | "error" | "info" = "error") {
@@ -250,14 +278,7 @@ import MainLayout from "../layouts/MainLayout.astro";
         return;
       }
 
-      if (!emailVerified) {
-        showToast("Please enter your complete 6-digit Email OTP.");
-        return;
-      }
-      if (!mobileVerified) {
-        showToast("Please enter your complete 6-digit Mobile OTP.");
-        return;
-      }
+      showToast("Please verify either Email OTP or Mobile OTP to continue.");
     });
   }
 
@@ -294,7 +315,7 @@ import MainLayout from "../layouts/MainLayout.astro";
       if (data.complete) {
         
         if (data.token) localStorage.setItem("token", data.token);
-        showToast("✔ Registration completed successfully.", "success");
+        showSuccessCard();
         setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 1500);
         return;
       }
@@ -342,10 +363,8 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       if (data.complete) {
         if (data.token) localStorage.setItem("token", data.token);
-        setTimeout(() => {
-          showToast("✔ Registration completed successfully.", "success");
-        }, 300);
-        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 2000);
+        showSuccessCard();
+        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 1500);
         return;
       }
 
@@ -395,7 +414,7 @@ import MainLayout from "../layouts/MainLayout.astro";
         showToast("✔ Mobile OTP sent successfully.", "success");
         clearBoxes(mobileBoxes);
       } catch {
-        showToast("❌ Failed to send Mobile OTP.");
+        showToast(" Failed to send Mobile OTP.");
       }
     });
   }
@@ -405,6 +424,49 @@ import MainLayout from "../layouts/MainLayout.astro";
   .verify-card {
     max-width: 420px;
     width: 100%;
+  }
+
+  .otp-info-banner {
+    background: rgba(124, 92, 252, 0.1);
+    border: 1px solid rgba(124, 92, 252, 0.35);
+    color: var(--text-secondary, #b5aef0);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .otp-success-card {
+    text-align: center;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    border-radius: 12px;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .otp-success-icon {
+    width: 48px;
+    height: 48px;
+    line-height: 48px;
+    margin: 0 auto 0.9rem;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .otp-success-card h3 {
+    color: #22c55e;
+    font-size: 1.1rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .otp-success-card p {
+    color: var(--text-secondary, #888);
+    font-size: 0.85rem;
+    margin: 0;
   }
 
   .otp-section {

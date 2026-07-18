@@ -7,6 +7,7 @@ import {
   login,
   googleLogin,
   getUser,
+  searchUsers,
   updateUserProfile,
   createUser,
   listUsers,
@@ -40,6 +41,8 @@ import {
   RegisterRequestSchema,
   RegisterResponseSchema,
   ResetPasswordRequestSchema,
+  SearchUsersQuerySchema,
+  SearchUsersResponseSchema,
   SendOtpRequestSchema,
   UpdatePasswordRequestSchema,
   UpdateUserProfileRequestSchema,
@@ -212,6 +215,23 @@ authV1.openapi(
     },
   }),
   asHandler(getUser),
+)
+
+authV1.openapi(
+  createRoute({
+    method: 'get',
+    path: '/search-users',
+    tags: ['Auth'],
+    summary: 'Search users by username, name, or full name',
+    security: [{ bearerAuth: [] }],
+    request: { query: SearchUsersQuerySchema },
+    responses: {
+      200: { content: { 'application/json': { schema: SearchUsersResponseSchema } }, description: 'Matching users' },
+      401: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'No token provided / invalid token / session expired' },
+      403: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Account access disabled' },
+    },
+  }),
+  asHandler(searchUsers),
 )
 
 authV1.openapi(

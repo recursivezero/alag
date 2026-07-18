@@ -729,13 +729,13 @@ const profileAvatarFallback = buildAvatarFallback(
 
   <UploadModal />
 
-  <!-- Toast region: rendered at body level so styles always reach it -->
+
   <div id="toastRegion" class="sec-toast-region"></div>
 </UserDashboardLayout>
 
-<!-- GLOBAL toast styles — must be is:global so dynamically-created elements get them -->
+
 <style is:global>
-  /* ─── Toast Region ─── */
+ 
   .sec-toast-region {
     position: fixed;
     top: 20px;
@@ -748,7 +748,7 @@ const profileAvatarFallback = buildAvatarFallback(
     pointer-events: none;
   }
   
-  /* ─── Toast Card ─── */
+
   .sec-toast {
     pointer-events: auto;
     display: flex;
@@ -785,7 +785,6 @@ const profileAvatarFallback = buildAvatarFallback(
       transform 260ms ease;
   }
 
-  /* ─── Icon circle ─── */
   .sec-toast__icon {
     flex-shrink: 0;
     width: 38px;
@@ -809,7 +808,7 @@ const profileAvatarFallback = buildAvatarFallback(
     border: 1.5px solid rgba(249, 115, 22, 0.28);
   }
 
-  /* ─── Body ─── */
+ 
   .sec-toast__body {
     flex: 1;
     min-width: 0;
@@ -1027,15 +1026,12 @@ const profileAvatarFallback = buildAvatarFallback(
     node.dataset.tone = tone;
   };
 
-  /* ═══════════════════════════════════════════
-     TOAST SYSTEM
-     No auto-dismiss — user must click X to close
-  ═══════════════════════════════════════════ */
+ 
   const showSecurityToast = ({ message, tone }) => {
     const region = document.getElementById("toastRegion");
     if (!region) return;
 
-    // Remove any existing toast with slide-out animation
+  
     const existing = region.querySelector("[data-security-toast]");
     if (existing instanceof HTMLElement) {
       existing.dataset.state = "closing";
@@ -1044,7 +1040,7 @@ const profileAvatarFallback = buildAvatarFallback(
       }, 280);
     }
 
-    // Build the toast card
+  
     const toastEl = document.createElement("div");
     toastEl.className = "sec-toast sec-toast--" + tone;
     toastEl.setAttribute("data-security-toast", "");
@@ -1052,7 +1048,7 @@ const profileAvatarFallback = buildAvatarFallback(
     toastEl.setAttribute("aria-live", "assertive");
     toastEl.setAttribute("aria-atomic", "true");
 
-    // ── Icon circle ──
+    
     const iconWrap = document.createElement("div");
     iconWrap.className = "sec-toast__icon";
 
@@ -1064,7 +1060,6 @@ const profileAvatarFallback = buildAvatarFallback(
         '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
     }
 
-    // ── Body (title + message) ──
     const body = document.createElement("div");
     body.className = "sec-toast__body";
 
@@ -1079,7 +1074,7 @@ const profileAvatarFallback = buildAvatarFallback(
     body.appendChild(titleEl);
     body.appendChild(msgEl);
 
-    // ── Close (X) button ──
+   
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "sec-toast__close";
@@ -1087,7 +1082,7 @@ const profileAvatarFallback = buildAvatarFallback(
     closeBtn.innerHTML =
       '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
-    // Dismiss handler — only triggered by X click (no auto-dismiss)
+  
     const dismiss = () => {
       toastEl.dataset.state = "closing";
       setTimeout(() => {
@@ -1119,9 +1114,7 @@ const profileAvatarFallback = buildAvatarFallback(
     },
   };
 
-  /* ══════════════════════════════════════════════════
-     PASSWORD VALIDATION
-  ══════════════════════════════════════════════════ */
+ 
   const setPasswordMessage = (node, message) => {
     if (!(node instanceof HTMLElement)) return;
     node.textContent = message;
@@ -1199,9 +1192,6 @@ const profileAvatarFallback = buildAvatarFallback(
     validatePasswordMatch();
   };
 
-  /* ══════════════════════════════════════════════════
-     STATE
-  ══════════════════════════════════════════════════ */
   const notificationState = readJson(
     settingsNotificationsKey,
     defaultNotificationState,
@@ -1219,9 +1209,7 @@ const profileAvatarFallback = buildAvatarFallback(
     picture: profileDefaults.picture,
   };
 
-  /* ══════════════════════════════════════════════════
-     VIEW MANAGEMENT
-  ══════════════════════════════════════════════════ */
+ 
   const applyView = (viewName) => {
     currentView.value = viewName;
     writeJson(settingsViewKey, { view: viewName });
@@ -1250,9 +1238,7 @@ const profileAvatarFallback = buildAvatarFallback(
     applyView(viewName);
   };
 
-  /* ══════════════════════════════════════════════════
-     RENDER STATE
-  ══════════════════════════════════════════════════ */
+
   const renderNotificationState = () => {
     notificationToggles.forEach((toggle) => {
       const id = toggle.getAttribute("data-notification-id");
@@ -1328,9 +1314,7 @@ const profileAvatarFallback = buildAvatarFallback(
       bioInput.value = profileState.bio || "";
   };
 
-  /* ══════════════════════════════════════════════════
-     EVENT LISTENERS
-  ══════════════════════════════════════════════════ */
+ 
   settingsCards.forEach((button) => {
     button.addEventListener("click", () => {
       const cardId =
@@ -1707,9 +1691,7 @@ const profileAvatarFallback = buildAvatarFallback(
     })();
   });
 
-  /* ══════════════════════════════════════════════════
-     INIT
-  ══════════════════════════════════════════════════ */
+
   const storedCard = readJson(settingsCardKey, {
     cardId:
       settingsCards[0]?.getAttribute("data-settings-card-id") ||
@@ -1717,7 +1699,15 @@ const profileAvatarFallback = buildAvatarFallback(
   });
   if (storedCard.cardId) updateActiveCard(storedCard.cardId);
 
-  if (window.sessionStorage.getItem(settingsViewKey)) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedTab = urlParams.get("tab");
+  const validTabIds = settingsCards
+    .map((button) => button.getAttribute("data-settings-card-id"))
+    .filter(Boolean);
+
+  if (requestedTab && validTabIds.includes(requestedTab)) {
+    openView(requestedTab, requestedTab);
+  } else if (window.sessionStorage.getItem(settingsViewKey)) {
     const storedView = readJson(settingsViewKey, { view: "main" });
     applyView(storedView.view || "main");
   } else {
