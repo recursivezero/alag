@@ -18,7 +18,7 @@ import MainLayout from "../layouts/MainLayout.astro";
     <div class="otp-success-card" id="otpSuccessCard" style="display:none;">
       <div class="otp-success-icon">✓</div>
       <h3>Account Verified Successfully!</h3>
-      <p>You have been registered successfully. Welcome!</p>
+      <p>Your account has been verified. Please login to continue.</p>
     </div>
 
     <div id="otpFormWrap">
@@ -310,15 +310,15 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       emailVerified = true;
       setVerified("email");
-      showToast("✔ Email verified successfully.", "success");
 
       if (data.complete) {
-        
-        if (data.token) localStorage.setItem("token", data.token);
         showSuccessCard();
-        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 1500);
+        showToast("Account verified successfully! Please login to continue.", "success");
+        setTimeout(() => (window.location.href = "/login"), 1500);
         return;
       }
+
+      showToast("✔ Email verified successfully.", "success");
 
       
       verifyBtn.disabled = false;
@@ -359,14 +359,15 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       mobileVerified = true;
       setVerified("mobile");
-      showToast("✔ Mobile number verified successfully.", "success");
 
       if (data.complete) {
-        if (data.token) localStorage.setItem("token", data.token);
         showSuccessCard();
-        setTimeout(() => (window.location.href = data.redirectTo || "/dashboard"), 1500);
+        showToast("Account verified successfully! Please login to continue.", "success");
+        setTimeout(() => (window.location.href = "/login"), 1500);
         return;
       }
+
+      showToast("✔ Mobile number verified successfully.", "success");
 
       verifyBtn.disabled = false;
       verifyBtn.textContent = "Verify Account";

@@ -506,8 +506,12 @@ export const verifyOtp = async (c: Context) => {
       return c.json({ message: 'Email already registered' }, 409)
     }
 
-    const token = await issueUserSession(c, newUserId)
-    return c.json({ message: 'Verified', token, emailVerified: true, mobileVerified: false, complete: true })
+    return c.json({
+      message: 'Account verified successfully! Please login to continue.',
+      emailVerified: true,
+      mobileVerified: false,
+      complete: true,
+    })
   }
 
  
@@ -667,10 +671,8 @@ async function finalizeRegistration(
     return c.json({ message: 'Email already registered' }, 409)
   }
 
-  const token = await issueUserSession(c, newUserId)
   return c.json({
-    message: 'Registration completed successfully.',
-    token,
+    message: 'Account verified successfully! Please login to continue.',
     emailVerified,
     mobileVerified,
     complete: true,

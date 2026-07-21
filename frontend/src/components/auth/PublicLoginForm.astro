@@ -319,7 +319,7 @@ import Input from "../ui/Input.astro";
           } else {
             forgetAccount(email);
           }
-          showAlert("Login successful! Redirecting…", "success");
+          showAlert(`Welcome back, ${data.user?.name || email}!`, "success");
           setTimeout(() => redirectAfterLogin(data), 750);
         }
       } catch {
