@@ -13,10 +13,25 @@ const { title = "Admin Panel" } = Astro.props;
     <script>
       (function () {
         try {
-          var t = localStorage.getItem('admin_theme');
-          var theme = t === 'light' ? 'light' : 'dark';
+         
+          var siteTheme = sessionStorage.getItem('alag-user-theme');
+          var prevAdminTheme = localStorage.getItem('admin_theme');
+          var prefersDark = window.matchMedia(
+            '(prefers-color-scheme: dark)',
+          ).matches;
+
+          var theme;
+          if (siteTheme === 'light' || siteTheme === 'dark') {
+            theme = siteTheme;
+          } else if (prevAdminTheme === 'light' || prevAdminTheme === 'dark') {
+            theme = prevAdminTheme;
+          } else {
+            theme = prefersDark ? 'dark' : 'light';
+          }
+
           document.documentElement.setAttribute('data-admin-theme', theme);
           document.documentElement.style.colorScheme = theme;
+          localStorage.setItem('admin_theme', theme);
         } catch (e) {}
       })();
     </script>
@@ -227,7 +242,6 @@ const { title = "Admin Panel" } = Astro.props;
     border-color: rgba(148, 163, 184, 0.22) !important;
   }
 
-  /* Style topbar notification (bell) and theme (sun) buttons in light mode */
   html[data-admin-theme="light"]
     [data-admin-surface="topbar"]
     button[aria-label="Notifications"] {
@@ -249,7 +263,6 @@ const { title = "Admin Panel" } = Astro.props;
     color: #f59e0b !important;
   }
 
-  /* Ensure text in filters (Total Users count) is readable in light mode */
   html[data-admin-theme="light"] [data-admin-surface="filters"] .total-count {
     color: #0f172a !important;
   }
@@ -262,7 +275,6 @@ const { title = "Admin Panel" } = Astro.props;
     color: #0f172a !important;
   }
 
-  /* Make inputs more visible in light mode with a subtle outline */
   html[data-admin-theme="light"] [data-admin-surface="modal"] input,
   html[data-admin-theme="light"] [data-admin-surface="table-shell"] input {
     border: 1px solid rgba(148, 163, 184, 0.3) !important;
@@ -286,7 +298,7 @@ const { title = "Admin Panel" } = Astro.props;
     border-color: rgba(148, 163, 184, 0.18) !important;
   }
 
-  /* Make search inputs and selects inside table-shell match light theme */
+
   html[data-admin-theme="light"] [data-admin-surface="table-shell"] input,
   html[data-admin-theme="light"] [data-admin-surface="table-shell"] select {
     background: rgba(255, 255, 255, 0.96) !important;
@@ -301,14 +313,14 @@ const { title = "Admin Panel" } = Astro.props;
     color: rgba(15, 23, 42, 0.45) !important;
   }
 
-  /* Ensure the search icon inside inputs is visible in light mode */
+ 
   html[data-admin-theme="light"]
     [data-admin-surface="table-shell"]
     .pointer-events-none {
     color: rgba(15, 23, 42, 0.45) !important;
   }
 
-  /* Tweak padding and border visibility for light mode cards */
+
   html[data-admin-theme="light"] [data-admin-surface="table-shell"],
   html[data-admin-theme="light"] [data-admin-surface="stat-card"] {
     padding: 1.5rem !important;
@@ -322,7 +334,7 @@ const { title = "Admin Panel" } = Astro.props;
     color: #0f172a !important;
   }
 
-  /* Ensure stat cards adapt in light mode */
+
   html[data-admin-theme="light"] [data-admin-surface="stat-card"] {
     background: #ffffff !important;
     border-color: rgba(148, 163, 184, 0.16) !important;
@@ -338,7 +350,7 @@ const { title = "Admin Panel" } = Astro.props;
     color: #0f172a !important;
   }
 
-  /* Reduce neon glow and make icons readable on light */
+ 
   html[data-admin-theme="light"]
     [data-admin-surface="stat-card"]
     > .pointer-events-none {
@@ -414,7 +426,7 @@ const { title = "Admin Panel" } = Astro.props;
       0 0 28px rgba(244, 63, 94, 0.08) !important;
   }
 
-  /* Make stat cards use a darker background and neon glow in dark mode */
+ 
   html[data-admin-theme="dark"] [data-admin-surface="stat-card"] {
     background: #030712 !important;
     color: #ffffff !important;
@@ -426,7 +438,7 @@ const { title = "Admin Panel" } = Astro.props;
       0 0 48px rgba(124, 92, 252, 0.06) !important;
   }
 
-  /* Per-tone neon outer glow for stat cards (dark mode) */
+
   html[data-admin-theme="dark"]
     [data-admin-surface="stat-card"][data-tone="violet"] {
     box-shadow:
@@ -467,7 +479,7 @@ const { title = "Admin Panel" } = Astro.props;
     border-color: rgba(244, 63, 94, 0.12) !important;
   }
 
-  /* Subtle neon for light mode cards */
+ 
   html[data-admin-theme="light"]
     [data-admin-surface="stat-card"][data-tone="violet"] {
     box-shadow:
@@ -475,7 +487,7 @@ const { title = "Admin Panel" } = Astro.props;
       0 0 20px rgba(124, 92, 252, 0.06) !important;
   }
 
-  /* Target icon wrapper specifically to ensure neon ring and background show */
+ 
   html[data-admin-theme="dark"]
     [data-admin-surface="stat-card"]
     [data-admin-icon][data-tone="violet"] {
@@ -551,13 +563,13 @@ const { title = "Admin Panel" } = Astro.props;
     color: #fff0f4 !important;
   }
 
-  /* Ensure icon wrapper has consistent radius and padding */
+
   [data-admin-icon] {
     border-radius: 10px !important;
     padding: 0.5rem !important;
   }
 
-  /* ICON neon for light theme as well */
+
   html[data-admin-theme="light"]
     [data-admin-surface="stat-card"]
     [data-admin-icon][data-tone="violet"] {
@@ -633,7 +645,7 @@ const { title = "Admin Panel" } = Astro.props;
     color: #be123c !important;
   }
 
-  /* Slightly reduce stat card text sizes */
+ 
   [data-admin-surface="stat-card"] p {
     font-size: 0.95rem !important;
   }
@@ -643,7 +655,7 @@ const { title = "Admin Panel" } = Astro.props;
     line-height: 1 !important;
   }
 
-  /* === DARK MODE SURFACE FIXES (no revert - explicit dark backgrounds) === */
+
   html[data-admin-theme="dark"] [data-admin-surface="sidebar"] {
     background: linear-gradient(180deg, rgba(5,10,24,0.98), rgba(3,7,18,0.98)) !important;
   }

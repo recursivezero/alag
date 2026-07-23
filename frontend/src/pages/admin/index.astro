@@ -4,10 +4,12 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 
 <AdminLayout title="Admin Portal | RecursiveAuth">
   <main
+    id="apPage"
     class="relative min-h-screen overflow-x-hidden overflow-y-auto text-white"
     style="background:#04050d"
   >
     <div
+      id="apBgGlow"
       class="pointer-events-none absolute inset-0"
       style="background:
 				radial-gradient(ellipse 70% 45% at 50% 0%, rgba(90,50,200,0.28) 0%, transparent 55%),
@@ -17,18 +19,21 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
     </div>
 
     <div
+      id="apBgGrid"
       class="pointer-events-none absolute inset-0"
       style="background-image:linear-gradient(rgba(255,255,255,0.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.028) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(circle at center,black 20%,transparent 75%);opacity:0.5"
     >
     </div>
 
     <div
+      id="apOrb1"
       class="pointer-events-none absolute left-1/2 -translate-x-1/2"
       style="top:-8rem;width:38rem;height:38rem;border-radius:50%;background:rgba(100,55,220,0.18);filter:blur(140px)"
     >
     </div>
 
     <div
+      id="apOrb2"
       class="pointer-events-none absolute"
       style="left:-6rem;top:40%;width:22rem;height:22rem;border-radius:50%;background:rgba(70,40,180,0.1);filter:blur(110px)"
     >
@@ -38,6 +43,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       class="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-16 sm:px-6"
     >
       <div
+        id="apCard"
         class="w-full max-w-[520px] rounded-[28px] px-8 py-10 sm:px-10 sm:py-11"
         style="background: rgba(14,14,26,0.82);border: 1px solid rgba(255,255,255,0.085);backdrop-filter: blur(20px) saturate(1.2);-webkit-backdrop-filter: blur(20px) saturate(1.2);box-shadow:0 40px 120px rgba(0,0,0,0.72),0 0 60px rgba(90,50,200,0.12),inset 0 1px 0 rgba(255,255,255,0.055);"
       >
@@ -45,6 +51,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           class="mx-auto flex max-w-[420px] flex-col items-center text-center"
         >
           <div
+            id="apIcon"
             class="grid place-items-center text-violet-300"
             style="width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(160,130,255,0.3);background:rgba(100,60,220,0.14);box-shadow:0 0 28px rgba(120,80,255,0.32),inset 0 1px 0 rgba(200,180,255,0.1);"
           >
@@ -66,12 +73,14 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           </div>
 
           <h1
+            id="apTitle"
             class="mt-6 font-extrabold text-white"
             style="font-size:2.3rem;letter-spacing:-0.025em;line-height:1.15;font-family:'Inter var',Inter,system-ui,sans-serif;"
           >
-            Admin <span style="color:#a78bfa">Portal</span>
+            Admin <span id="apTitleAccent" style="color:#a78bfa">Portal</span>
           </h1>
           <p
+            id="apSubtitle"
             style="margin-top:0.5rem;font-size:14.5px;color:rgba(148,163,184,0.82);line-height:1.6"
           >
             Secure administrator access
@@ -105,6 +114,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
               <div>
                 <label
                   for="adminEmail"
+                  class="ap-label"
                   style="display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#fff"
                   >Email Address</label
                 >
@@ -144,6 +154,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
               <div>
                 <label
                   for="adminPassword"
+                  class="ap-label"
                   style="display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#fff"
                   >Password</label
                 >
@@ -241,7 +252,7 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
           >
           </p>
 
-          <div style="margin-top:28px;width:100%">
+          <div id="apDivider" style="margin-top:28px;width:100%">
             <div style="position:relative;display:flex;align-items:center">
               <div
                 style="flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.09),transparent)"
@@ -279,14 +290,16 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
       </div>
 
       <footer
+        id="apFooter"
         style="position:absolute;left:50%;bottom:1.5rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;font-size:13px;color:rgba(100,116,139,0.7)"
       >
         <p>© 2026 RecursiveAuth. All rights reserved.</p>
         <a
+          id="apBackHome"
           href="/"
-          style="display:flex;align-items:center;gap:6px;color:rgba(148,163,184,0.7);text-decoration:none;transition:color 0.15s,text-decoration-color 0.15s"
-          onmouseover="this.style.color='#fff';this.style.textDecoration='underline';this.style.textDecorationColor='#fff'"
-          onmouseout="this.style.color='rgba(148,163,184,0.7)';this.style.textDecoration='none'"
+          style="display:flex;align-items:center;gap:6px;text-decoration:none;transition:color 0.15s,text-decoration-color 0.15s"
+          onmouseover="this.style.color='#8b5cf6';this.style.textDecoration='underline';this.style.textDecorationColor='#8b5cf6'"
+          onmouseout="this.style.color='';this.style.textDecoration='none'"
         >
           <svg
             viewBox="0 0 24 24"
@@ -456,4 +469,100 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
   body {
     min-height: 100vh;
   }
+
+  
+  html[data-admin-theme="light"] body {
+    background: #eef1fb;
+  }
+
+  html[data-admin-theme="light"] #apPage {
+    background: #eef1fb !important;
+  }
+
+  html[data-admin-theme="light"] #apBgGlow {
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(124,92,252,0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, rgba(56,189,248,0.08) 0%, transparent 55%),
+      linear-gradient(180deg,#f8fbff 0%,#edf1fb 46%,#e8edf8 100%) !important;
+  }
+
+  html[data-admin-theme="light"] #apBgGrid {
+    background-image:
+      linear-gradient(rgba(15,23,42,0.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(15,23,42,0.05) 1px,transparent 1px) !important;
+  }
+
+  html[data-admin-theme="light"] #apOrb1 {
+    background: rgba(124,92,252,0.12) !important;
+  }
+  html[data-admin-theme="light"] #apOrb2 {
+    background: rgba(56,189,248,0.08) !important;
+  }
+
+  html[data-admin-theme="light"] #apCard {
+    background: rgba(255,255,255,0.92) !important;
+    border-color: rgba(15,23,42,0.1) !important;
+    box-shadow:
+      0 30px 80px rgba(15,23,42,0.12),
+      0 0 40px rgba(124,92,252,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  }
+
+  html[data-admin-theme="light"] #apIcon {
+    border-color: rgba(124,92,252,0.35) !important;
+    background: rgba(124,92,252,0.1) !important;
+    box-shadow:
+      0 0 20px rgba(124,92,252,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.6) !important;
+    color: #6d28d9 !important;
+  }
+
+  html[data-admin-theme="light"] #apTitle {
+    color: #0f172a !important;
+  }
+  html[data-admin-theme="light"] #apTitleAccent {
+    color: #7c3aed !important;
+  }
+  html[data-admin-theme="light"] #apSubtitle {
+    color: rgba(71,85,105,0.85) !important;
+  }
+
+  html[data-admin-theme="light"] .ap-label {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="light"] #emailWrap,
+  html[data-admin-theme="light"] #passwordWrap {
+    background: rgba(248,250,252,0.92) !important;
+    border-color: rgba(15,23,42,0.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  }
+
+  html[data-admin-theme="light"] #adminEmail,
+  html[data-admin-theme="light"] #adminPassword {
+    color: #0f172a !important;
+  }
+
+  html[data-admin-theme="light"] #apDivider > div > div:first-child,
+  html[data-admin-theme="light"] #apDivider > div > div:last-child {
+    background: linear-gradient(to right,transparent,rgba(15,23,42,0.12),transparent) !important;
+  }
+
+  html[data-admin-theme="light"] #apDivider > div > div:nth-child(2) {
+    border-color: rgba(15,23,42,0.12) !important;
+    background: rgba(255,255,255,0.75) !important;
+  }
+
+  html[data-admin-theme="light"] #apDivider p {
+    color: rgba(71,85,105,0.85) !important;
+  }
+
+  html[data-admin-theme="light"] #apFooter {
+    color: rgba(71,85,105,0.75) !important;
+  }
+
+  html[data-admin-theme="light"] #apBackHome {
+    color: rgba(71,85,105,0.8) !important;
+  }
+</style>
 </style>
