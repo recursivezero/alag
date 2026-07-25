@@ -12,7 +12,7 @@ import MainLayout from "../layouts/MainLayout.astro";
     <div id="globalAlert" class="alert"></div>
 
     <div class="otp-info-banner" id="otpInfoBanner" style="display:none;">
-      You can verify using either Email OTP or Mobile OTP. Any one verification is enough to continue.
+      You can verify using either Email OTP or WhatsApp OTP. Any one verification is enough to continue.
     </div>
 
     <div class="otp-success-card" id="otpSuccessCard" style="display:none;">
@@ -56,7 +56,7 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       <div class="otp-section-header">
         <div class="otp-label-row">
-          <span class="otp-type-label" id="mobileTypeLabel">Mobile OTP</span>
+          <span class="otp-type-label" id="mobileTypeLabel">WhatsApp OTP</span>
           <span class="otp-sent-to" id="mobileSentTo"></span>
         </div>
         <div class="otp-status" id="mobileStatus">
@@ -76,7 +76,7 @@ import MainLayout from "../layouts/MainLayout.astro";
 
       <div class="resend-row">
         <button class="resend-btn" id="resendMobileBtn" disabled>
-          Resend Mobile OTP (<span id="mobileTimer">01:00</span>)
+          Resend WhatsApp OTP (<span id="mobileTimer">01:00</span>)
         </button>
       </div>
     </div>
@@ -130,14 +130,14 @@ import MainLayout from "../layouts/MainLayout.astro";
   if (emailSentTo) emailSentTo.textContent = email ? `Sent to ${email}` : "";
   if (hasMobile && mobile) {
     if (mobileSubText) mobileSubText.textContent = " and mobile";
-    if (mobileSentTo) mobileSentTo.textContent = `Sent to ${mobile}`;
+    if (mobileSentTo) mobileSentTo.textContent = `Sent via WhatsApp to ${mobile}`;
     if (mobileSection) mobileSection.style.display = "block";
     if (otpInfoBanner) otpInfoBanner.style.display = "block";
 
     const emailLabel = document.getElementById("emailTypeLabel");
     const mobileLabel = document.getElementById("mobileTypeLabel");
     if (emailLabel) emailLabel.textContent = "Email OTP (Optional)";
-    if (mobileLabel) mobileLabel.textContent = "Mobile OTP (Optional)";
+    if (mobileLabel) mobileLabel.textContent = "WhatsApp OTP (Optional)";
   }
 
   function showSuccessCard() {
@@ -208,7 +208,7 @@ import MainLayout from "../layouts/MainLayout.astro";
   }
 
   startTimer("emailTimer", "resendEmailBtn", "Resend Email OTP");
-  if (hasMobile) startTimer("mobileTimer", "resendMobileBtn", "Resend Mobile OTP");
+  if (hasMobile) startTimer("mobileTimer", "resendMobileBtn", "Resend WhatsApp OTP");
 
   
   function wireOtpBoxes(boxes: HTMLInputElement[]) {
@@ -314,7 +314,7 @@ import MainLayout from "../layouts/MainLayout.astro";
       if (data.complete) {
         showSuccessCard();
         showToast("Account verified successfully! Please login to continue.", "success");
-        setTimeout(() => (window.location.href = "/login"), 1500);
+        setTimeout(() => (window.location.href = "/login"), 3000);
         return;
       }
 
@@ -334,7 +334,7 @@ import MainLayout from "../layouts/MainLayout.astro";
   async function verifyMobileOtp() {
     const otp = getOtp(mobileBoxes);
     if (otp.length < 6) {
-      showToast("Please enter the complete 6-digit Mobile OTP.");
+      showToast("Please enter the complete 6-digit WhatsApp OTP.");
       return;
     }
 
@@ -351,7 +351,7 @@ import MainLayout from "../layouts/MainLayout.astro";
       const data = await res.json();
 
       if (!res.ok) {
-        showToast(data.message || "Invalid Mobile OTP.");
+        showToast(data.message || "Invalid WhatsApp OTP.");
         verifyBtn.disabled = false;
         verifyBtn.textContent = "Verify Account";
         return;
@@ -367,7 +367,7 @@ import MainLayout from "../layouts/MainLayout.astro";
         return;
       }
 
-      showToast("✔ Mobile number verified successfully.", "success");
+      showToast("✔ WhatsApp number verified successfully.", "success");
 
       verifyBtn.disabled = false;
       verifyBtn.textContent = "Verify Account";
@@ -408,14 +408,14 @@ import MainLayout from "../layouts/MainLayout.astro";
         });
         const data = await res.json();
         if (!res.ok) {
-          showToast(data.message || "Failed to send Mobile OTP.");
+          showToast(data.message || "Failed to send WhatsApp Code.");
           return;
         }
-        startTimer("mobileTimer", "resendMobileBtn", "Resend Mobile OTP");
-        showToast("✔ Mobile OTP sent successfully.", "success");
+        startTimer("mobileTimer", "resendMobileBtn", "Resend WhatsApp Code");
+        showToast("✔ WhatsApp OTP sent successfully.", "success");
         clearBoxes(mobileBoxes);
       } catch {
-        showToast(" Failed to send Mobile OTP.");
+        showToast("Failed to send WhatsApp OTP.");
       }
     });
   }

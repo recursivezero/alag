@@ -14,7 +14,8 @@ import {
 import { clearSessionCookieOptions } from '../utils/session.js'
 import { deleteCookie } from 'hono/cookie'
 import { sendOTPEmail, sendPasswordResetEmail } from '../utils/mailer.js'
-import { sendMobileOtp, isValidMobileNumber, normalizeMobile } from '../utils/sms.js'
+import { isValidMobileNumber, normalizeMobile } from '../utils/sms.js'
+import { sendWhatsAppOTP } from '../utils/whatsapp.js'
 import { getCookie, setCookie } from 'hono/cookie'
 import { getRequestIp } from '../utils/requestIp.js'
 
@@ -371,6 +372,7 @@ export const register = async (c: Context) => {
   }
 
 
+  let mobileOtpSent = false
   if (mobile && mobileOtp) {
     await db.execute(
       `INSERT INTO otp_codes (email, identifier, type, otp, expires_at)
@@ -378,16 +380,20 @@ export const register = async (c: Context) => {
       [normalizedEmail, mobile, mobileOtp]
     )
 
-    const smsSent = await sendMobileOtp(mobile, mobileOtp)
-    if (!smsSent) {
-  
-      console.warn('[register] Failed to send mobile OTP for', normalizedEmail)
+    mobileOtpSent = await sendWhatsAppOTP(mobile, mobileOtp)
+    if (!mobileOtpSent) {
+      await db.execute(
+        `DELETE FROM otp_codes WHERE email = ? AND identifier = ? AND type = 'mobile' AND otp = ?`,
+        [normalizedEmail, mobile, mobileOtp]
+      )
+      console.warn('[register] Failed to send WhatsApp OTP for', normalizedEmail)
     }
   }
 
   return c.json({
-    message: mobile ? 'OTPs sent to your email and mobile' : 'OTP sent to your email',
+    message: mobile ? 'OTP sent to your email and WhatsApp' : 'OTP sent to your email',
     hasMobile: Boolean(mobile),
+    mobileOtpSent,
   })
 }
 
@@ -564,9 +570,9 @@ export const verifyMobileOtp = async (c: Context) => {
       [email, otp]
     )
     if (expiredRows.length) {
-      return c.json({ message: 'Mobile OTP has expired. Please request a new one.' }, 400)
+      return c.json({ message: 'WhatsApp OTP has expired. Please request a new one.' }, 400)
     }
-    return c.json({ message: 'Invalid Mobile OTP.' }, 400)
+    return c.json({ message: 'Invalid WhatsApp OTP.' }, 400)
   }
 
  
@@ -615,16 +621,16 @@ export const sendMobileOtpHandler = async (c: Context) => {
     [email, mobile, otp]
   )
 
-  const sent = await sendMobileOtp(mobile, otp)
+  const sent = await sendWhatsAppOTP(mobile, otp)
   if (!sent) {
     await db.execute(
       `DELETE FROM otp_codes WHERE email = ? AND type = 'mobile' AND otp = ?`,
       [email, otp]
     )
-    return c.json({ message: 'Failed to send Mobile OTP.' }, 500)
+    return c.json({ message: 'Failed to send WhatsApp OTP.' }, 500)
   }
 
-  return c.json({ message: 'Mobile OTP sent successfully.' })
+  return c.json({ message: 'WhatsApp OTP sent successfully.' })
 }
 
 export const resendMobileOtp = async (c: Context) => {
