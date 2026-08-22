@@ -1,0 +1,84 @@
+import { getAuthApiBaseUrl } from './api'
+import type { UserProfile, SearchUserResult } from '../types/user'
+
+type SessionHeaders = {
+  cookieHeader?: string
+}
+
+const buildHeaders = (headers?: SessionHeaders): HeadersInit => {
+  if (!headers?.cookieHeader) return {}
+
+  return {
+    cookie: headers.cookieHeader,
+  }
+}
+
+export const fetchCurrentUser = async (headers?: SessionHeaders) => {
+  try {
+    const response = await fetch(`${getAuthApiBaseUrl()}/user`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: buildHeaders(headers),
+    })
+
+    if (!response.ok) {
+      throw new Error('Unable to load current user')
+    }
+
+    const data = (await response.json()) as { user: UserProfile }
+    return data.user
+  } catch {
+    return null
+  }
+}
+
+export const fetchCurrentUserOrGuest = async (headers?: SessionHeaders) => {
+  const user = await fetchCurrentUser(headers)
+
+  return (
+    user || {
+      id: 0,
+      name: 'Guest',
+      fullName: 'Guest',
+      username: null,
+      email: '',
+      phoneNumber: null,
+      bio: null,
+      picture: null,
+      role: 'user',
+    }
+  ) as UserProfile
+}
+
+export const fetchCurrentUserWithApi = async () => {
+  const response = await fetch(`${getAuthApiBaseUrl()}/user`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+  const data = (await response.json()) as { user: UserProfile }
+  return data.user
+}
+
+export const searchUsers = async (query: string): Promise<SearchUserResult[]> => {
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  try {
+    const response = await fetch(
+      `${getAuthApiBaseUrl()}/search-users?q=${encodeURIComponent(trimmed)}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Unable to search users')
+    }
+
+    const data = (await response.json()) as { users: SearchUserResult[] }
+    return data.users || []
+  } catch {
+    return []
+  }
+}

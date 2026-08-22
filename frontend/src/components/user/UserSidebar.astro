@@ -1,0 +1,12 @@
+---
+import Sidebar from "../layout/Sidebar.astro";
+
+import type { UserProfile } from "../../types/user";
+
+const { currentPath = "/dashboard", user } = Astro.props as {
+  currentPath?: string;
+  user: UserProfile;
+};
+---
+
+<Sidebar currentPath={currentPath} user={user} />

@@ -1,0 +1,64 @@
+---
+interface Props {
+  totalId?: string;
+  searchId?: string;
+  statusId?: string;
+}
+
+const {
+  totalId = "totalUsers",
+  searchId = "searchInput",
+  statusId = "statusFilter",
+} = Astro.props as Props;
+---
+
+<section
+  data-admin-surface="filters"
+  class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px_auto] xl:items-end p-3 rounded-[10px]"
+>
+  <div class="relative">
+    <input
+      id={searchId}
+      type="text"
+      class="h-11 w-full rounded-[50px] border border-white/10 bg-slate-950/60 py-2.5 pl-10 pr-4 text-[13px] text-slate-100 placeholder:text-slate-500/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] outline-none transition focus:border-violet-400/45 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.14)]"
+      placeholder="Search users by name or email..."
+    />
+    <span
+      class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="h-4.5 w-4.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+      >
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M21 21l-4.3-4.3"></path>
+      </svg>
+    </span>
+  </div>
+
+  <div>
+    <label
+      for={statusId}
+      class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300/70"
+      >Filter by status</label
+    >
+    <select
+      id={statusId}
+      class="h-11 w-full rounded-[10px] border border-white/10 bg-slate-950/60 px-3 text-[13px] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] outline-none transition focus:border-violet-400/45 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.14)]"
+    >
+      <option value="all">All</option>
+      <option value="enabled">Enabled</option>
+      <option value="disabled">Disabled</option>
+    </select>
+  </div>
+
+  <p class="self-end pb-[2px] text-[15px] text-slate-300/80">
+    Total Users: <span
+      id={totalId}
+      class="font-semibold text-slate-100 total-count">0</span
+    >
+  </p>
+</section>

@@ -1,0 +1,45 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import AdminShell from "../../components/admin/AdminShell.astro";
+import AdminCard from "../../components/admin/AdminCard.astro";
+---
+
+<AdminLayout title="Settings | RecursiveAuth">
+  <AdminShell
+    active="settings"
+    title="Settings"
+    eyebrow="Security and preferences"
+    description="Configure the admin surface, session behavior, and future access policy settings from one place."
+    showSearch={false}
+    showNotifications={false}
+    showThemeToggle={true}
+    showAddUserAction={false}
+  >
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <AdminCard title="Session" value="HttpOnly" description="Cookie-backed admin auth" tone="violet">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"></path><path d="M9 12l2 2 4-4"></path></svg>
+      </AdminCard>
+
+      <AdminCard title="Route Mode" value="Strict" description="Exact allowlist matching only" tone="sky">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 14a4 4 0 0 0 5.66 0l2.12-2.12a4 4 0 0 0-5.66-5.66l-1.41 1.41"></path><path d="M14 10a4 4 0 0 0-5.66 0L6.22 12.12a4 4 0 0 0 5.66 5.66l1.41-1.41"></path></svg>
+      </AdminCard>
+
+      <AdminCard title="Theme" value="Light / Dark" description="Shared purple glass design" tone="emerald">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </AdminCard>
+
+      <AdminCard title="Visibility" value="Private" description="No public admin entry links" tone="amber">
+        <svg slot="icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z"></path><path d="M9.5 12.5 11 14l3.5-3.5"></path></svg>
+      </AdminCard>
+    </section>
+
+    <div class="mt-4 rounded-[10px] border border-white/10 bg-[linear-gradient(180deg,#07101d,#040915)] p-5">
+      <h2 class="text-[1.05rem] font-bold tracking-[-0.03em] text-white">Planned controls</h2>
+      <ul class="mt-3 space-y-2 text-[14px] leading-7 text-slate-400/80">
+        <li>• Theme persistence for the admin shell.</li>
+        <li>• Route exposure checks for future admin pages.</li>
+        <li>• Session timeout and logout hardening.</li>
+      </ul>
+    </div>
+  </AdminShell>
+</AdminLayout>

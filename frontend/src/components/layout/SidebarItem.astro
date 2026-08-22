@@ -1,0 +1,263 @@
+---
+const {
+  href,
+  label,
+  icon,
+  active = false,
+} = Astro.props as {
+  href: string;
+  label: string;
+  icon: string;
+  active?: boolean;
+};
+---
+
+<a
+  href={href}
+  aria-current={active ? "page" : undefined}
+  data-sidebar-item
+  class:list={[
+    "nav-item group relative flex items-center transition-all duration-200",
+    active ? "nav-active" : "nav-inactive",
+  ]}
+>
+  <!-- Icon box -->
+  <span
+    class:list={[
+      "nav-icon grid shrink-0 place-items-center transition-all duration-200",
+      active ? "nav-icon-active" : "nav-icon-inactive",
+    ]}
+    set:html={`<svg class="nav-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${icon}</svg>`}
+  />
+
+  <!-- Label -->
+  <span data-sidebar-label class="nav-label">
+    {label}
+  </span>
+</a>
+
+<style>
+  /* ── Item shell ── */
+  .nav-item {
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    min-height: 50px;
+    align-items: center;
+    text-decoration: none;
+    width: 100%;
+  }
+
+  /* ── Active row ── */
+  .nav-active {
+    background: var(--sb-active-bg);
+    border-color: var(--sb-active-border);
+  }
+
+  /* ── Inactive row ── */
+  .nav-inactive {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  /* Hover — subtle neutral emphasis */
+  .nav-inactive:hover {
+    background: var(--sb-item-hover-bg);
+    border-color: var(--sb-item-hover-border);
+  }
+
+  /* ── Icon box ── */
+  .nav-icon {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    padding: 2px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+  }
+
+  /* Active icon — violet gradient fill */
+  .nav-icon-active {
+    background: var(--sb-active-icon-bg);
+    border-color: var(--sb-active-icon-border);
+    box-shadow: var(--sb-active-icon-shadow);
+    color: var(--sb-active-icon-color);
+  }
+
+  /* Inactive icon — muted tile, dark icon */
+  .nav-icon-inactive {
+    background: var(--sb-item-bg);
+    border-color: var(--sb-border);
+    color: var(--sb-icon-color);
+  }
+
+  /* Hover — icon border brightens slightly */
+  .nav-inactive:hover .nav-icon-inactive {
+    background: var(--sb-item-hover-bg);
+    border-color: var(--sb-item-hover-border);
+    color: var(--sb-text);
+  }
+
+  /* ── SVG size ── */
+  .nav-svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    transform: translateY(1px);
+  }
+
+  /* ── Label ── */
+  .nav-label {
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+    color: var(--sb-label-color);
+    transition: color 180ms;
+  }
+
+  .nav-active .nav-label {
+    color: var(--sb-label-active);
+    font-weight: 600;
+  }
+
+  .nav-inactive:hover .nav-label {
+    color: var(--sb-text);
+  }
+
+  :global([data-sidebar-item][title="My Profile"]) .nav-icon {
+    padding-top: 4px;
+  }
+
+  /* ════════════════════════════════════════
+     COLLAPSED — icon only, centred
+  ════════════════════════════════════════ */
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-item {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: 52px !important;
+    margin: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-label {
+    position: absolute;
+    left: calc(100% + 24px);
+    top: 50%;
+    transform: translate3d(-10px, -50%, 0) scale(0.98);
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 11px 16px 11px 18px;
+    border-radius: 18px;
+    border: 1px solid var(--sb-tooltip-border);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dashboard-accent) 6%, var(--sb-tooltip-bg)),
+      var(--sb-tooltip-bg)
+    );
+    box-shadow:
+      0 16px 34px color-mix(in srgb, var(--dashboard-accent) 16%, rgba(15, 23, 42, 0.16)),
+      0 0 0 1px color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
+    color: var(--sb-tooltip-text);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 160ms ease;
+    z-index: 9999;
+    backdrop-filter: blur(14px);
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-label::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translateY(-50%) rotate(45deg);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dashboard-accent) 6%, var(--sb-tooltip-bg)),
+      var(--sb-tooltip-bg)
+    );
+    border-left: 1px solid var(--sb-tooltip-border);
+    border-bottom: 1px solid var(--sb-tooltip-border);
+    box-shadow:
+      -7px 5px 16px color-mix(in srgb, var(--dashboard-accent) 14%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-icon {
+    margin-left: auto;
+    margin-right: auto;
+    width: 44px;
+    height: 44px;
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-icon-active {
+    background: var(--sb-active-icon-bg);
+    border-color: var(--sb-active-icon-border);
+    box-shadow: var(--sb-active-icon-shadow);
+    color: var(--sb-active-icon-color);
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-active {
+    background: var(--sb-active-bg) !important;
+    border-color: var(--sb-active-border) !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--dashboard-accent) 14%, transparent),
+      0 12px 26px color-mix(in srgb, var(--dashboard-accent) 12%, transparent);
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-active .nav-label {
+    color: var(--sb-tooltip-text);
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"])
+    .nav-item:hover
+    .nav-label,
+  :global([data-user-sidebar][data-collapsed="true"])
+    .nav-item:focus-visible
+    .nav-label {
+    opacity: 1;
+    visibility: visible;
+    transform: translate3d(0, -50%, 0) scale(1);
+  }
+
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-item:hover,
+  :global([data-user-sidebar][data-collapsed="true"]) .nav-item:focus-visible {
+    z-index: 9998;
+  }
+
+  /* ════════════════════════════════════════
+     EXPANDED — restore
+  ════════════════════════════════════════ */
+  :global([data-user-sidebar]:not([data-collapsed="true"])) .nav-label {
+    display: block;
+  }
+
+  :global([data-user-sidebar]:not([data-collapsed="true"])) .nav-label {
+    position: static;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+</style>

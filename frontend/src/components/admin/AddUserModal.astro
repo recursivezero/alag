@@ -1,0 +1,373 @@
+---
+interface Props {
+  openByDefault?: boolean;
+}
+
+const { openByDefault = false } = Astro.props as Props;
+---
+
+<div
+  id="addUserModal"
+  data-admin-surface="modal"
+  class:list={[
+    "fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-[6px] transition duration-200 ease-out px-4",
+    openByDefault
+      ? "opacity-100 pointer-events-auto"
+      : "opacity-0 pointer-events-none",
+  ]}
+  aria-hidden={openByDefault ? "false" : "true"}
+>
+  <!-- Backdrop click to close -->
+  <button
+    id="addUserBackdrop"
+    type="button"
+    class="absolute inset-0 cursor-default"
+    aria-label="Close add user panel"></button>
+
+  <!-- Modal Card -->
+  <div
+    class:list={[
+      "relative z-10 w-full max-w-[440px] rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,30,0.98),rgba(6,10,22,0.98))] p-7 shadow-[0_32px_80px_rgba(0,0,0,0.55)] transition-all duration-200 ease-out",
+      openByDefault ? "scale-100 opacity-100" : "scale-95 opacity-0",
+    ]}
+    id="addUserCard"
+    data-admin-surface="modal"
+  >
+    <!-- Header -->
+    <div class="mb-6">
+      <p
+        class="text-[11px] font-semibold uppercase tracking-[0.28em] text-violet-300/90"
+      >
+        USER MANAGEMENT
+      </p>
+      <h2 class="mt-1 text-[2rem] font-extrabold tracking-[-0.05em] text-white">
+        Add User
+      </h2>
+      <p class="mt-1.5 text-[13px] leading-6 text-slate-400/85">
+        Create a new user by filling in the details below.
+      </p>
+    </div>
+
+    <!-- Form -->
+    <form id="addUserForm" class="flex flex-col gap-5">
+      <!-- Full Name -->
+      <div class="space-y-2">
+        <label
+          class="block text-[12px] font-bold uppercase tracking-[0.06em] text-white"
+        >
+          Full Name
+        </label>
+        <div class="relative">
+          <input
+            id="fullName"
+            type="text"
+            placeholder="Name"
+            autocomplete="name"
+            required
+            class="h-13 w-full rounded-[14px] border border-white/12 bg-white/4 px-4 pr-11 text-[14px] text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/55 focus:bg-white/6 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.12)]"
+            style="height: 52px;"
+          />
+          <span
+            class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-2">
+        <label
+          class="block text-[12px] font-bold uppercase tracking-[0.06em] text-white"
+        >
+          Email Address
+        </label>
+        <div class="relative">
+          <input
+            id="email"
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+            required
+            class="h-13 w-full rounded-[14px] border border-white/12 bg-white/4 px-4 pr-11 text-[14px] text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/55 focus:bg-white/6 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.12)]"
+            style="height: 52px;"
+          />
+          <span
+            class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label
+          class="block text-[12px] font-bold uppercase tracking-[0.06em] text-white"
+        >
+          Phone Number (Optional)
+        </label>
+        <div class="relative">
+          <input
+            id="phoneNumber"
+            type="tel"
+            placeholder="Phone Number"
+            autocomplete="tel"
+            inputmode="tel"
+            class="h-13 w-full rounded-[14px] border border-white/12 bg-white/4 px-4 pr-11 text-[14px] text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/55 focus:bg-white/6 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.12)]"
+            style="height: 52px;"
+          />
+          <span
+            class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.89.34 1.76.66 2.59a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.49-1.18a2 2 0 0 1 2.11-.45c.83.32 1.7.54 2.59.66A2 2 0 0 1 22 16.92Z"
+              ></path>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="space-y-2">
+        <label
+          class="block text-[12px] font-bold uppercase tracking-[0.06em] text-white"
+        >
+          Password
+        </label>
+        <div class="relative">
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="new-password"
+            required
+            class="h-13 w-full rounded-[14px] border border-white/12 bg-white/4 px-4 pr-11 text-[14px] text-white placeholder:text-slate-500 outline-none transition focus:border-violet-400/55 focus:bg-white/6 focus:shadow-[0_0_0_1px_rgba(129,92,255,0.18),0_0_24px_rgba(124,92,255,0.12)]"
+            style="height: 52px;"
+          />
+          <button
+            type="button"
+            id="togglePassword"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+            aria-label="Toggle password visibility"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Verification Mode -->
+      <div class="space-y-3">
+        <label
+          class="block text-[12px] font-bold uppercase tracking-[0.06em] text-white"
+        >
+          Verification Method
+        </label>
+
+        <div class="flex flex-col gap-4">
+          <label class="group flex cursor-pointer items-start gap-3">
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center"
+            >
+              <input
+                id="verificationOtp"
+                type="radio"
+                name="verificationMethod"
+                value="otp"
+                checked
+                class="peer sr-only"
+              />
+              <span
+                class="flex h-5 w-5 items-center justify-center rounded-full border border-white/40 bg-transparent transition peer-checked:border-white peer-checked:bg-violet-500 peer-checked:shadow-[0_0_0_1px_rgba(255,255,255,0.9)]"
+              >
+                <span
+                  class="h-2.5 w-2.5 rounded-full bg-white opacity-0 transition peer-checked:opacity-100"
+                ></span>
+              </span>
+            </span>
+            <span
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-violet-300/20 bg-[radial-gradient(circle_at_top,rgba(168,139,255,0.22),rgba(30,20,70,0.92))] shadow-[0_0_18px_rgba(124,92,252,0.16)]"
+            >
+              <span
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/6 bg-[linear-gradient(180deg,rgba(20,24,48,0.9),rgba(13,16,34,0.96))]"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+              </span>
+            </span>
+            <span class="min-w-0 pt-0.5">
+              <span
+                class="add-user-verification-title block text-left text-[16px] font-semibold leading-[1.15] tracking-[-0.02em] text-white"
+              >
+                Verify by OTP
+              </span>
+              <span
+                class="add-user-verification-desc mt-1 block text-left text-[13px] leading-[1.45] text-slate-400/90"
+              >
+                We’ll send an OTP to your email
+              </span>
+            </span>
+          </label>
+
+          <label class="group flex cursor-pointer items-start gap-3">
+            <span
+              class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center"
+            >
+              <input
+                id="verificationDirect"
+                type="radio"
+                name="verificationMethod"
+                value="direct"
+                class="peer sr-only"
+              />
+              <span
+                class="flex h-5 w-5 items-center justify-center rounded-full border border-white/40 bg-transparent transition peer-checked:border-white peer-checked:bg-violet-500 peer-checked:shadow-[0_0_0_1px_rgba(255,255,255,0.9)]"
+              >
+                <span
+                  class="h-2.5 w-2.5 rounded-full bg-white opacity-0 transition peer-checked:opacity-100"
+                ></span>
+              </span>
+            </span>
+            <span
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-violet-300/20 bg-[radial-gradient(circle_at_top,rgba(168,139,255,0.22),rgba(30,20,70,0.92))] shadow-[0_0_18px_rgba(124,92,252,0.16)]"
+            >
+              <span
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-white/6 bg-[linear-gradient(180deg,rgba(20,24,48,0.9),rgba(13,16,34,0.96))]"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </span>
+            </span>
+            <span class="min-w-0 pt-0.5">
+              <span
+                class="add-user-verification-title block text-left text-[16px] font-semibold leading-[1.15] tracking-[-0.02em] text-white"
+              >
+                Direct add
+              </span>
+              <span
+                class="add-user-verification-desc mt-1 block text-left text-[13px] leading-[1.45] text-slate-400/90"
+              >
+                Add user directly without verification
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <p id="formMessage" class="min-h-5 text-[13px] text-slate-300"></p>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-3 pt-1">
+        <button
+          id="cancelAdd"
+          type="button"
+          class="inline-flex h-11 items-center justify-center rounded-[14px] border border-white/12 bg-white/5 px-5 text-[13px] font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/8"
+        >
+          Cancel
+        </button>
+        <button
+          id="submitAdd"
+          type="submit"
+          class="inline-flex h-11 flex-1 items-center justify-center rounded-[14px] border border-violet-400/25 bg-[linear-gradient(135deg,rgba(124,92,252,0.96),rgba(99,79,237,0.94))] px-5 text-[13px] font-bold text-white shadow-[0_0_28px_rgba(124,92,252,0.3)] transition hover:-translate-y-0.5 hover:shadow-[0_0_36px_rgba(124,92,252,0.42)]"
+        >
+          Add User
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const toggleBtn = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById(
+    "password",
+  ) as HTMLInputElement | null;
+
+  toggleBtn?.addEventListener("click", () => {
+    if (!passwordInput) return;
+    passwordInput.type =
+      passwordInput.type === "password" ? "text" : "password";
+  });
+</script>
+
+<style>
+  :global(html[data-admin-theme="light"]) .add-user-verification-title {
+    color: #0f172a !important;
+  }
+
+  :global(html[data-admin-theme="light"]) .add-user-verification-desc {
+    color: #475569 !important;
+  }
+
+  :global(html[data-admin-theme="light"])
+    input[name="verificationMethod"]
+    + span {
+    border-color: rgba(203, 213, 225, 0.9) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+  }
+
+  :global(html[data-admin-theme="light"])
+    input[name="verificationMethod"]:checked
+    + span {
+    border-color: rgba(124, 92, 252, 0.78) !important;
+    background: rgba(124, 92, 252, 0.16) !important;
+    box-shadow: 0 0 0 1px rgba(124, 92, 252, 0.16) !important;
+  }
+</style>

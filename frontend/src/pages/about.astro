@@ -1,0 +1,207 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+<MainLayout page="about">
+  <section class="card about-card">
+    <div class="about-header">
+      <!-- <span class="about-badge" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L4 7v5c0 4.55 3.4 8.74 8 9.93C16.6 20.74 20 16.55 20 12V7L12 2z" fill="currentColor"></path>
+          <path d="M9 12l2 2 4-4" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span> -->
+      <h2 class="card-title about-title">About Recursive Auth</h2>
+    </div>
+    <p class="card-sub about-description">
+      Recursive Auth is a clean email-OTP authentication flow with login,
+      register, dashboard, and users management screens. It demonstrates a
+      simple, secure authentication workflow with an intuitive user experience,
+      making it easy to explore registration, verification, and account
+      management features.
+    </p>
+    <div class="about-grid">
+      <div class="about-item">
+        <span class="feature-icon about-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11.5L12 4l9 7.5"></path>
+            <path d="M5.5 10v9a1 1 0 0 0 1 1H9.5v-6h5v6H17.5a1 1 0 0 0 1-1v-9"></path>
+          </svg>
+        </span>
+        <h3>Home</h3>
+        <span class="about-item-accent" aria-hidden="true"></span>
+        <p>
+          Entry point with Login, Register, and About navigation, providing a
+          simple starting point for users.
+        </p>
+      </div>
+      <div class="about-item">
+        <span class="feature-icon about-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="9" rx="1.5"></rect>
+            <path d="M8 11V7.5a4 4 0 0 1 8 0V11"></path>
+          </svg>
+        </span>
+        <h3>Authentication</h3>
+        <span class="about-item-accent" aria-hidden="true"></span>
+        <p>
+          Register your account, verify your email using OTP, and securely sign
+          in to access protected features.
+        </p>
+      </div>
+      <div class="about-item">
+        <span class="feature-icon about-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="7" height="7" rx="1.2"></rect>
+            <rect x="13" y="4" width="7" height="7" rx="1.2"></rect>
+            <rect x="4" y="13" width="7" height="7" rx="1.2"></rect>
+            <rect x="13" y="13" width="7" height="7" rx="1.2"></rect>
+          </svg>
+        </span>
+        <h3>Dashboard</h3>
+        <span class="about-item-accent" aria-hidden="true"></span>
+        <p>
+          Access your profile, manage users, view application features, and
+          securely log out from your account.
+        </p>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .about-card {
+    width: min(1200px, 92%) !important;
+    max-width: 1200px !important;
+    padding: clamp(2.5rem, 5vw, 4.5rem) !important;
+    margin: 0 auto;
+    min-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .about-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .about-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--purple-glow);
+    color: var(--purple);
+  }
+
+  .about-title {
+    font-size: clamp(2.25rem, 4vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0;
+  }
+
+  .about-description {
+    font-size: 1.15rem;
+    line-height: 1.85;
+    color: var(--muted);
+    max-width: 880px;
+    margin-bottom: 3.5rem;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+
+  .about-item {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.6);
+    padding: 2.5rem;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--ease), border-color var(--ease);
+  }
+
+  .about-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124, 92, 252, 0.25);
+  }
+
+  .about-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    margin-bottom: 1.1rem;
+  }
+
+  .about-item h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin-bottom: 0;
+  }
+
+  .about-item-accent {
+    display: block;
+    width: 28px;
+    height: 2px;
+    margin: 0.7rem 0 1.1rem;
+    background: var(--purple);
+    border-radius: 999px;
+  }
+
+  .about-item p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.75;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 900px) {
+    .about-card {
+      width: 94% !important;
+      padding: 2rem !important;
+      min-height: auto;
+      margin: 1.5rem auto;
+    }
+
+    .about-header {
+      gap: 0.7rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .about-badge {
+      width: 38px;
+      height: 38px;
+    }
+
+    .about-title {
+      font-size: 2rem;
+    }
+
+    .about-description {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    .about-item {
+      min-height: auto;
+      padding: 1.5rem;
+    }
+  }
+</style>

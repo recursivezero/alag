@@ -1,0 +1,122 @@
+---
+interface Props {
+  title: string;
+  value: string | number;
+  description?: string;
+  trendValue?: string;
+  trendLabel?: string;
+  trendDirection?: "up" | "down";
+  tone?: "violet" | "emerald" | "amber" | "sky" | "rose";
+  valueId?: string;
+  class?: string;
+}
+
+const {
+  title,
+  value,
+  description = "",
+  trendValue = "",
+  trendLabel = "",
+  trendDirection = "up",
+  tone = "violet",
+  valueId = "",
+  class: className = "",
+} = Astro.props as Props;
+
+const toneClasses = {
+  violet: "from-violet-500/18 to-indigo-500/10 border-violet-300/18",
+  emerald: "from-emerald-500/16 to-cyan-500/10 border-emerald-300/18",
+  amber: "from-amber-500/16 to-orange-500/10 border-amber-300/18",
+  sky: "from-sky-500/16 to-blue-500/10 border-sky-300/18",
+  rose: "from-rose-500/16 to-red-500/10 border-rose-300/18",
+} as const;
+
+const iconToneClasses = {
+  violet:
+    "border-violet-400/28 bg-[linear-gradient(180deg,rgba(124,92,252,0.24),rgba(79,70,229,0.12))] text-violet-100 shadow-[0_0_18px_rgba(124,92,252,0.14)]",
+  emerald:
+    "border-emerald-400/22 bg-[linear-gradient(180deg,rgba(16,185,129,0.18),rgba(20,184,166,0.09))] text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.12)]",
+  amber:
+    "border-amber-400/22 bg-[linear-gradient(180deg,rgba(245,158,11,0.18),rgba(249,115,22,0.09))] text-amber-100 shadow-[0_0_18px_rgba(245,158,11,0.12)]",
+  sky: "border-sky-400/22 bg-[linear-gradient(180deg,rgba(56,189,248,0.18),rgba(37,99,235,0.09))] text-sky-100 shadow-[0_0_18px_rgba(56,189,248,0.12)]",
+  rose: "border-rose-400/22 bg-[linear-gradient(180deg,rgba(244,63,94,0.18),rgba(190,18,60,0.09))] text-rose-100 shadow-[0_0_18px_rgba(244,63,94,0.12)]",
+} as const;
+---
+
+<article
+  data-admin-surface="stat-card"
+  data-tone={tone}
+  class:list([
+  "glass-panel
+  flex
+  h-full
+  min-h-[210px]
+  flex-col
+  rounded-[26px]
+  border
+  bg-[linear-gradient(180deg,rgba(13,18,34,0.96),rgba(8,12,24,0.92))]
+  p-5
+  shadow-[0_24px_64px_rgba(0,0,0,0.28)]
+  transition
+  duration-200
+  hover:-translate-y-0.5
+  hover:shadow-[0_30px_74px_rgba(0,0,0,0.36)]",
+  toneClasses[tone],
+  className,
+  ])>
+  <div class="flex items-start gap-4">
+    <div
+      data-admin-icon
+      data-tone={tone}
+      class:list([
+      "grid
+      h-14
+      w-14
+      shrink-0
+      place-items-center
+      rounded-[10px]
+      border
+      bg-white
+      5
+      p-2",
+      iconToneClasses[tone],
+      ])
+    >
+      <slot name="icon" />
+    </div>
+    <div class="min-w-0 flex-1 pt-0.5">
+      <p class="text-[1.05rem] font-medium tracking-[-0.03em] text-white/88">
+        {title}
+      </p>
+      <p
+        id={valueId || undefined}
+        class="mt-2 text-[clamp(2.65rem,4vw,3.2rem)] font-semibold tracking-[-0.07em] text-white"
+      >
+        {value}
+      </p>
+    </div>
+  </div>
+
+  {
+    trendValue || trendLabel ? (
+      <div class="mt-auto flex items-center gap-2 pt-5">
+        <span
+          class:list={[
+            "inline-flex items-center gap-1.5 text-[0.95rem] font-semibold",
+            trendDirection === "down" ? "text-rose-400" : "text-emerald-400",
+          ]}
+        >
+          <span class="text-lg leading-none">
+            {trendDirection === "down" ? "↓" : "↑"}
+          </span>
+          {trendValue}
+        </span>
+        <span class="text-[0.95rem] text-slate-300/82">{trendLabel}</span>
+      </div>
+    ) : description ? (
+      <p class="mt-auto pt-5 text-sm leading-6 text-slate-300/76">
+        {description}
+      </p>
+    ) : null
+  }
+</article>

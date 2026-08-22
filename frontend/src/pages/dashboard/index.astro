@@ -1,0 +1,152 @@
+---
+import UserDashboardLayout from "../../layouts/UserDashboardLayout.astro";
+import Feed from "../../components/user/Feed.astro";
+import FeedFilters from "../../components/user/FeedFilters.astro";
+import UploadModal from "../../components/user/UploadModal.astro";
+
+import { fetchCurrentUserOrGuest } from "../../services/userService";
+import { fetchFeedPosts } from "../../services/postService";
+
+const cookieHeader = Astro.request.headers.get("cookie") || "";
+
+const filter = Astro.url.searchParams.get("filter") || "all";
+
+const currentUser = await fetchCurrentUserOrGuest({ cookieHeader });
+
+const posts = currentUser.id
+  ? await fetchFeedPosts({
+      cookieHeader,
+      userId: currentUser.id,
+      filter,
+    })
+  : [];
+---
+
+<UserDashboardLayout title="Dashboard | RecursiveAuth" user={currentUser}>
+  <div
+    class="page-grid  w-full max-w-[1400px] px-5 py-6 lg:px-6 lg:py-7"
+  >
+   
+    <section class="feed-col mx-auto min-w-0 w-full max-w-[1150px]">
+     
+      <div class="mb-6">
+        <p
+          class="text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-400"
+        >
+          Welcome back, {currentUser.name}
+        </p>
+        <h1
+          class="mt-1.5 text-[32px] font-black tracking-[-0.05em] text-[color:var(--dashboard-text)] lg:text-[36px]"
+        >
+          Your social feed
+        </h1>
+        <p
+          class="mt-2 max-w-xl text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+        >
+          Discover fresh image posts, save what inspires you, and stay connected
+          with the people and moments you follow.
+        </p>
+      </div>
+
+    
+<div class="filters-wrapper">
+  <FeedFilters current={filter} />
+</div>
+
+      <!-- Posts feed -->
+   <div class="posts-wrapper">
+     <Feed posts={posts} />
+   </div>
+    </section>
+
+    
+  </div>
+
+  <UploadModal />
+</UserDashboardLayout>
+
+<style>
+
+  
+ .page-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+
+  padding-left: 0 !important;
+  padding-right: 20px !important;
+
+  padding-top: 24px !important;
+  padding-bottom: 32px !important;
+}
+  @media (min-width: 1024px) {
+    .page-grid {
+      padding-left: 28px !important;
+      padding-right: 28px !important;
+    }
+  }
+
+ /* @media (min-width: 1280px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
+} */
+@media (min-width: 1280px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+}
+ 
+  .profile-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--dashboard-shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+ 
+  .section-divider {
+    height: 1px;
+    background: var(--dashboard-border);
+    margin: 0 1.25rem;
+  }
+
+  
+  .stat-chip {
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+  }
+
+
+  .tag-chip {
+    border-color: var(--dashboard-border);
+    background: var(--dashboard-surface);
+  }
+  .tag-chip:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    background: var(--dashboard-accent-soft);
+    color: var(--dashboard-accent);
+  }
+
+  
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dashboard-muted);
+  }
+  .posts-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.filters-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  
+}
+</style>

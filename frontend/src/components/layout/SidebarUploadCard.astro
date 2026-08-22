@@ -1,0 +1,56 @@
+---
+
+---
+
+<article
+  data-sidebar-upload-card
+  class="rounded-[24px] border border-white/6 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] transition-all duration-300"
+>
+  <div class="flex items-start gap-3">
+    <div
+      class="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] border border-violet-400/20 bg-violet-500/10 text-violet-100 shadow-[0_0_24px_rgba(124,58,237,0.16)]"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M12 16V4"></path>
+        <path d="m7 9 5-5 5 5"></path>
+        <path d="M4 20h16"></path>
+      </svg>
+    </div>
+
+    <div data-sidebar-upload-copy class="min-w-0">
+      <p class="text-sm font-semibold text-[color:var(--dashboard-text)]">
+        Upload your image
+      </p>
+
+      <p class="mt-1 text-xs leading-5 text-[color:var(--dashboard-muted)]">
+        Share something new with the feed.
+      </p>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    data-upload-trigger
+    class="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[16px] bg-violet-600 px-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(124,58,237,0.28)] transition hover:bg-violet-500 hover:shadow-[0_14px_30px_rgba(124,58,237,0.34)]"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path d="M12 16V4"></path>
+      <path d="m7 9 5-5 5 5"></path>
+      <path d="M4 20h16"></path>
+    </svg>
+
+    <span data-sidebar-upload-button-label>Upload image</span>
+  </button>
+</article>
