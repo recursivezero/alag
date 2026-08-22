@@ -19,7 +19,11 @@ import { sendWhatsAppOTP } from '../utils/whatsapp.js'
 import { getCookie, setCookie } from 'hono/cookie'
 import { getRequestIp } from '../utils/requestIp.js'
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID || ''
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const googleClientId = process.env.PUBLIC_GOOGLE_CLIENT_ID || ''
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null
 const frontendUrl = (process.env.FRONTEND_URL || process.env.PUBLIC_FRONTEND_URL || 'http://localhost:4321').replace(/\/$/, '')
 
