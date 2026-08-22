@@ -1,0 +1,18 @@
+---
+import Avatar from "../ui/Avatar.astro";
+import type { PostItem } from "../../types/post";
+import { formatRelativeTime } from "../../services/interactionService";
+
+const { post } = Astro.props as { post: PostItem };
+---
+
+<header class="rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+  <div class="flex flex-wrap items-center gap-4">
+    <Avatar src={post.author.picture || "/icon.png"} alt={post.author.name} size="lg" />
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-accent)]">Image story</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--dashboard-text)]">{post.title}</h1>
+      <p class="mt-2 text-sm text-[color:var(--dashboard-muted)]">By {post.author.name} · {formatRelativeTime(post.createdAt)} · {post.location || "Global"}</p>
+    </div>
+  </div>
+</header>

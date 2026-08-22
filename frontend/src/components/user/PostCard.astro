@@ -1,0 +1,791 @@
+---
+import Avatar from "../ui/Avatar.astro";
+import Modal from "../ui/Modal.astro";
+import postCardScriptUrl from "../../scripts/post-card.ts?url";
+
+import type { PostItem } from "../../types/post";
+
+import {
+  formatCounter,
+  formatRelativeTime,
+} from "../../services/interactionService";
+
+const { post } = Astro.props as {
+  post: PostItem;
+};
+
+const postShareUrl = `${Astro.url.origin}/posts/${post.slug}`;
+const encodedShareUrl = encodeURIComponent(postShareUrl);
+
+const shareTargets = {
+  whatsapp: `https://wa.me/?text=${encodedShareUrl}`,
+  x: `https://twitter.com/intent/tweet?url=${encodedShareUrl}`,
+  facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}`,
+  linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedShareUrl}`,
+  reddit: `https://www.reddit.com/submit?url=${encodedShareUrl}`,
+};
+---
+
+<article
+  data-post-card
+  data-post-slug={post.slug}
+  data-post-author-id={post.author.id}
+  data-post-author-username={post.author.username || ""}
+  data-post-author-email={post.author.email || ""}
+  class="group relative overflow-visible rounded-[28px] border border-white/5 bg-white/[0.03] shadow-[0_18px_50px_rgba(0,0,0,0.22)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/10 hover:shadow-[0_26px_70px_rgba(0,0,0,0.3)]"
+>
+  <div class="main-card flex items-center justify-between px-5 pt-5">
+    <div class="flex min-w-0 items-center gap-3">
+      <Avatar
+        src={post.author.picture || "/icon.png"}
+        alt={post.author.name}
+        size="md"
+      />
+
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span
+            class="truncate text-[13px] font-semibold text-[color:var(--dashboard-text)] transition hover:text-violet-300"
+          >
+            {post.author.name}
+          </span>
+
+          <span
+            class="inline-flex items-center rounded-full border border-violet-500/18 bg-violet-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300"
+          >
+            New
+          </span>
+        </div>
+
+        <p
+          class="mt-0.5 truncate text-[11px] text-[color:var(--dashboard-muted)]"
+        >
+          {formatRelativeTime(post.createdAt)}
+          ·
+          {post.location || "Worldwide"}
+        </p>
+      </div>
+    </div>
+
+    <div class="absolute right-5 top-5 z-30">
+      <button
+        type="button"
+        data-post-menu-btn
+        aria-haspopup="true"
+        aria-expanded="false"
+        class="grid h-10 w-10 place-items-center rounded-full bg-transparent text-[color:var(--dashboard-muted)] transition hover:text-[color:var(--dashboard-text)]"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="1.75"></circle>
+
+          <circle cx="12" cy="12" r="1.75"></circle>
+
+          <circle cx="12" cy="19" r="1.75"></circle>
+        </svg>
+      </button>
+
+      <div
+        data-post-menu
+        role="menu"
+        aria-hidden="true"
+        class="delete-postcard absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.2)] z-40 invisible opacity-0 translate-y-1 transition-[opacity,transform] duration-150"
+      >
+        <button
+          type="button"
+          data-post-menu-delete
+          class="delete-postcard-btn flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-rose-500 hover:bg-[color:var(--dashboard-accent-soft)]"
+          role="menuitem">Delete Post</button
+        >
+        <button
+          type="button"
+          data-post-menu-cancel
+          class="cancel-postcard-btn mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-[color:var(--dashboard-muted)] hover:bg-[color:var(--dashboard-accent-soft)]"
+          role="menuitem">Cancel</button
+        >
+      </div>
+    </div>
+  </div>
+
+  <div class="main-card2">
+    <div class="relative mt-3 block px-4">
+      <div class="overflow-hidden rounded-[18px]">
+        <img
+          src={post.imageUrl}
+          alt={post.altText || post.title}
+          loading="lazy"
+          class="aspect-[16/7] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+        />
+      </div>
+
+      <div
+        class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100"
+      >
+      </div>
+    </div>
+
+    <div class="px-5 py-5">
+      <div class="post-title">
+        <div
+          class="text-[24px] font-black tracking-[-0.04em] text-[color:var(--dashboard-text)] transition"
+        >
+          {post.title}
+        </div>
+
+        {post.altText && (
+          <p
+            class="mt-2 line-clamp-2 text-[14px] leading-6 text-[color:var(--dashboard-muted)]"
+          >
+            {post.altText}
+          </p>
+        )}
+      </div>
+
+      <div
+        class="mt-5 flex items-center justify-between border-t border-white/5 pt-4"
+      >
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="like-btn"
+            aria-pressed={post.userState?.liked ? "true" : "false"}
+            class:list={[
+              "inline-flex items-center gap-2 rounded-[14px] px-3 py-2.5 text-[13px] font-medium transition-[transform,background-color,box-shadow,color]",
+              post.userState?.liked
+                ? "bg-rose-500/10 text-rose-300"
+                : "text-[color:var(--dashboard-muted)] hover:bg-white/[0.04] hover:text-[color:var(--dashboard-muted)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]",
+            ]}
+          >
+
+    
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              class="like-icon"
+              fill={post.userState?.liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"
+              ></path>
+            </svg>
+
+            {formatCounter(post.counts.likes)}
+          </button>
+
+          <button
+            type="button"
+            class="comment-btn inline-flex items-center gap-2 rounded-[14px] px-3 py-2.5 text-[13px] font-medium text-[color:var(--dashboard-muted)] transition hover:bg-white/[0.04] hover:text-white"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M7.9 20.5a.8.8 0 0 1-1.3-.6V17a8 8 0 1 1 5.9 1.8 8 8 0 0 1-4.6 1.7Z"
+              ></path>
+            </svg>
+
+            {formatCounter(post.counts.comments)}
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={post.userState?.saved ? "true" : "false"}
+            class="saved-btn"
+            class:list={[
+              "inline-flex items-center gap-2 rounded-[14px] px-3 py-2.5 text-[13px] font-medium transition-[transform,background-color,box-shadow,color]",
+              post.userState?.saved
+  ? "bg-violet-500/10 text-violet-300"
+  : "text-[color:var(--dashboard-muted)] hover:bg-white/[0.04] hover:text-[color:var(--dashboard-muted)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
+            ]}
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill={post.userState?.saved ? "currentColor" : "none"}
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M7 4h10a1 1 0 0 1 1 1v16l-6-3-6 3V5a1 1 0 0 1 1-1Z"
+              ></path>
+            </svg>
+
+            Save
+          </button>
+
+          <button
+            type="button"
+            data-share-trigger
+            aria-haspopup="dialog"
+            class="share-btn inline-flex items-center gap-2 rounded-[14px] px-3 py-2.5 text-[13px] font-medium text-[color:var(--dashboard-muted)] transition hover:bg-white/[0.04] hover:text-white"
+          >
+           <svg
+  class="h-4 w-4"
+  viewBox="0 0 16 16"
+  fill="currentColor"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5"
+  />
+</svg>
+
+            Share
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Modal
+    id={`delete-modal-${post.slug}`}
+    role="dialog"
+    ariaModal={true}
+    ariaLabelledby={`delete-modal-${post.slug}-title`}
+    ariaDescribedby={`delete-modal-${post.slug}-desc`}
+    class="bg-slate-950/40 backdrop-blur-md"
+    panelClass="w-[min(94vw,520px)] rounded-[18px] p-5"
+  >
+
+    <div class="delete-modal-content">
+  
+  <div class="delete-icon-wrap">
+    <svg
+      class="delete-icon"
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="32"
+        cy="32"
+        r="22"
+        stroke="currentColor"
+        stroke-width="3"
+      />
+      <path
+        d="M32 22V34"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+      />
+      <circle cx="32" cy="42" r="2.5" fill="currentColor" />
+    </svg>
+  </div>
+
+ 
+  <h3
+    id={`delete-modal-${post.slug}-title`}
+    class="delete-title"
+  >
+    Delete this post?
+  </h3>
+
+
+  <p
+    id={`delete-modal-${post.slug}-desc`}
+    class="delete-description"
+  >
+    This action cannot be undone.
+  </p>
+
+  
+  <div class="delete-actions">
+    <button
+      type="button"
+      data-delete-cancel
+      class="delete-btn-cancel"
+    >
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      data-delete-confirm
+      class="delete-btn-danger"
+    >
+      Delete Post
+    </button>
+  </div>
+</div>
+
+  </Modal>
+
+  <Modal
+    
+    id={`share-modal-${post.slug}`}
+    role="dialog"
+    ariaModal={true}
+    ariaLabelledby={`share-modal-${post.slug}-title`}
+    ariaDescribedby={`share-modal-${post.slug}-desc`}
+    class="bg-slate-950/40 backdrop-blur-md"
+    panelClass="w-[min(92vw,440px)] rounded-[24px] p-6 border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] shadow-[0_24px_80px_rgba(0,0,0,0.28)]"
+  >
+    <div class="share-modal-content">
+      <div class="share-modal-head">
+        <h3 id={`share-modal-${post.slug}-title`} class="share-modal-title">
+          Share this post!
+        </h3>
+        <button
+          type="button"
+          data-share-close
+          aria-label="Close share dialog"
+          class="share-modal-close-btn"
+        >
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+          >
+            <path d="m18 6-12 12"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <p id={`share-modal-${post.slug}-desc`} class="share-modal-subtitle">
+        Share this post with the world!
+      </p>
+
+      <div class="share-social-row" role="group" aria-label="Share on social media">
+        <a
+          href={shareTargets.whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-platform="whatsapp"
+          aria-label="Share on WhatsApp"
+          class="share-social-btn share-social-whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.81L2 22l5.41-1.42a9.86 9.86 0 0 0 4.63 1.18h.01c5.46 0 9.9-4.45 9.9-9.91S17.5 2 12.04 2zm5.8 14.03c-.24.68-1.4 1.3-1.93 1.37-.5.07-1.11.1-1.79-.11-.41-.13-.94-.3-1.61-.6-2.84-1.23-4.69-4.1-4.83-4.29-.14-.19-1.16-1.54-1.16-2.94s.73-2.09 1-2.38c.26-.29.56-.36.75-.36.19 0 .38 0 .54.01.17.01.4-.07.63.48.24.58.81 2 .88 2.14.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.62 2 1.12.99 2.06 1.3 2.35 1.45.29.14.46.12.63-.07.17-.19.72-.83.91-1.12.19-.29.38-.24.63-.15.26.1 1.65.78 1.93.92.29.14.48.22.55.34.07.13.07.72-.17 1.4z"></path>
+          </svg>
+        </a>
+
+        <a
+          href={shareTargets.x}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-platform="x"
+          aria-label="Share on X (Twitter)"
+          class="share-social-btn share-social-x"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.24 2.75h3.03l-6.62 7.56 7.79 10.94h-6.1l-4.78-6.62-5.47 6.62H2.06l7.08-8.58L1.66 2.75h6.26l4.32 6.05zm-1.06 16.6h1.68L7.9 4.5H6.1z"></path>
+          </svg>
+        </a>
+
+        <a
+          href={shareTargets.facebook}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-platform="facebook"
+          aria-label="Share on Facebook"
+          class="share-social-btn share-social-facebook"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M13.5 21v-8h2.68l.4-3.11h-3.08V7.94c0-.9.25-1.51 1.54-1.51h1.65V3.65C15.98 3.55 15.02 3.5 13.9 3.5c-2.34 0-3.94 1.43-3.94 4.05v2.34H7.27v3.11h2.69v8z"></path>
+          </svg>
+        </a>
+
+        <a
+          href={shareTargets.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-platform="linkedin"
+          aria-label="Share on LinkedIn"
+          class="share-social-btn share-social-linkedin"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M6.94 8.5H3.56V20.5h3.38zm-1.69-5.4a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92zM20.5 20.5h-3.37v-6.06c0-1.44-.03-3.3-2.01-3.3-2.01 0-2.32 1.57-2.32 3.2v6.16H9.44V8.5h3.24v1.64h.05c.45-.85 1.55-1.75 3.2-1.75 3.42 0 4.06 2.25 4.06 5.18z"></path>
+          </svg>
+        </a>
+
+        <a
+          href={shareTargets.reddit}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-platform="reddit"
+          aria-label="Share on Reddit"
+          class="share-social-btn share-social-reddit"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M22 12.14c0-1.14-.93-2.06-2.06-2.06-.55 0-1.05.22-1.42.57-1.4-.96-3.3-1.57-5.4-1.65l1.02-3.2 2.83.63a1.5 1.5 0 1 0 .15-.72l-3.16-.7a.37.37 0 0 0-.44.26l-1.14 3.6c-2.14.06-4.07.67-5.48 1.64a2.05 2.05 0 0 0-1.4-.56A2.06 2.06 0 0 0 4.36 13.9c0 .3.08.58.2.83a3.28 3.28 0 0 0-.06.6c0 2.5 3.06 4.53 6.83 4.53s6.83-2.02 6.83-4.53c0-.2-.02-.4-.05-.6.14-.27.22-.56.22-.86zM8.5 14.5a1.13 1.13 0 1 1 2.26 0 1.13 1.13 0 0 1-2.26 0zm6.94 2.5c-.65.64-1.86.87-2.44.87-.58 0-1.79-.23-2.44-.87a.28.28 0 0 1 .4-.4c.42.42 1.35.63 2.04.63.7 0 1.62-.21 2.04-.63a.28.28 0 1 1 .4.4zm-.44-1.37a1.13 1.13 0 1 1 0-2.26 1.13 1.13 0 0 1 0 2.26z"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="share-divider" role="separator"></div>
+
+      <div class="share-link-section">
+        <span class="share-link-label" id={`share-link-label-${post.slug}`}>
+          Share link
+        </span>
+        <div class="share-link-row">
+          <input
+            type="text"
+            data-share-link-input
+            readonly
+            value={postShareUrl}
+            aria-labelledby={`share-link-label-${post.slug}`}
+            class="share-link-input"
+          />
+          <button
+            type="button"
+            data-share-copy
+            aria-label="Copy share link"
+            class="share-copy-btn"
+          >
+            Copy
+          </button>
+        </div>
+        <p data-share-copy-confirm class="share-copy-confirm" hidden>
+          <svg
+            class="h-3.5 w-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+          Link copied to clipboard!
+        </p>
+      </div>
+    </div>
+  </Modal>
+
+  <script type="module" src={postCardScriptUrl}></script>
+</article>
+
+<style>
+  .main-card {
+    padding: 15px;
+  }
+  .post-title {
+    padding: 10px;
+  }
+  .main-card2 {
+    padding: 20px;
+  }
+  .delete-postcard {
+    background-color: white;
+    padding: 14px;
+  }
+  .delete-postcard-btn {
+    height: 40px;
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+  .cancel-postcard-btn {
+    height: 40px;
+    padding: 15px;
+  }
+
+
+ 
+
+.delete-modal-content {
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+  margin-inline: auto;
+  background-color: white;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.delete-icon-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-icon {
+  width: 64px;
+  height: 64px;
+  color: #dc2626;
+}
+
+.delete-title {
+  margin-top: 18px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.dark .delete-title {
+  color: #ffffff;
+}
+
+.delete-description {
+  margin-top: 10px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 220px;
+  margin-inline: auto;
+}
+
+.dark .delete-description {
+  color: #94a3b8;
+}
+
+.delete-actions {
+  margin-top: 28px;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.delete-btn-cancel {
+  min-width: 130px;
+  height: 50px;
+  border-radius: 14px;
+  border: 1.5px solid #d9dde5;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.delete-btn-cancel:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.dark .delete-btn-cancel {
+  background: #1e293b;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+.delete-btn-danger {
+  min-width: 150px;
+  height: 50px;
+  border: none;
+  border-radius: 14px;
+  background: #e53935;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow:
+    0 8px 18px rgba(229, 57, 53, 0.28),
+    0 2px 6px rgba(229, 57, 53, 0.18);
+  transition: all 0.2s ease;
+}
+
+.delete-btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.delete-btn-danger:active {
+  transform: translateY(0);
+}
+
+
+.like-btn{
+  background-color:transparent;
+  color:red;
+  padding: 10px;
+}
+.like-btn:hover {
+  transform: translateY(-1px);
+}
+.like-icon:hover{
+  color: var(--dashboard-text);
+}
+.saved-btn{
+  background-color: transparent;
+  padding: 10px;
+}
+
+
+html.dark .comment-btn,
+html.dark .share-btn,
+html.dark .saved-btn[aria-pressed="false"] {
+  color: #c7cbdb;
+}
+
+html.dark .comment-btn:hover,
+html.dark .share-btn:hover,
+html.dark .saved-btn[aria-pressed="false"]:hover {
+  color: #f4f6fb;
+}
+
+.share-modal-content {
+  padding:12px;
+  text-align: left;
+}
+/* .modal-box{
+  padding:20px;
+} */
+.share-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.share-modal-title {
+  font-size: 1.35rem;
+  line-height: 1.3;
+  font-weight: 800;
+  color: var(--dashboard-text);
+  letter-spacing: -0.015em;
+}
+
+.share-modal-close-btn {
+  display: inline-flex;
+  height: 34px;
+  width: 34px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--dashboard-muted);
+  background: transparent;
+  transition: background 200ms, color 200ms;
+}
+
+.share-modal-close-btn:hover {
+  background: var(--dashboard-border);
+  color: var(--dashboard-text);
+}
+
+.share-modal-subtitle {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--dashboard-muted);
+}
+
+.share-social-row {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.share-social-btn {
+  display: inline-flex;
+  height: 48px;
+  width: 48px;
+  flex: 1 1 0;
+  max-width: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+}
+
+.share-social-btn svg {
+  height: 21px;
+  width: 21px;
+}
+
+.share-social-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.06);
+}
+
+.share-social-btn:focus-visible {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 2px;
+}
+
+.share-social-whatsapp { background: #25d366; }
+.share-social-x { background: #000000; }
+.share-social-facebook { background: #1877f2; }
+.share-social-linkedin { background: #0a66c2; }
+.share-social-reddit { background: #ff4500; }
+
+.share-divider {
+  margin-top: 24px;
+  height: 1px;
+  width: 100%;
+  background: var(--dashboard-border);
+}
+
+.share-link-section {
+  margin-top: 20px;
+}
+
+.share-link-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--dashboard-muted);
+  margin-bottom: 8px;
+}
+
+.share-link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.share-link-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface);
+  color: var(--dashboard-text);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-link-input:focus {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 1px;
+}
+
+.share-copy-btn {
+  flex-shrink: 0;
+  width: 84px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--dashboard-accent);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.share-copy-btn:hover {
+  background: var(--dashboard-accent-strong, var(--dashboard-accent));
+  transform: translateY(-1px);
+}
+
+.share-copy-confirm {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #22c55e;
+}
+
+</style>

@@ -1,0 +1,261 @@
+---
+import Sidebar from "./Sidebar.astro";
+import Topbar from "./Topbar.astro";
+import AddUserModal from "./AddUserModal.astro";
+
+interface Props {
+  active?:
+    | "dashboard"
+    | "users"
+    | "add-user"
+    | "admin-information"
+    | "waitlist"
+    | "settings";
+  title: string;
+  eyebrow?: string;
+  description?: string;
+  searchPlaceholder?: string;
+  searchId?: string;
+  showSearch?: boolean;
+  showNotifications?: boolean;
+  showThemeToggle?: boolean;
+  primaryActionLabel?: string;
+  primaryActionId?: string;
+  showAddUserAction?: boolean;
+}
+
+const props = Astro.props as Props;
+---
+
+<div
+  data-admin-shell
+  data-admin-surface="shell"
+  class="h-screen
+    overflow-hidden
+    bg-[#040b17]
+    p-[10px]
+    text-white"
+>
+  <!-- MAIN LAYOUT -->
+  <div
+    class="mx-auto
+      flex
+      h-full
+      w-full
+      items-stretch
+      gap-[10px]"
+  >
+    <!-- SIDEBAR -->
+    <Sidebar
+      active={props.active}
+      showAddUserAction={props.showAddUserAction}
+    />
+
+    <!-- CONTENT -->
+    <main
+      id="mainContent"
+      data-admin-surface="main"
+      class="min-w-0
+        flex-1
+        overflow-hidden
+        min-h-0"
+    >
+      <div
+        class="relative
+          h-full
+          overflow-y-auto
+          overflow-x-hidden
+          px-[28px]
+          py-[24px]"
+      >
+        <!-- TOP BLUE GLOW -->
+        <div
+          class="pointer-events-none
+            absolute
+            inset-0
+            opacity-[0.06]
+            bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.35),transparent_55%)]"
+        >
+        </div>
+
+        <!-- SIDE GLOW -->
+        <div
+          class="pointer-events-none
+            absolute
+            left-0
+            top-0
+            h-full
+            w-[320px]
+            opacity-[0.03]
+            bg-[linear-gradient(90deg,rgba(124,92,255,0.5),transparent)]"
+        >
+        </div>
+
+        <!-- CONTENT LAYER -->
+        <div class="relative z-10">
+          <!-- TOPBAR -->
+          <Topbar
+            title={props.title}
+            eyebrow={props.eyebrow}
+            description={props.description}
+            searchPlaceholder={props.searchPlaceholder}
+            searchId={props.searchId}
+            showSearch={props.showSearch}
+            showNotifications={props.showNotifications}
+            showThemeToggle={props.showThemeToggle}
+            showAddUserAction={props.showAddUserAction}
+          />
+
+          <!-- PAGE CONTENT -->
+          <section class="mt-6">
+            <slot />
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<AddUserModal openByDefault={false} />
+
+<script>
+  const modal = document.getElementById("addUserModal");
+  const card = document.getElementById("addUserCard");
+  const backdrop = document.getElementById("addUserBackdrop");
+
+  const cancelBtn = document.getElementById("cancelAdd");
+  const closeBtn = document.getElementById("closeAddUserModal");
+
+  const openButtons = [
+    document.getElementById("addUserBtn"),
+    document.getElementById("dashboardAddUserBtn"),
+  ];
+
+  const openModal = () => {
+    if (!modal || !card) return;
+
+    modal.classList.remove("opacity-0", "pointer-events-none");
+
+    modal.classList.add("opacity-100", "pointer-events-auto");
+
+    modal.setAttribute("aria-hidden", "false");
+
+    card.classList.remove("scale-95", "opacity-0");
+
+    card.classList.add("scale-100", "opacity-100");
+
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeModal = () => {
+    if (!modal || !card) return;
+
+    modal.classList.add("opacity-0", "pointer-events-none");
+
+    modal.classList.remove("opacity-100", "pointer-events-auto");
+
+    modal.setAttribute("aria-hidden", "true");
+
+    card.classList.add("scale-95", "opacity-0");
+
+    card.classList.remove("scale-100", "opacity-100");
+
+    document.body.style.overflow = "";
+  };
+
+  openButtons.forEach((btn) => {
+    btn?.addEventListener("click", openModal);
+  });
+
+  backdrop?.addEventListener("click", closeModal);
+
+  cancelBtn?.addEventListener("click", closeModal);
+
+  closeBtn?.addEventListener("click", closeModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeModal();
+    }
+  });
+</script>
+
+<script>
+  (function () {
+    const THEME_KEY = "admin_theme";
+
+    const init = () => {
+      const adminShell = document.querySelector("[data-admin-shell]");
+      const toggles = Array.from(
+        document.querySelectorAll("[data-theme-toggle]"),
+      );
+
+      const sunSvg = `
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+      `;
+
+      const moonSvg = `
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      `;
+
+      const applyTheme = (theme) => {
+        if (!theme) return;
+        document.documentElement.dataset.adminTheme = theme;
+        document.documentElement.style.colorScheme = theme;
+        adminShell?.setAttribute("data-admin-theme", theme);
+        toggles.forEach((t) => {
+          t.setAttribute("aria-pressed", String(theme === "light"));
+
+          if (t.classList.contains("theme-switch")) {
+            const sidebarIcon =
+              t.parentElement?.querySelector(".sidebar-icon i");
+            if (sidebarIcon) {
+              sidebarIcon.classList.remove(
+                "fa-moon",
+                "fa-sun",
+                "fa-regular",
+                "fa-solid",
+              );
+              if (theme === "light") {
+                sidebarIcon.classList.add("fa-solid", "fa-sun");
+              } else {
+                sidebarIcon.classList.add("fa-regular", "fa-moon");
+              }
+            }
+            return;
+          }
+
+          try {
+            t.innerHTML = theme === "light" ? sunSvg : moonSvg;
+          } catch (e) {}
+        });
+      };
+
+      const stored = localStorage.getItem(THEME_KEY);
+      applyTheme(stored === "light" ? "light" : "dark");
+
+      toggles.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const next =
+            document.documentElement.dataset.adminTheme === "light"
+              ? "dark"
+              : "light";
+          localStorage.setItem(THEME_KEY, next);
+          applyTheme(next);
+        });
+      });
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
+    }
+  })();
+</script>

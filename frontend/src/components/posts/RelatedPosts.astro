@@ -1,0 +1,21 @@
+---
+import type { PostItem } from "../../types/post";
+
+const { posts } = Astro.props as { posts: PostItem[] };
+---
+
+<section class="rounded-[28px] border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-strong)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+  <h2 class="text-xl font-semibold text-[color:var(--dashboard-text)]">Related posts</h2>
+
+  <div class="mt-5 grid gap-4 md:grid-cols-3">
+    {posts.map((post) => (
+      <a href={`/posts/${post.slug}`} class="group overflow-hidden rounded-[22px] border border-[color:var(--dashboard-border)] bg-white/5 transition hover:-translate-y-0.5 hover:border-[color:var(--dashboard-accent)]">
+        <img src={post.imageUrl} alt={post.title} class="aspect-[4/3] w-full object-cover" />
+        <div class="space-y-2 p-4">
+          <p class="text-sm font-semibold text-[color:var(--dashboard-text)] transition group-hover:text-[color:var(--dashboard-accent)]">{post.title}</p>
+          <p class="line-clamp-2 text-xs leading-5 text-[color:var(--dashboard-muted)]">{post.caption}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>

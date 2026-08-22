@@ -1,0 +1,498 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout page="home" title="Recursive Auth — Share Moments. Inspire Others.">
+  <section class="hero-shell">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="hero-badge">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+          Share · Connect · Inspire
+        </div>
+
+        <h1>Share Moments.<br /><span>Inspire Others.</span></h1>
+
+        <p>
+          Upload your images, share your perspective, and discover inspiring
+          moments from a global community.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/register" class="btn-hero solid">
+            Get Started
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"
+              ></path></svg
+            >
+          </a>
+          <a href="/login" class="btn-hero outline">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><path
+                d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path></svg
+            >
+            Sign In
+          </a>
+        </div>
+
+        <div class="hero-social">
+          <div class="hero-avatars" aria-hidden="true">
+            <img src="https://i.pravatar.cc/64?img=32" alt="" />
+            <img src="https://i.pravatar.cc/64?img=48" alt="" />
+            <img src="https://i.pravatar.cc/64?img=15" alt="" />
+            <img src="https://i.pravatar.cc/64?img=25" alt="" />
+          </div>
+          <span>Join thousands of creators sharing their vision.</span>
+        </div>
+      </div>
+
+      <div class="hero-collage" aria-hidden="true">
+        <img
+          class="collage-img c1"
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=700&auto=format&fit=crop"
+          alt=""
+          loading="eager"
+        />
+        <img
+          class="collage-img c2"
+          src="https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?q=80&w=700&auto=format&fit=crop"
+          alt=""
+          loading="eager"
+        />
+        <img
+          class="collage-img c3"
+          src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=600&auto=format&fit=crop"
+          alt=""
+          loading="eager"
+        />
+        <img
+          class="collage-img c4"
+          src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=650&auto=format&fit=crop"
+          alt=""
+          loading="eager"
+        />
+        <div class="collage-glow"></div>
+      </div>
+    </div>
+
+    <div class="hc-features">
+      <div class="hc-feature-card">
+        <div class="hc-feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><rect x="3" y="11" width="18" height="11" rx="2"></rect><path
+              d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg
+          >
+        </div>
+        <h3>Secure & Private</h3>
+        <p>Your data and images are protected with industry-standard security.</p>
+      </div>
+
+      <div class="hc-feature-card">
+        <div class="hc-feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg
+          >
+        </div>
+        <h3>Share Instantly</h3>
+        <p>Upload and share your moments in just a few seconds.</p>
+      </div>
+
+      <div class="hc-feature-card">
+        <div class="hc-feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><circle cx="12" cy="12" r="9"></circle><path
+              d="M3.6 9h16.8M3.6 15h16.8M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18"
+            ></path></svg
+          >
+        </div>
+        <h3>Global Community</h3>
+        <p>Connect with creators and discover inspiring stories worldwide.</p>
+      </div>
+    </div>
+
+    <div class="hc-steps-wrap">
+      <h2 class="hc-steps-title">How It Works</h2>
+      <div class="hc-steps">
+        <div class="hc-step">
+          <span class="hc-step-num">01</span>
+          <h4>Create Account</h4>
+          <p>Sign up and create your free account.</p>
+        </div>
+        <div class="hc-step-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </div>
+        <div class="hc-step">
+          <span class="hc-step-num">02</span>
+          <h4>Upload Your Moments</h4>
+          <p>Upload your images and add a short description.</p>
+        </div>
+        <div class="hc-step-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </div>
+        <div class="hc-step">
+          <span class="hc-step-num">03</span>
+          <h4>Share With Community</h4>
+          <p>Share your moments and connect with others.</p>
+        </div>
+        <div class="hc-step-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </div>
+        <div class="hc-step">
+          <span class="hc-step-num">04</span>
+          <h4>Discover & Get Inspired</h4>
+          <p>Explore amazing content from around the world.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .hero-shell {
+    width: min(100%, 1280px);
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+    gap: 2.5rem;
+    min-height: 70vh;
+    padding-top: 2rem;
+  }
+
+  .hero-copy { max-width: 560px; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--purple-glow);
+    border: 1px solid rgba(124, 92, 252, 0.25);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--purple-light);
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.6rem, 5vw, 3.7rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    margin-bottom: 1.1rem;
+    color: var(--text);
+  }
+
+  .hero-copy h1 span {
+    background: linear-gradient(100deg, var(--purple) 10%, var(--purple-light) 55%, #c9b8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-copy > p {
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 1.02rem;
+    max-width: 480px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 0.85rem;
+    margin-top: 1.9rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-hero {
+    padding: 0.85rem 1.55rem;
+    border-radius: 14px;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all var(--ease);
+  }
+
+  .btn-hero.solid {
+    background: var(--purple);
+    border: 1px solid transparent;
+    color: #fff;
+    box-shadow: 0 4px 22px rgba(124, 92, 252, 0.38);
+  }
+  .btn-hero.solid:hover { background: var(--purple-light); transform: translateY(-1px); }
+
+  .btn-hero.outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-hero.outline:hover {
+    background: var(--purple-glow);
+    border-color: rgba(124, 92, 252, 0.3);
+  }
+
+  .hero-social {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 2.2rem;
+  }
+
+  .hero-avatars {
+    display: flex;
+  }
+  .hero-avatars img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--bg);
+    margin-left: -8px;
+    background: var(--card);
+  }
+  .hero-avatars img:first-child { margin-left: 0; }
+
+  .hero-social span {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+ 
+  .hero-collage {
+    position: relative;
+    height: 440px;
+    justify-self: center;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .collage-glow {
+    position: absolute;
+    inset: 8%;
+    background: radial-gradient(circle, rgba(124, 92, 252, 0.35) 0%, transparent 70%);
+    filter: blur(30px);
+    z-index: 0;
+  }
+
+  .collage-img {
+    position: absolute;
+    border-radius: 18px;
+    object-fit: cover;
+    box-shadow: 0 20px 45px rgba(124, 92, 252, 0.25), 0 8px 20px rgba(0, 0, 0, 0.25);
+    border: 3px solid var(--surface);
+    z-index: 1;
+    transition: transform var(--ease);
+  }
+
+  .collage-img.c1 {
+    width: 56%;
+    height: 52%;
+    top: 2%;
+    left: 0;
+    transform: rotate(-6deg);
+  }
+  .collage-img.c2 {
+    width: 50%;
+    height: 42%;
+    top: 0;
+    right: 0;
+    transform: rotate(5deg);
+    z-index: 2;
+  }
+  .collage-img.c3 {
+    width: 38%;
+    height: 34%;
+    bottom: 4%;
+    left: 6%;
+    transform: rotate(4deg);
+    z-index: 3;
+  }
+  .collage-img.c4 {
+    width: 48%;
+    height: 44%;
+    bottom: 0;
+    right: 4%;
+    transform: rotate(-4deg);
+    z-index: 2;
+  }
+
+  .hero-collage:hover .collage-img { transform: rotate(0deg) scale(1.02); }
+
+ 
+  .hc-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.1rem;
+    margin-top: 4.5rem;
+  }
+
+  .hc-feature-card {
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1.6rem 1.5rem;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(124, 92, 252, 0.06);
+    transition: transform var(--ease), border-color var(--ease);
+  }
+  .hc-feature-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124, 92, 252, 0.28);
+  }
+
+  .hc-feature-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--purple-glow);
+    color: var(--purple-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .hc-feature-icon svg { width: 20px; height: 20px; }
+
+  .hc-feature-card h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--text);
+  }
+  .hc-feature-card p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+ 
+  .hc-steps-wrap { margin-top: 5.5rem; text-align: center; }
+
+  .hc-steps-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 2.2rem;
+    color: var(--text);
+  }
+
+  .hc-steps {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .hc-step {
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.4rem 1.2rem;
+    width: 210px;
+    text-align: left;
+  }
+
+  .hc-step-num {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--purple-light);
+    background: var(--purple-glow);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .hc-step h4 {
+    font-size: 0.94rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text);
+  }
+  .hc-step p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .hc-step-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--purple-light);
+    opacity: 0.6;
+    flex: 0 0 24px;
+  }
+  .hc-step-arrow svg { width: 20px; height: 20px; }
+
+  
+  @media (max-width: 980px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      min-height: unset;
+      text-align: center;
+    }
+    .hero-copy { max-width: 100%; margin: 0 auto; }
+    .hero-copy > p { margin: 0 auto; }
+    .hero-actions { justify-content: center; }
+    .hero-social { justify-content: center; }
+    .hero-collage { margin-top: 2.5rem; height: 380px; }
+    .hc-features { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .hero-shell { padding-top: 1.5rem; }
+    .hc-steps { flex-direction: column; align-items: center; }
+    .hc-step { width: 100%; max-width: 320px; }
+    .hc-step-arrow { transform: rotate(90deg); }
+  }
+</style>

@@ -1,0 +1,51 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  autocomplete?: string;
+  required?: boolean;
+  name?: string;
+  value?: string;
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  type = "text",
+  placeholder = "",
+  autocomplete = "off",
+  required = false,
+  name,
+  value,
+  class: className = "",
+} = Astro.props as Props;
+
+const isPassword = type === "password";
+
+const resolvedAutocomplete = isPassword
+  ? (autocomplete !== "off" ? autocomplete : "new-password")
+  : autocomplete;
+---
+
+<div class:list={["field", className]}>
+  <label for={id}>{label}</label>
+  <div class="input-wrap">
+    <slot name="icon" />
+    <input
+      id={id}
+      name={name || id}
+      type={type}
+      placeholder={placeholder}
+      autocomplete={resolvedAutocomplete}
+      required={required}
+      value={value}
+      data-lpignore={isPassword ? "true" : undefined}
+      data-form-type={isPassword ? "other" : undefined}
+      data-1p-ignore={isPassword ? "" : undefined}
+    />
+    <slot name="action" />
+  </div>
+</div>

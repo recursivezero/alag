@@ -1,0 +1,169 @@
+---
+import "../styles/global.css";
+import siteThemeScriptUrl from "../scripts/site-theme.ts?url";
+
+const page = Astro && Astro.props && Astro.props.page ? Astro.props.page : "";
+const title =
+  Astro && Astro.props && Astro.props.title
+    ? Astro.props.title
+    : "Recursive Auth";
+const authPages = new Set(["dashboard"]);
+---
+
+<html lang="en">
+  <head>
+    
+    <script is:inline>
+      (() => {
+        try {
+          const themeMode = sessionStorage.getItem("alag-user-theme");
+          const prefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)",
+          ).matches;
+          const effectiveTheme =
+            themeMode === "dark"
+              ? "dark"
+              : themeMode === "light"
+                ? "light"
+                : prefersDark
+                  ? "dark"
+                  : "light";
+
+          document.documentElement.classList.toggle(
+            "dark",
+            effectiveTheme === "dark",
+          );
+          document.documentElement.style.colorScheme = effectiveTheme;
+          document.documentElement.dataset.theme = effectiveTheme;
+          document.documentElement.dataset.themeMode =
+            themeMode === "dark" || themeMode === "light" || themeMode === "system"
+              ? themeMode
+              : prefersDark
+                ? "system"
+                : "light";
+        } catch (_) {}
+      })();
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="/icon2.png" sizes="1024X1024" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="/" class="nav-brand">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 2L4 7v5c0 4.55 3.4 8.74 8 9.93C16.6 20.74 20 16.55 20 12V7L12 2z"
+            fill="currentColor"
+            style="color: var(--purple);"></path>
+          <path
+            d="M9 12l2 2 4-4"
+            stroke="white"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+        <span>Recursive<span class="accent">Auth</span></span>
+      </a>
+      {
+        authPages.has(page) ? (
+          <ul class="nav-links auth-links">
+            <li>
+              <a href="/">Back to Home</a>
+            </li>
+            <li>
+              <a href="/dashboard" class={page === "dashboard" ? "active" : ""}>
+                Dashboard
+              </a>
+            </li>
+          </ul>
+        ) : (
+          <>
+            <ul class="nav-links nav-links-center">
+              <li>
+                <a href="/" class={page === "home" ? "active" : ""}>
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="/about" class={page === "about" ? "active" : ""}>
+                  About
+                </a>
+              </li>
+            </ul>
+
+            <div class="nav-actions">
+              <a
+                href="/login"
+                class={`nav-btn nav-btn-outline ${page === "login" ? "active" : ""}`}
+              >
+                Login
+              </a>
+              <a
+                href="/register"
+                class={`nav-btn nav-btn-solid ${page === "register" ? "active" : ""}`}
+              >
+                Join Us
+              </a>
+              <button
+                type="button"
+                data-theme-toggle
+                aria-label="Toggle dark and light theme"
+                class="theme-icon-btn"
+              >
+                <svg
+                  data-icon-moon
+                  class="theme-icon theme-icon-moon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <svg
+                  data-icon-sun
+                  class="theme-icon theme-icon-sun"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.9"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              </button>
+            </div>
+          </>
+        )
+      }
+    </nav>
+    <main class="page-container">
+      <slot />
+    </main>
+    <script type="module" src={siteThemeScriptUrl}></script>
+  </body>
+</html>
+
+<style>
+  :global(body) {
+    display: flex;
+    flex-direction: column;
+  }
+</style>
