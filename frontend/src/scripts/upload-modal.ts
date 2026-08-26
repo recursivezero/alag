@@ -1,4 +1,4 @@
-import { createPost, fetchDraft, saveDraft, discardDraft } from "../services/postService"
+import { createPost, fetchDraft, saveDraft, discardDraft, uploadPostImage } from "../services/postService"
 import type { DraftData } from "../services/postService"
 
 const modal = document.getElementById("upload-modal")
@@ -34,6 +34,7 @@ const maxFileSize = 10 * 1024 * 1024
 
 let selectedImage: File | null = null
 let selectedImageUrl = ""
+let remoteImageUrl: string | null = null
 let activeDraftId: number | null = null
 let uploadAbortController: AbortController | null = null
 let uploadProgressTimer: ReturnType<typeof setInterval> | null = null
@@ -258,6 +259,7 @@ const clearPreview = () => {
   selectedImage = null
   selectedImageUrl = ""
   if (uploadInput) (uploadInput as HTMLInputElement).value = ""
+  remoteImageUrl = null
   if (previewImage && previewPlaceholder) {
     ;(previewImage as HTMLImageElement).src = ""
     previewImage.classList.add("hidden")
@@ -293,9 +295,24 @@ const readFileAsDataUrl = (file: File): Promise<string> =>
 const handleFileSelection = async (file: File | null) => {
   if (!validateFile(file)) { syncSubmitState(); return }
   selectedImage = file
+  remoteImageUrl = null
   const dataUrl = await readFileAsDataUrl(file!)
   setPreview(dataUrl)
   syncSubmitState()
+}
+
+
+const resolveImageUrlForSubmit = async (signal?: AbortSignal): Promise<string> => {
+  if (remoteImageUrl) return remoteImageUrl
+
+  if (selectedImage) {
+    const uploaded = await uploadPostImage(selectedImage, signal)
+    remoteImageUrl = uploaded
+    return uploaded
+  }
+
+  
+  return selectedImageUrl
 }
 
 
@@ -326,7 +343,8 @@ const loadDraft = async () => {
  
   if (draft.imageUrl) {
     selectedImageUrl = draft.imageUrl
-    
+    remoteImageUrl = draft.imageUrl
+
     if (previewImage && previewPlaceholder) {
       ;(previewImage as HTMLImageElement).src = draft.imageUrl
       previewImage.classList.remove("hidden")
@@ -399,8 +417,19 @@ const handleCloseRequest = () => {
 
           const feedType = getFeedType()
 
+          let imageUrlForDraft = ""
+          try {
+            imageUrlForDraft = await resolveImageUrlForSubmit()
+          } catch {
+            showToast({
+              tone: "error",
+              title: "Upload failed",
+              message: "Unable to upload image. The draft was saved without it.",
+            })
+          }
+
           const result = await saveDraft({
-            imageUrl: selectedImageUrl,
+            imageUrl: imageUrlForDraft,
             caption,
             altText: caption,
             feedType,
@@ -536,9 +565,11 @@ const submitUpload = async (event: Event) => {
   syncSubmitState()
 
   try {
+    const imageUrlForPost = await resolveImageUrlForSubmit(uploadAbortController.signal)
+
     await createPost(
       {
-        imageUrl: selectedImageUrl,
+        imageUrl: imageUrlForPost,
         caption,
         altText: caption,
         category: "general",

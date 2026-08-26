@@ -64,6 +64,28 @@ export const fetchMyPosts = async (options?: SessionOptions) => {
   }
 }
 
+// IMAGE UPLOAD (Cloudflare R2) 
+
+export const uploadPostImage = async (file: File, signal?: AbortSignal): Promise<string> => {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const response = await fetch(`${getPostsApiBaseUrl()}/upload-image`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+    signal,
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new Error(data?.message || 'Unable to upload image')
+  }
+
+  const data = (await response.json()) as { imageUrl: string }
+  return data.imageUrl
+}
+
 export type CreatePostInput = {
   imageUrl: string
   caption: string

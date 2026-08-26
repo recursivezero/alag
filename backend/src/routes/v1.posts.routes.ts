@@ -12,6 +12,7 @@ import {
   saveDraft,
   getDraft,
   deleteDraft,
+  uploadPostImage,
 } from '../controllers/posts.controller.js'
 import { jsonMessageHook } from '../middleware/validationHook.js'
 import { asHandler } from '../middleware/asHandler.js'
@@ -32,6 +33,8 @@ import {
 } from '../schemas/posts.schemas.js'
 
 const postsRoutes = new OpenAPIHono({ defaultHook: jsonMessageHook })
+
+postsRoutes.post('/upload-image', asHandler(uploadPostImage))
 
 postsRoutes.openapi(
   createRoute({

@@ -12,6 +12,7 @@
     "seed": "tsx seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1106.0",
     "@hono/node-server": "^1.19.14",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "1.4.0",

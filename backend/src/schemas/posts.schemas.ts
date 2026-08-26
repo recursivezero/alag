@@ -69,7 +69,7 @@ export const ListPostsQuerySchema = z.object({
 
 export const CreatePostRequestSchema = z
   .object({
-    imageUrl: z.string().min(1).openapi({ example: 'data:image/png;base64,...' }),
+    imageUrl: z.string().min(1).openapi({ example: 'https://<r2-public-url>/posts/1/169999999-abcd1234.jpg' }),
     caption: z.string().min(1).openapi({ example: 'A beautiful sunset.' }),
     altText: z.string().min(1).openapi({ example: 'A sunset over the ocean' }),
     category: z.string().optional().openapi({ example: 'nature' }),
@@ -111,7 +111,7 @@ export const DraftSchema = z
 
 export const SaveDraftRequestSchema = z
   .object({
-    imageUrl: z.string().optional().openapi({ example: 'data:image/png;base64,...' }),
+    imageUrl: z.string().optional().openapi({ example: 'https://<r2-public-url>/posts/1/169999999-abcd1234.jpg' }),
     caption: z.string().optional().openapi({ example: 'Work in progress...' }),
     altText: z.string().optional(),
     category: z.string().optional(),
