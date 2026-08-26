@@ -4,6 +4,7 @@ import { getCookie } from 'hono/cookie'
 import { db, withTransaction } from '../config/db.js'
 import { verifyToken } from '../utils/jwt.js'
 import { USER_SESSION_COOKIE } from '../utils/session.js'
+import { buildObjectKey, deleteImageFromR2, isR2Configured, uploadImageToR2 } from '../utils/r2.js'
 
 const mapPostRow = (row: any) => ({
   id: row.id,
@@ -128,6 +129,50 @@ const isDataUrlTooLarge = (imageUrl: string) => {
   const payload = imageUrl.slice(commaIndex + 1)
   const estimatedSize = Buffer.byteLength(payload, 'base64')
   return estimatedSize > 10 * 1024 * 1024
+}
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 
+
+
+
+export const uploadPostImage = async (c: Context) => {
+  const user = await getAuthenticatedUser(c)
+  if (!user) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  if (!isR2Configured()) {
+    console.error('[posts] R2 upload attempted but R2 env vars are not configured')
+    return c.json({ message: 'Image storage is not configured. Please try again later.' }, 503)
+  }
+
+  const body = await c.req.parseBody().catch(() => null)
+  const file = body?.image
+
+  if (!file || !(file instanceof File)) {
+    return c.json({ message: 'Image file is required' }, 400)
+  }
+
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return c.json({ message: 'Only JPG, PNG, and WEBP images are allowed' }, 400)
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    return c.json({ message: 'Image must be 10MB or smaller' }, 413)
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const key = buildObjectKey(user.id, file.type)
+    const imageUrl = await uploadImageToR2(buffer, file.type, key)
+
+    return c.json({ imageUrl }, 201)
+  } catch (error) {
+    console.error('[posts] Failed to upload image to R2:', error)
+    return c.json({ message: 'Unable to upload image. Please try again.' }, 500)
+  }
 }
 
 // LIST POSTS (public feed — published only) 
@@ -564,7 +609,7 @@ export const deletePost = async (c: Context) => {
   }
 
   const [rows]: any = await db.execute(
-    'SELECT id FROM posts WHERE slug = ? AND user_id = ? LIMIT 1',
+    'SELECT id, image_url AS imageUrl FROM posts WHERE slug = ? AND user_id = ? LIMIT 1',
     [slug, user.id],
   )
 
@@ -573,6 +618,7 @@ export const deletePost = async (c: Context) => {
   }
 
   const postId = Number(rows[0].id)
+  const imageUrl = String(rows[0].imageUrl || '')
 
   try {
     await withTransaction(async (conn) => {
@@ -584,6 +630,9 @@ export const deletePost = async (c: Context) => {
   } catch {
     return c.json({ message: 'Unable to delete post' }, 500)
   }
+
+
+  void deleteImageFromR2(imageUrl)
 
   return c.json({ success: true })
 }
